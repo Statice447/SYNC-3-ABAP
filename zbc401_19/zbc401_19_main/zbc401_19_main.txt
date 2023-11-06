@@ -1,0 +1,190 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC401_19_MAIN
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc401_19_main.
+
+CLASS lcl_vehicle DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      set_attributes IMPORTING iv_make  TYPE s_make     " instance method
+                               iv_model TYPE s_model,
+
+      constructor    IMPORTING  iv_make  TYPE s_make    " instance method
+                                iv_model TYPE s_model
+                     EXCEPTIONS wrong_type,
+
+      display_attributes,                               " instance method
+      display_attributes_sql.                           " instance method
+
+    CLASS-METHODS:
+      display_no_vehicles,                              " static method
+      get_no_vehicles RETURNING VALUE(rv_count) TYPE i. " static functional method, returning이 있다면 functioal method
+
+*  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+    DATA: mv_make    TYPE s_make,                         " instance attribute
+          mv_model   TYPE s_model,
+          mv_tankcap TYPE s_capacity,
+          mv_consum  TYPE s_consum,
+          mv_speed   TYPE s_speed.
+
+    CLASS-DATA: gv_no_vehicles TYPE i.                  " static attribute
+
+ENDCLASS.
+
+CLASS lcl_vehicle IMPLEMENTATION.
+  METHOD set_attributes.
+    mv_make  = iv_make.
+    mv_model = iv_model.
+
+    gv_no_vehicles = gv_no_vehicles + 1.
+
+  ENDMETHOD.
+
+  METHOD constructor.
+    DATA ls_vehicle TYPE zsvehicle19.
+
+    SELECT SINGLE *                             " 테이블에 있는 데이터 sql문으로 가져오기
+      FROM zsvehicle19 INTO CORRESPONDING FIELDS OF ls_vehicle
+      WHERE make = iv_make
+      AND   model = iv_model.
+
+    IF sy-subrc <> 0.
+      RAISE wrong_type.                     " Exception.
+    ELSE.
+      mv_make = iv_make.
+      mv_model = iv_model.
+      mv_tankcap = ls_vehicle-tankcap.
+      mv_consum = ls_vehicle-consum.
+      mv_speed = ls_vehicle-speed.
+
+      gv_no_vehicles = gv_no_vehicles + 1.
+
+    ENDIF.
+
+*    mv_make = iv_make.                     " no sql, 직접 데이터 넣기
+*    mv_model = iv_model.
+*
+*    ADD 1 TO gv_no_vehicles.
+  ENDMETHOD.
+
+  METHOD display_attributes.                    " no SQL 버전
+    WRITE:/ ' Manufacture : ', mv_make,
+          / ' Model       : ', mv_model.
+
+  ENDMETHOD.
+
+  METHOD display_attributes_sql.                " SQL 버전
+    WRITE:/ ' Manufacture : ', mv_make,
+          / ' Model       : ', mv_model,
+          / ' Tankcap     : ', mv_tankcap,
+          / ' Consum      : ', mv_consum,
+          / ' Speed       : ', mv_speed.
+
+  ENDMETHOD.
+
+
+  METHOD display_no_vehicles.
+    WRITE:/ ' Total number of vehicle : ', gv_no_vehicles.
+  ENDMETHOD.
+
+  METHOD get_no_vehicles.
+    rv_count = gv_no_vehicles.
+*    WRITE:/ ' rv_count : ', rv_count.
+  ENDMETHOD.
+ENDCLASS.
+
+*DATA: go_vehicle1 TYPE REF TO lcl_vehicle,           " exercise 1
+*      go_vehicle2 TYPE REF TO lcl_vehicle,
+*      go_vehicle3 TYPE REF TO lcl_vehicle,
+*      gt_vehicles TYPE TABLE OF REF TO lcl_vehicle.
+*
+*START-OF-SELECTION.
+*
+*  CREATE OBJECT go_vehicle1.
+*  APPEND go_vehicle1 TO gt_vehicles.
+*
+*  CREATE OBJECT go_vehicle2.
+*  APPEND go_vehicle2 TO gt_vehicles.
+*
+*  CREATE OBJECT go_vehicle3.
+*  APPEND go_vehicle2 TO gt_vehicles.
+
+DATA: go_vehicle  TYPE REF TO lcl_vehicle,
+      gt_vehicles TYPE TABLE OF REF TO lcl_vehicle.
+
+DATA: gv_number TYPE i.                         " static functional method의 returning 데이터를 넣을 변수 선언
+
+START-OF-SELECTION.
+
+  lcl_vehicle=>display_no_vehicles( ).          " static 메소드는 클래스 이름으로 불러온다.
+  gv_number = lcl_vehicle=>get_no_vehicles( ).  " static functional method의 return 데이터 넣기.
+  WRITE:/ ' total : ' , gv_number.
+
+  WRITE:/' ', /.
+
+*  CREATE OBJECT go_vehicle.                    " no constructor
+*  go_vehicle->set_attributes(
+*    iv_make = 'TESLA'
+*    iv_model = 'MODEL Y'
+*    ).
+*  APPEND go_vehicle TO gt_vehicles.
+
+*  CLEAR go_vehicle.
+*  CREATE OBJECT go_vehicle.
+*  go_vehicle->set_attributes(
+*    iv_make = 'TESLA'
+*    iv_model = 'Model 3'
+*    ).
+*  APPEND go_vehicle TO gt_vehicles.
+
+*  CLEAR go_vehicle.                             " constructor 사용 1
+*  CREATE OBJECT go_vehicle
+*    EXPORTING
+*      iv_make  = 'TESLA'
+*      iv_model = 'Model 3'.
+*  APPEND go_vehicle TO gt_vehicles.
+*
+*  LOOP AT gt_vehicles INTO go_vehicle.          " 출력을 위한 loop문
+*    go_vehicle->display_attributes_sql( ).
+*    WRITE:/ ' ', /.
+*  ENDLOOP.
+
+  CLEAR go_vehicle.                             " constructor 사용 sql문
+  CREATE OBJECT go_vehicle
+    EXPORTING
+      iv_make    = 'AUDI'
+      iv_model   = 'A3'
+    EXCEPTIONS
+      wrong_type = 1.
+
+  IF sy-subrc = 0.
+    APPEND go_vehicle TO gt_vehicles.
+  ENDIF.
+
+  CLEAR go_vehicle.                             " constructor 사용 sql문
+  CREATE OBJECT go_vehicle
+    EXPORTING
+      iv_make    = 'BMW'
+      iv_model   = '318I'
+    EXCEPTIONS
+      wrong_type = 1.
+
+  IF sy-subrc = 0.
+    APPEND go_vehicle TO gt_vehicles.
+  ENDIF.
+
+  LOOP AT gt_vehicles INTO go_vehicle.          " 출력을 위한 loop문
+    go_vehicle->display_attributes_sql( ).
+    WRITE:/ ' ', /.
+  ENDLOOP.
+
+  lcl_vehicle=>display_no_vehicles( ).          " static 메소드는 클래스 이름으로 불러온다.
+  gv_number = lcl_vehicle=>get_no_vehicles( ).
+  WRITE:/ ' total : ' , gv_number.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

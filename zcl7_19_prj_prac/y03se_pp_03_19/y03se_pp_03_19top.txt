@@ -1,0 +1,58 @@
+*&---------------------------------------------------------------------*
+*& Include Y03SE_PP_03TOP                           - Module Pool      Y03SE_PP_03
+*&---------------------------------------------------------------------*
+PROGRAM y03se_pp_03.
+
+TABLES: ysem01, y03se_ppt_prod_c . " 생산 수확 추가 ST, 싱글트리ALV불러올 화면 ST
+
+
+DATA: ok_code TYPE sy-ucomm.
+
+
+*************************************TREE ALV
+TYPES: node_table_type  LIKE STANDARD TABLE OF mtreesnode WITH DEFAULT KEY.
+
+DATA: tree_con_ref TYPE REF TO cl_gui_custom_container, "컨테이너 만들기
+      g_tree       TYPE REF TO cl_gui_simple_tree.        "트리 컨테이너 참조변수
+
+*TABLES: Y03SE_PPT_PROD.
+
+DATA: ws_tab  TYPE y03se_ppt_prod_c,
+      wt_tab  TYPE TABLE OF y03se_ppt_prod_c,
+      wt_tab2 TYPE TABLE OF y03se_ppt_prod_c. " 처음 실행했을때 밑에 alv에 생산오더 번호가 보여져서 그걸 안보이게 하기 위함.
+**************************************
+
+***************************ALV 관련 데이터 오브젝트
+
+
+DATA: g_custom_con TYPE REF TO cl_gui_custom_container,      "컨테이너
+      g_alv        TYPE REF TO cl_gui_alv_grid.              "ALV GRID
+
+DATA: gs_fieldcat  TYPE lvc_s_fcat,
+      gt_fieldcat  TYPE lvc_t_fcat,
+      gs_layo      TYPE lvc_s_layo,
+      gs_sort      TYPE lvc_s_sort,
+      gt_sort      TYPE lvc_t_sort,
+      gs_functions TYPE ui_functions,
+      gs_refto     TYPE REF TO data,
+      gs_pos       TYPE i.
+**********************************************
+
+* 이벤트 구현
+CLASS lcl_application DEFINITION.
+  PUBLIC SECTION.
+    METHODS : handle_node_double_click
+                  FOR EVENT node_double_click OF cl_gui_simple_tree " 트리에 노드 더블 클릭시 해당 ALV나옴.
+      IMPORTING node_key.
+ENDCLASS.
+CLASS lcl_application IMPLEMENTATION.
+  METHOD handle_node_double_click.
+    PERFORM node_double_click_0100  USING node_key.
+  ENDMETHOD.
+
+ENDCLASS.
+
+DATA: g_application TYPE REF TO lcl_application.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

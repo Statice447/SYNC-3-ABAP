@@ -1,0 +1,302 @@
+*&---------------------------------------------------------------------*
+*& Include          Y03SE_PP_03F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form BUILD_NODE_TABLE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_NODE_TABLE  text
+*&---------------------------------------------------------------------*
+FORM build_node_table  USING    node_table TYPE node_table_type.
+*  SELECT ord_num FROM y03se_ppt_prod
+*    INTO CORRESPONDING FIELDS OF TABLE Wt_tab.
+
+  DATA: node LIKE mtreesnode.
+
+  CLEAR node.
+  " Sort 시 root가 최상위가 되야하므로 키 이름을 최상단에 올릴수 있도록 이름 설정
+  node-node_key = 'AAARoot'.       "tree 상위항목 , 최상위 항목임.
+  node-isfolder = 'X'.        "폴더모양으로 표시  , 모양이 폴더
+  node-text = '생산'.        "항공사라는 텍스트로 표시
+  APPEND node TO node_table.
+
+  CLEAR node.
+  " child는 root 아래에 올 수 있도록 이름 설정
+  node-node_key = 'AAChild1'. "root 하위 항목
+  node-relatkey = 'AAARoot'.
+  node-isfolder = 'X'.
+  node-text = '생산 오더 번호'.
+  node-expander = 'X'. "아래로 확장
+  APPEND node TO node_table.
+
+  LOOP AT wt_tab INTO ws_tab.
+    CLEAR node.
+
+    node-node_key = ws_tab-ord_num.
+    node-relatkey = 'AAChild1'.
+*    node-n_image = '@7T@'.  " se37에서 show_icon으로 원하는 아이콘 찾아서 깃허브에 아이콘 코드 맞춰서 넣으면 됨.
+    node-text = ws_tab-ord_num.
+    APPEND node TO node_table.
+  ENDLOOP.
+
+  " 중복 키값을 제거 하기위해 Sort 오름/내림 차순은 명명에 따라서 선택, sort안하면 중복키값들이 제대로 삭제 안됨
+  SORT node_table ASCENDING BY node_key.
+  " node table에 있는 중복 키값 삭제
+  DELETE ADJACENT DUPLICATES FROM node_table COMPARING node_key.
+  CLEAR node.
+  " child는 root 아래에 올 수 있도록 이름 설정
+  node-node_key = 'AAChild2'. "root 하위 항목
+  node-relatkey = 'AAARoot'.
+  node-isfolder = 'X'.
+  node-text = '임시'.
+  node-expander = 'X'. "아래로 확장
+  APPEND node TO node_table.
+
+  node-node_key = '010101010'.
+  node-relatkey = 'AAChild2'.
+  node-text = '자산'.
+  APPEND node TO node_table.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Module CREATE_CONTAINER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_container OUTPUT.
+
+*************************************
+* ALV 화면 보여주는 컨테이너
+
+  IF g_custom_con IS INITIAL. "PBO Module이  실행될때마다 실행되면 안되므로 커스텀컨테이너가 비어있을때만 로직을 수행한다.
+
+* 화면 100에 생성한 HD_CON을 참조하여 오브젝트 생성
+    CREATE OBJECT g_custom_con
+      EXPORTING
+        container_name = 'CONT1'.
+
+* ALV_CON위에 ALV 오브젝트를 생성한다.
+    CREATE OBJECT g_alv
+      EXPORTING
+        i_parent = g_custom_con.
+
+*필드 카탈로그
+    PERFORM make_fieldcat.      "필드 카탈로그 설정
+
+* LAYOUT
+    gs_layo-sel_mode = 'A'.
+
+* ALV 출력
+    CALL METHOD g_alv->set_table_for_first_display
+      EXPORTING
+        is_layout       = gs_layo
+      CHANGING
+        it_outtab       = wt_tab2
+        it_fieldcatalog = gt_fieldcat.
+  ELSE.
+    PERFORM refresh_grid.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Form MAKE_FIELDCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM make_fieldcat .
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'ORD_NUM'.
+  gs_fieldcat-coltext = '생산 오더 번호'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PRO_NUM'.
+  gs_fieldcat-coltext = '생산 번호'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'MT_COD'.
+  gs_fieldcat-coltext = '자재코드'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'PRO_DT'.
+  gs_fieldcat-coltext = '생산날짜'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'EX_DT'.
+  gs_fieldcat-coltext = '유통기한'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'QUANTITY'.
+  gs_fieldcat-coltext = '생산량'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'QUANUNIT'.
+  gs_fieldcat-coltext = '단위'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  CLEAR gs_fieldcat.
+  gs_fieldcat-fieldname = 'STATUS'.
+  gs_fieldcat-coltext = '상태'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_GRID
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_grid .
+  DATA: l_scroll TYPE lvc_s_stbl.
+  l_scroll-row = 'X'.
+  l_scroll-col = 'X'.
+  CALL METHOD g_alv->refresh_table_display
+    EXPORTING
+      i_soft_refresh = ''
+      is_stable      = l_scroll.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form ADD_PRO
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM add_pro .
+  DATA lv_num TYPE c LENGTH 6.
+  DATA lv_text TYPE c LENGTH 8.
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = '01'
+      object      = 'YNPRONUM1'
+    IMPORTING
+      number      = lv_num
+    EXCEPTIONS
+      OTHERS      = 1.
+
+  lv_text = 'PR' && lv_num.  " PR과 채번 값 합쳐서 넣기
+
+
+  ws_tab-mandt = '400'.
+  ws_tab-pro_num = lv_text.
+  ws_tab-mt_cod = ysem01-mt_cod.
+  ws_tab-ord_num = ysem01-ord_num.
+  ws_tab-pro_dt = ysem01-pro_dt.
+  ws_tab-ex_dt = ysem01-ex_dt.
+  ws_tab-quantity = ysem01-quantity.
+  ws_tab-quanunit = ysem01-quanunit.
+  ws_tab-status = '검수미완료'. " 검수완료되면 제품 창고로 UPDATE시켜주면서
+  " 생산 테이블의 STATUS도 검수 완료로 변경시켜주기.
+
+
+  INSERT y03se_ppt_prod_c FROM ws_tab.
+
+  IF sy-subrc = 0.
+    WRITE:'데이터 넣기 성공'.
+    MESSAGE i001(zbc405_02) .
+
+    CLEAR: wt_tab, ws_tab.
+    SELECT *
+      FROM y03se_ppt_prod_c INTO CORRESPONDING FIELDS OF TABLE wt_tab.
+
+    g_tree->free( ).
+    PERFORM create_tree.
+
+  ELSE.
+    WRITE '데이터 왜 안들어가누'.
+    MESSAGE i002(zbc405_02) .
+  ENDIF.
+  CLEAR ws_tab.
+*      gv_num = ysem01-ord_num.  " 데이터 추가하고 클리어하기 전에 넣어주기.
+  CLEAR ysem01.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form NODE_DOUBLE_CLICK_0100
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_NODE_KEY  text
+*&---------------------------------------------------------------------*
+FORM node_double_click_0100  USING    p_node_key.
+  SELECT * FROM y03se_ppt_prod_c
+     INTO CORRESPONDING FIELDS OF TABLE wt_tab2
+   WHERE ord_num = p_node_key. "트리 생산번호 더블클릭시 그에맞는 정보만 가져오기.
+  PERFORM refresh_grid. " alv grid refresh.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_TREE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_tree .
+
+  DATA: node_table TYPE node_table_type, "트리 값들 관계 넣어주기위해
+        events     TYPE cntl_simple_events, "더블클릭 이벤트
+        event      TYPE cntl_simple_event.    "더블클릭 이벤트
+
+  CREATE OBJECT g_tree
+    EXPORTING
+      parent              = tree_con_ref
+      node_selection_mode = cl_gui_simple_tree=>node_sel_mode_single. "싱글선택
+
+*노드 생성
+  PERFORM build_node_table USING node_table. "트리에 데이터 넣어줌
+
+*트리 노드 추가
+  CALL METHOD g_tree->add_nodes
+    EXPORTING
+      table_structure_name = 'MTREESNODE'
+      node_table           = node_table. "트리 데이터 들어가있는 int
+
+*이벤트
+  CREATE OBJECT g_application.
+
+  event-eventid = cl_gui_simple_tree=>eventid_node_double_click.
+  event-appl_event = 'X'.
+  APPEND event TO events.
+
+*트리 이벤트 등록
+  CALL METHOD g_tree->set_registered_events
+    EXPORTING
+      events                    = events
+    EXCEPTIONS
+      cntl_error                = 1
+      cntl_system_error         = 2
+      illegal_event_combination = 3.
+
+*이벤트 헨들러
+  SET HANDLER g_application->handle_node_double_click FOR g_tree.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

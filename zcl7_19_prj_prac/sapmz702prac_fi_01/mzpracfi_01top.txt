@@ -1,0 +1,32 @@
+*&---------------------------------------------------------------------*
+*& Include MZPRACFI_01TOP                           - Module Pool      SAPMZ702PRAC_FI_01
+*&---------------------------------------------------------------------*
+PROGRAM sapmz702prac_fi_01.
+
+TABLES: ztc702_docu_h, ztc702_docu_i.
+
+DATA: gt_docu_h TYPE TABLE OF ztc702_docu_h,
+      gs_docu_h TYPE ztc702_docu_h.
+
+DATA: gt_docu_i TYPE TABLE OF ztc702_docu_i,
+      gs_docu_i TYPE ztc702_docu_i.
+
+DATA: gt_add_item TYPE TABLE OF ztc702_docu_i,
+      gs_add_item TYPE ztc702_docu_i.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid,
+      gv_refresh   TYPE c LENGTH 1.
+
+DATA: go_container2 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid2  TYPE REF TO cl_gui_alv_grid,
+      gv_refresh2   TYPE c LENGTH 1.
+
+DATA : gt_index TYPE lvc_t_row,
+       gs_index TYPE lvc_s_row,
+       gv_lines TYPE i.
+
+DATA: ok_code TYPE sy-ucomm.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

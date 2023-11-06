@@ -1,0 +1,62 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_19_TASK5
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_19_task5.
+
+TYPES: BEGIN OF gty_s_flight,
+         carrid TYPE sflight-carrid,
+         connid TYPE sflight-connid,
+       END OF gty_s_flight.
+
+TYPES: gty_t_flight TYPE SORTED TABLE OF gty_s_flight WITH NON-UNIQUE KEY carrid connid.
+
+DATA: gt_flight  TYPE gty_t_flight,
+      gt_display TYPE TABLE OF gty_s_flight.
+
+SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: pa_sql  TYPE xfeld RADIOBUTTON GROUP grp DEFAULT 'X'.
+SELECTION-SCREEN COMMENT 5(30) TEXT-001.
+SELECTION-SCREEN END OF LINE.
+
+SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: pa_dist TYPE xfeld RADIOBUTTON GROUP grp.
+SELECTION-SCREEN COMMENT 5(30) TEXT-002.
+SELECTION-SCREEN END OF LINE.
+
+SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: pa_dele TYPE xfeld RADIOBUTTON GROUP grp.
+SELECTION-SCREEN COMMENT 5(30) TEXT-003.
+SELECTION-SCREEN END OF LINE.
+
+START-OF-SELECTION.
+
+  CASE 'X'.
+    WHEN pa_sql.
+      PERFORM open_sql
+        CHANGING gt_flight.
+    WHEN pa_dist.
+      PERFORM distince
+        CHANGING gt_flight.
+    WHEN pa_dele.
+      PERFORM delete_adjacent
+        CHANGING gt_flight.
+  ENDCASE.
+  gt_display = gt_flight.
+  CALL FUNCTION 'BC402_DISPLAY_TABLE'
+    CHANGING
+      ct_table = gt_display.
+
+  INCLUDE zcl7_19_task5_open_sqlf01.
+  INCLUDE zcl7_19_task5_distincef01.
+  INCLUDE zcl7_19_task5_delete_adjacef01.
+
+*Text elements
+*----------------------------------------------------------
+* 001 Open Sql
+* 002 DISTINCT 이용
+* 003 DELETE ADJACENT DUPLICATES 이용
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

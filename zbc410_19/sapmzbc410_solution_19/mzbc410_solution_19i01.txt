@@ -1,0 +1,61 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOLUTION_19I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_SFLIGHT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_sflight INPUT.
+  SELECT SINGLE *
+    FROM sflight INTO CORRESPONDING FIELDS OF wa_sflight
+    WHERE carrid = sdyn_conn-carrid
+    AND connid = sdyn_conn-connid
+    AND fldate = sdyn_conn-fldate.
+
+  CHECK sy-subrc <> 0.
+  CLEAR wa_sflight.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+*  CASE io_command.
+*    WHEN 'T'.
+*      CALL SCREEN 150
+*      STARTING AT 10 10
+*      ENDING AT 50 20.
+*      CLEAR io_command.
+*    WHEN 'X'.
+*      LEAVE TO SCREEN 0.
+*  ENDCASE.
+
+  CASE ok_code.
+    WHEN 'TIME'.
+      CALL SCREEN 150
+      STARTING AT 10 10
+      ENDING AT 50 20.
+      CLEAR io_command.
+  ENDCASE.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0150  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0150 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

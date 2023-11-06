@@ -1,0 +1,18 @@
+FUNCTION ZFM_UPD_ZSCUSTOM19.
+*"----------------------------------------------------------------------
+*"*"Update Function Module:
+*"
+*"*"Local Interface:
+*"  IMPORTING
+*"     VALUE(IV_ID) TYPE  ZSCUSTOM19-ID
+*"     VALUE(IV_CUSTTYPE) TYPE  ZSCUSTOM19-CUSTTYPE
+*"  EXCEPTIONS
+*"      ERROR
+*"----------------------------------------------------------------------
+
+UPDATE zscustom19 set custtype = iv_custtype WHERE id = iv_id.
+
+ENDFUNCTION.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

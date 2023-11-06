@@ -1,0 +1,76 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_ZSTRAVEL19_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      CASE sy-dynnr.
+        WHEN '0100'.
+          LEAVE TO SCREEN '0000'.
+        WHEN '0200'.
+
+          IF sy-datar IS INITIAL.
+*           no changes performed on screen
+            LEAVE TO SCREEN 0.
+          ELSE.
+*           at least one field on table control changed.
+            PERFORM popup_to_confirm_loss_of_data.
+          ENDIF.
+
+      ENDCASE.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'EDIT'.
+      gv_sel_changed = abap_true.
+      CALL SCREEN '0200' STARTING AT  5  5
+                         ENDING   AT 80 15.
+      SET SCREEN '0100'.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  TRANS_FROM_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE trans_from_0200 INPUT.
+  MOVE-CORRESPONDING zstravelag19 TO gs_stravelag.
+  MODIFY gt_stravelag_sel FROM gs_stravelag INDEX tc_stravelag-current_line.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'SAVE'.
+*     ToDo: Save changes
+      PERFORM save_data USING gt_stravelag_sel.
+      SET SCREEN '0000'.
+*     Stravelag data changed on database
+      gv_refresh = abap_true.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

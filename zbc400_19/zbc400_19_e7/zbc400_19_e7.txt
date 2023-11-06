@@ -1,0 +1,68 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E7
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC400_19_E7.
+
+*TYPES s_carr_id type c LENGTH 3.
+
+DATA:
+      gv_sum TYPE i,
+      gv_sub TYPE i,
+      gv_mul TYPE i,
+      gv_div TYPE P,
+      gv_fldate type d value '20230908'.
+
+PARAMETERS:            gv_val1 TYPE i,
+                       gv_val2 TYPE i,
+                       gv_id type s_carr_id.
+
+gv_sum = gv_val1 + gv_val2.
+gv_sub = gv_val1 - gv_val2.
+gv_mul = gv_val1 * gv_val2.
+gv_div = gv_val1 / gv_val2.
+
+
+WRITE: / '첫번째 수 =  ',gv_val1,'   두 번째 수 =  ',gv_val2,
+       / '-----------------------',
+       / '두 숫자 의 합 : ', gv_sum,
+       / '두 숫자 의 차 : ', gv_sub,
+       / '두 숫자 의 곱 : ', gv_mul,
+       / '두 숫자 의 나누기 : ', gv_div.
+
+WRITE / '-----------------------'.
+WRITE / '두 수의 곱과 앞의 수 제곱 비교'.
+IF gv_val1 * gv_val2 >= ipow( base = gv_val1 exp = 2 ).
+  WRITE: '  =    두 수의 곱이 크다'.
+else.
+  WRITE: '  =    두번째 수의 제곱이 더 크다'.
+ENDIF.
+
+*WRITE / '-----------------------'.
+*WRITE / '첫번째 숫자의 절대값이 더 크면 영어, 작고 gv_id 길이가 1~10 사이면 한글'.
+*IF abs( gv_val1 ) > gv_val2.
+*  write : '     =     aobap'.
+*ELSEIF charlen( gv_id ) between 1 AND 10.
+*  write : '     =     아오밥나무'.
+*ENDIF.
+*
+*WRITE / '-----------------------'.
+*WRITE / 'gv_id값이 0이 아니면 NO, 맞으면 YES'.
+*IF gv_id is not INITIAL.
+*  write '   =     NO'.
+*else.
+*  write '   =     YES'.
+*ENDIF.
+*
+*WRITE / '-----------------------'.
+*WRITE / 'gv_id값이 AA이거나 UA 이고, 비행날짜가 현재날짜 보다 늦을 경우 한글 출력 아니면 영어 '.
+*WRITE / '비행날짜 ( 20230908) '.
+*if ( gv_id = 'AA' or gv_id = 'UA' ) and gv_fldate > sy-datum.
+*    WRITE : '   =     아오밥나무'.
+*  else.
+*    WRITE '     =     aobap'.
+* endif.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

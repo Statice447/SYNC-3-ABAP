@@ -1,0 +1,49 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_ITAB_SORTED
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc430_19_e3_itab_sorted.
+
+
+DATA: it_flight  TYPE zit_sflight19,
+      wa_sflight TYPE sflight.
+
+SELECT *
+  FROM sflight
+  INTO wa_sflight
+  WHERE carrid = 'JL'.
+
+  WRITE: / wa_sflight-carrid,
+         / wa_sflight-connid,
+         / wa_sflight-fldate,
+         / wa_sflight-mandt,
+         / wa_sflight-paymentsum,
+         / wa_sflight-planetype,
+         / wa_sflight-price,
+         / wa_sflight-seatsmax,
+         / wa_sflight-seatsocc.
+ENDSELECT.
+
+WRITE: / '-----------------------------------------------'.
+
+SELECT *
+  FROM sflight
+  INTO TABLE it_flight.
+
+WRITE: / 'sorted itab'.
+LOOP AT it_flight INTO wa_sflight.
+  WRITE: / wa_sflight-carrid,
+       / wa_sflight-connid,
+       / wa_sflight-fldate,
+       / wa_sflight-mandt,
+       / wa_sflight-paymentsum,
+       / wa_sflight-planetype,
+       / wa_sflight-price,
+       / wa_sflight-seatsmax,
+       / wa_sflight-seatsocc.
+
+ENDLOOP.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

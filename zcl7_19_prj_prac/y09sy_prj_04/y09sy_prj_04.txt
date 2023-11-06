@@ -1,0 +1,639 @@
+*&---------------------------------------------------------------------*
+*& Report Y09SY_PRJ_03_2
+*&---------------------------------------------------------------------*
+*&
+*&
+*& 개선할 점:
+*&
+*&
+*&
+*&
+*&
+*&
+*&---------------------------------------------------------------------*
+REPORT y09sy_prj_04 MESSAGE-ID zcl7_prj_09.
+
+TABLES: y09sy_tinfo, y09sy_dv_sample, y09sy_tresult.
+
+TYPES: BEGIN OF gty_testinfo.
+    INCLUDE TYPE y09sy_tinfo.
+TYPES: it_colfields   TYPE lvc_t_scol,
+       display_detail TYPE c LENGTH 20,
+       it_celltype    TYPE lvc_t_styl,
+       END OF gty_testinfo.
+SELECT-OPTIONS: so_snum FOR y09sy_tinfo-snumber NO INTERVALS NO-EXTENSION,
+                so_pat FOR y09sy_tinfo-patient NO INTERVALS NO-EXTENSION,
+                so_hosp FOR y09sy_tinfo-hname NO INTERVALS NO-EXTENSION,
+                so_sales FOR y09sy_tinfo-salesname NO INTERVALS NO-EXTENSION,
+                so_erdat FOR y09sy_tinfo-erdat.
+PARAMETERS: pa_arrv AS CHECKBOX.
+DATA: gt_sample  TYPE TABLE OF gty_testinfo,
+      gt_sample1 LIKE gt_sample,
+      gs_sample  LIKE LINE OF gt_sample,
+      gs_info    TYPE y09sy_tinfo.
+DATA: ok_code LIKE sy-ucomm.
+DATA: go_cont TYPE REF TO cl_gui_custom_container,
+      go_alv  TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_fcat TYPE lvc_s_fcat,
+      gt_fcat TYPE lvc_t_fcat.
+
+DATA: gs_colfield LIKE LINE OF gs_sample-it_colfields.
+
+DATA: gs_variant TYPE disvariant,
+      gv_save    TYPE c LENGTH 1.
+
+DATA: gs_layo  TYPE lvc_s_layo,
+      gs_layo1 LIKE gs_layo.
+
+DATA: gs_cellstyle TYPE lvc_s_styl.
+DATA: gt_cellstyle type lvc_t_styl.
+
+DATA: gt_asmp TYPE TABLE OF y09sy_tasmp,
+      gs_asmp LIKE LINE OF gt_asmp.
+
+DATA: gs_samp TYPE y09sy_dv_sample,
+      gt_samp LIKE TABLE OF gs_samp.
+DATA: gs_tinfo TYPE y09sy_tinfo.
+
+DATA: gt_commt TYPE TABLE OF y09sy_tcommt,
+      gs_commt LIKE LINE OF gt_commt.
+DATA: gs_input  LIKE gs_commt,
+      gs_upload LIKE gs_input.
+DATA: gt_arrv TYPE TABLE OF y09sy_tarrv,
+      gs_arrv LIKE LINE OF gt_arrv.
+
+DATA: gs_samparr TYPE y09sy_samparrv,
+      gt_samparr LIKE TABLE OF gs_samparr.
+CONTROLS: tc110 TYPE TABLEVIEW USING SCREEN '0110'.
+
+CLASS lcl_handle DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      on_button_click
+                    FOR EVENT button_click OF cl_gui_alv_grid
+        IMPORTING es_row_no.
+ENDCLASS.
+CLASS lcl_handle IMPLEMENTATION.
+  METHOD on_button_click.
+    READ TABLE gt_sample INTO gs_sample INDEX es_row_no-row_id.
+    MOVE-CORRESPONDING gs_sample TO gs_info.
+
+    CALL SCREEN 200.
+
+  ENDMETHOD.
+ENDCLASS.
+
+
+START-OF-SELECTION.
+  SELECT * FROM y09sy_tinfo
+    INTO CORRESPONDING FIELDS OF TABLE gt_sample
+    WHERE snumber IN so_snum
+    AND patient IN so_pat
+    AND hname IN so_hosp
+    AND salesname IN so_sales
+    AND erdat IN so_erdat.
+
+  IF pa_arrv = 'X'. "도착처리 되지 않은 검사들 조회
+    SELECT * FROM y09sy_tarrv
+      INTO CORRESPONDING FIELDS OF TABLE gt_arrv.
+    LOOP AT gt_sample INTO gs_sample.
+      READ TABLE gt_arrv INTO gs_arrv WITH KEY snumber = gs_sample-snumber
+                                               aedat = '00000000'.
+      IF sy-subrc = 0. "등록은 되었으나 도착처리가 되지 않음.
+        APPEND gs_sample TO gt_sample1.
+        CLEAR gs_sample.
+      ENDIF.
+    ENDLOOP.
+    CLEAR gt_sample.
+
+    MOVE-CORRESPONDING gt_sample1 TO gt_sample.
+  ENDIF.
+
+
+
+  LOOP AT gt_sample INTO gs_sample.
+    IF gs_sample-retest = 'X'.
+      gs_colfield-fname = 'RETEST'.
+      gs_colfield-color-col = col_total.
+      gs_colfield-color-int = '1'.
+      gs_colfield-color-inv = '0'.
+      APPEND gs_colfield TO gs_sample-it_colfields.
+    ENDIF.
+
+    gs_cellstyle-fieldname = 'DISPLAY_DETAIL'.
+    gs_cellstyle-style = cl_gui_alv_grid=>mc_style_button.
+    APPEND gs_cellstyle TO GS_SAMPLE-it_celltype.
+    gs_sample-display_detail = 'Detail'.
+    MODIFY gt_sample FROM gs_sample TRANSPORTING it_colfields IT_CELLTYPE DISPLAY_DETAIL .
+
+  ENDLOOP.
+
+
+*  READ TABLE gt_sample INTO gs_sample INDEX 1.
+*  MOVE-CORRESPONDING gs_sample TO y09sy_tinfo.
+*
+*  SELECT * FROM y09sy_tasmp
+*    INTO CORRESPONDING FIELDS OF TABLE gt_asmp.
+*
+*  LOOP AT gt_sample INTO gs_sample.
+*    READ TABLE gt_asmp WITH KEY testnum = gs_sample-testnum INTO gs_asmp.
+*    IF gs_sample-t_result < gs_asmp-ref_valuel.
+*      gs_colfield-fname = 'T_RESULT'.
+*      gs_colfield-color-col = col_heading.
+*      gs_colfield-color-int = '1'.
+*      gs_colfield-color-inv = '0'.
+*
+*    ELSEIF gs_sample-t_result > gs_asmp-ref_valueh.
+*      gs_colfield-fname = 'T_RESULT'.
+*      gs_colfield-color-col = col_negative.
+*      gs_colfield-color-int = '1'.
+*      gs_colfield-color-inv = '0'.
+*    ELSE.
+*      CLEAR gs_colfield.
+*    ENDIF.
+*    APPEND gs_colfield TO gs_sample-it_colfields.
+*    MODIFY gt_sample FROM gs_sample TRANSPORTING it_colfields.
+*  ENDLOOP.
+
+  CLEAR gs_sample.
+
+  CALL SCREEN 100.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'CANCEL' OR 'EXIT'.
+      LEAVE PROGRAM.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module ALV OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE alv OUTPUT.
+  PERFORM create_object.
+  PERFORM field_cat.
+  PERFORM layo CHANGING gs_layo.
+  gs_layo-zebra = 'X'.
+  gs_layo-sel_mode = 'A'.
+*  gs_layo-edit = 'X'.
+  gs_layo-ctab_fname = 'IT_COLFIELDS'.
+  gs_layo-stylefname = 'IT_CELLTYPE'.
+  PERFORM variant.
+
+  PERFORM display_alv.
+ENDMODULE.
+FORM create_object .
+  IF go_cont IS INITIAL.
+    CREATE OBJECT go_cont
+      EXPORTING
+        container_name              = 'CONT'
+      EXCEPTIONS
+        cntl_error                  = 1
+        cntl_system_error           = 2
+        create_error                = 3
+        lifetime_error              = 4
+        lifetime_dynpro_dynpro_link = 5
+        OTHERS                      = 6.
+    IF sy-subrc <> 0.
+      MESSAGE a001(zcl7_prj_09) WITH sy-subrc.
+    ENDIF.
+
+    CREATE OBJECT go_alv
+      EXPORTING
+        i_parent          = go_cont
+      EXCEPTIONS
+        error_cntl_create = 1
+        error_cntl_init   = 2
+        error_cntl_link   = 3
+        error_dp_create   = 4
+        OTHERS            = 5.
+    IF sy-subrc <> 0.
+      MESSAGE a001(zcl7_prj_09) WITH sy-subrc.
+    ENDIF.
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form FIELD_CAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM field_cat .
+  REFRESH gt_fcat.
+  PERFORM set_fcat USING: '' 'fieldname' 'snumber',
+                         '' 'coltext' 'Sample Number',
+                         'E' '' ''.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'Patient',
+                          '' 'coltext' 'Patient ID'.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'Patient_name',
+                          '' 'coltext' 'Patient_name',
+                          'E' '' ''.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'AREA',
+                          '' 'coltext' 'Area',
+                          'E' '' ''.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'HName',
+                         '' 'coltext' 'Hospital name',
+                          'E' '' ''.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'salesname',
+                         '' 'coltext' 'salesname',
+                          'E' '' ''.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'erdat',
+                         '' 'coltext' 'erdat',
+                          'E' '' ''.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'Retest',
+                       '' 'coltext' 'Retest',
+                        'E' '' ''.
+
+  PERFORM set_fcat USING: '' 'fieldname' 'DISPLAY_DETAIL',
+                     '' 'coltext' 'Detail',
+                      'E' '' ''.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_       text
+*      -->P_       text
+*      -->P_       text
+*&---------------------------------------------------------------------*
+FORM set_fcat  USING    VALUE(p_end)
+                        VALUE(p_field)
+                        VALUE(p_value).
+
+  DATA: lv_field(20).
+  FIELD-SYMBOLS <f> TYPE any.
+
+  IF p_end = 'E'.
+    APPEND gs_fcat TO gt_fcat.
+    CLEAR gs_fcat.
+    RETURN.
+  ENDIF.
+  CONCATENATE 'gs_fcat-' p_field INTO lv_field. "X가 아니라면 fcat 내용을 채운다. concatenate를 통해 fcat의 field를 만들어준다.
+  ASSIGN (lv_field) TO <f>. "assign을 통해 lv_fcat의 내용을 변수로 지정해준다.
+  <f> = p_value.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form LAYO
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM layo CHANGING gs_layo TYPE lvc_s_layo.
+
+*  gs_layo-stylefname = 'DISPLAY_DETAIL'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_alv .
+  SET HANDLER lcl_handle=>on_button_click FOR go_alv.
+
+  CALL METHOD go_alv->set_table_for_first_display
+    EXPORTING
+*     i_buffer_active               =
+*     i_bypassing_buffer            =
+*     i_consistency_check           =
+*     i_structure_name              = 'GTY_TESTINFO'
+      is_variant                    = gs_variant
+      i_save                        = gv_save
+*     i_default                     = 'X'
+      is_layout                     = gs_layo
+*     is_print                      =
+*     it_special_groups             =
+*     it_toolbar_excluding          =
+*     it_hyperlink                  =
+*     it_alv_graphics               =
+*     it_except_qinfo               =
+*     ir_salv_adapter               =
+    CHANGING
+      it_outtab                     = gt_sample
+      it_fieldcatalog               = gt_fcat
+*     it_sort                       =
+*     it_filter                     =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+    MESSAGE a002 WITH sy-subrc.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OKCODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_okcode OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*& Module STATUS_0110 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0110 OUTPUT.
+  SET PF-STATUS 'S0110'.
+  SET TITLEBAR 'T0110' WITH gs_asmp-testname.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0110  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0110 INPUT.
+
+  CASE ok_code.
+
+    WHEN 'UPLOAD'.
+      MOVE-CORRESPONDING gs_input TO gs_upload.
+      gs_upload-testnum = gs_commt-testnum.
+      gs_upload-erdat = sy-datum.
+      gs_upload-erzet = sy-uzeit.
+
+      APPEND gs_upload TO gt_commt.
+      PERFORM upload_commt ON COMMIT.
+
+      COMMIT WORK.
+      IF sy-subrc <> 0.
+        MESSAGE 'commt update errr' TYPE 'A'.
+      ELSE.
+        MESSAGE 'Successfully save your comment' TYPE 'S'.
+      ENDIF.
+
+
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module MOVETODYNP OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE movetodynp OUTPUT.
+*  MOVE-CORRESPONDING gs_commt TO y09sy_tcommt.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+
+  CASE ok_code.
+    WHEN 'CANCEL'.
+      CALL SCREEN 100.
+      LEAVE.
+
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Form UPLOAD_COMMT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM upload_commt .
+  INSERT y09sy_tcommt FROM gs_upload.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form VARIANT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM variant .
+  gs_variant-report = sy-cprog.
+  gs_variant-variant = gv_save.
+  gv_save = 'A'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'CANCEL' OR 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'SEARCH200'.
+      SELECT SINGLE * FROM y09sy_dv_sample
+        INTO CORRESPONDING FIELDS OF gs_sample
+        WHERE snumber = gs_sample-snumber.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0200 OUTPUT.
+  SET PF-STATUS 'S0200'.
+  SET TITLEBAR 'T0200' WITH gs_sample-snumber.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_CONT OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_cont OUTPUT.
+
+  IF go_cont IS INITIAL.
+
+    CREATE OBJECT go_cont
+      EXPORTING
+        container_name = 'CONT'.
+
+    CREATE OBJECT go_alv
+      EXPORTING
+        i_parent = go_cont.
+
+    PERFORM field_catalog.
+    CLEAR gs_layo1.
+*gs_layo-col_opt = 'X'.
+    gs_layo1-zebra = 'X'.
+
+    CALL METHOD go_alv->set_table_for_first_display
+      EXPORTING
+        is_layout       = gs_layo1
+      CHANGING
+        it_outtab       = gt_samp
+        it_fieldcatalog = gt_fcat.
+*  ELSE.
+*    PERFORM refresh_grid.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Form FIELD_CATALOG
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM field_catalog .
+
+
+  PERFORM set_fcat USING: '' 'FIELDNAME' 'ORGEH',
+                          '' 'COLTEXT' 'ORGEH',
+                          'E' '' ''.
+  PERFORM set_fcat USING: '' 'FIELDNAME' 'TESTNUM',
+                          '' 'COLTEXT' 'TEST NUMBER',
+                          'E' '' ''.
+  PERFORM set_fcat USING: '' 'FIELDNAME' 'TESTNAME',
+                          '' 'COLTEXT' 'TESTNAME',
+                          'E' '' ''.
+  PERFORM set_fcat USING: '' 'FIELDNAME' 'EQUIPMENT',
+                          '' 'COLTEXT' 'EQUIPMENT',
+                          'E' '' ''.
+  PERFORM set_fcat USING: '' 'FIELDNAME' 'SAMPLE_TYPE',
+                          '' 'COLTEXT' 'SAMPLE TYPE',
+                          'E' '' ''.
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Module INIT OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE init OUTPUT.
+  DATA: gt_test LIKE gt_samp.
+  DATA: gt_stype TYPE TABLE OF y09sy_tsamptype,
+        gs_stype LIKE LINE OF gt_stype.
+  DATA: sst         TYPE c LENGTH 1,
+        edta        TYPE c LENGTH 1,
+        urine       TYPE c LENGTH 1,
+        swab        TYPE c LENGTH 1,
+        stool       TYPE c LENGTH 1,
+        fluid       TYPE c LENGTH 1,
+        slide       TYPE c LENGTH 1,
+        organs      TYPE c LENGTH 1,
+        sod_citrate TYPE c LENGTH 1.
+  MOVE-CORRESPONDING gt_samp TO gt_samparr.
+
+  DELETE ADJACENT DUPLICATES FROM gt_samparr COMPARING sample_type.
+  DESCRIBE TABLE gt_samparr LINES sy-tfill.
+  IF sy-tfill > 1.
+
+    SELECT * FROM y09sy_tsamptype
+      INTO CORRESPONDING FIELDS OF TABLE gt_stype.
+
+    LOOP AT gt_samparr INTO gs_samparr.
+      READ TABLE gt_stype WITH KEY sample_type = gs_samparr INTO gs_stype.
+      CASE gs_stype.
+        WHEN 'SST'.
+          sst = 'X'.
+        WHEN 'EDTA'.
+          edta = 'X'.
+        WHEN 'URINE'.
+          urine  = 'X'.
+        WHEN 'SWAB'.
+          swab  = 'X'.
+        WHEN 'STOOL'.
+          stool = 'X'.
+        WHEN 'FLUID'.
+          fluid = 'X'.
+        WHEN 'SLIDE'.
+          slide = 'X'.
+        WHEN 'ORGANS'.
+          organs = 'X'.
+        WHEN 'SOD_CITRATE'.
+          sod_citrate = 'X'.
+
+      ENDCASE.
+      CLEAR gs_samp.
+    ENDLOOP.
+
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  FROM_DYNPRO  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE from_dynpro INPUT.
+  MOVE-CORRESPONDING y09sy_tresult TO gs_samp.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module TO_DYNPRO OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE to_dynpro OUTPUT.
+  MOVE-CORRESPONDING gs_sample TO y09sy_dv_sample.
+ENDMODULE.
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> 검체 정보 조회
+* T0110 --> & Test 상세조회
+* T0200 --> & Test 상세조회
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   commt update errr
+*
+* Message class: ZCL7_PRJ_09
+*001   Error & creating object
+*002   error & alv grid
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

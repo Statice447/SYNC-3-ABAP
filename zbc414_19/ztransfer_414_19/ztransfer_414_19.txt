@@ -1,0 +1,80 @@
+*&---------------------------------------------------------------------*
+*& Report ZTRANSFER19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ztransfer_414_19.
+
+DATA: gt_scarr  TYPE TABLE OF scarr,                " Internal Table SCARR
+      gs_scarr  LIKE LINE OF gt_scarr,              " Structure SCARR
+      gs_zscarr TYPE zscarr19.                      " 복사용 zscarr Work Area
+
+DATA: gt_spfli  TYPE TABLE OF spfli,                " Internal Table SPFLI
+      gs_spfli  LIKE LINE OF gt_spfli,              " Structure SPFLI
+      gs_zspfli TYPE zspfli19.                      " 복사용 zspfli Work Area
+
+DATA: gt_scustom  TYPE TABLE OF scustom,            " Internal Table SCUSTOM
+      gs_scustom  LIKE LINE OF gt_scustom,          " Structure SCUSTOM
+      gs_zscustom TYPE zscustom19.                  " 복사용 zscustom Work Area
+
+DATA: gt_stravelag  TYPE TABLE OF stravelag,        " Internal Table TRAVELAG
+      gs_stravelag  LIKE LINE OF gt_stravelag,      " Structure TRAVELAG
+      gs_zstravelag TYPE zstravelag19.              " 복사용 ztravelag Work Area
+
+DATA: gt_sbook  TYPE TABLE OF sbook,                " Internal Table SBOOK
+      gs_sbook  LIKE LINE OF gt_sbook,              " Structure SBOOK
+      gs_zsbook TYPE zsbook19.                      " 복사용 zSBOOK Work Area
+
+DATA: gt_sflight  TYPE TABLE OF sflight,                " Internal Table SFLIGHT
+      gs_sflight  LIKE LINE OF gt_sflight,              " Structure SFLIGHT
+      gs_zsflight TYPE zsflight19.                      " 복사용 zSFLIGHT Work Area
+
+*
+*SELECT *                                      " SCARR 테이블 엔트리 복사
+*  FROM scarr INTO gs_scarr.
+*
+*  MOVE-CORRESPONDING gs_scarr TO gs_zscarr.
+*  INSERT zscarr19 FROM gs_zscarr.
+*ENDSELECT.
+
+*SELECT *                                      " SPFLI 테이블 엔트리 복사
+*  FROM spfli INTO gs_spfli.
+*
+*  MOVE-CORRESPONDING gs_scarr TO gs_zspfli.
+*  INSERT zspfli19 FROM gs_zspfli.
+*ENDSELECT.
+
+*SELECT *                                    " SCUSTOM 테이블 엔트리 복사
+*  FROM scustom INTO gs_scustom.
+*
+*  MOVE-CORRESPONDING gs_scustom TO gs_zscustom.
+*  INSERT zscustom19 FROM gs_zscustom.
+*ENDSELECT.
+
+*SELECT *                                    " TRAVELAG 테이블 엔트리 복사
+*  FROM stravelag INTO gs_stravelag.
+*
+*  MOVE-CORRESPONDING gs_stravelag TO gs_zstravelag.
+*  INSERT zstravelag19 FROM gs_zstravelag.
+*ENDSELECT.
+
+*SELECT *                                    " SBOOK 테이블 엔트리 복사
+*  FROM sbook INTO gs_sbook.
+*
+*  MOVE-CORRESPONDING gs_sbook TO gs_zsbook.
+*  INSERT zsbook19 FROM gs_zsbook.
+*ENDSELECT.
+
+SELECT *                                    " SFIGHT 테이블 엔트리 복사
+  FROM sflight INTO gs_sflight.
+
+  MOVE-CORRESPONDING gs_sflight TO gs_zsflight.
+  INSERT zsflight19 FROM gs_zsflight.
+ENDSELECT.
+
+IF sy-subrc = 0.
+  WRITE: / 'Transfer done'.                   " 성공 시 문구 출력
+ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

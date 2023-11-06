@@ -1,0 +1,104 @@
+*&---------------------------------------------------------------------*
+*& Report  SAPBC401_EXC_PROP_D1
+*&
+*&---------------------------------------------------------------------*
+*&
+*& Exception cx_invalid_planetype raised in constructor
+*&                                and handled in main program
+*&
+*&---------------------------------------------------------------------*
+
+REPORT  zbc401_19_demo_cx_e1.
+
+" SAPBC401_EXC_PROP_D1, D5까지 있으니 확인하기,
+
+TYPE-POOLS:
+   icon.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_airplane DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_airplane DEFINITION.
+
+  PUBLIC SECTION.
+
+    METHODS:
+      constructor
+        IMPORTING
+          iv_name      TYPE string
+          iv_planetype TYPE saplane-planetype
+          RAISING
+             cx_invalid_planetype.
+
+  PRIVATE SECTION.
+
+    DATA:
+      mv_name      TYPE string,
+      mv_planetype TYPE saplane-planetype.
+
+ENDCLASS.                    "lcl_airplane DEFINITION
+
+*------------------------------------------------------------------*
+*       CLASS lcl_airplane IMPLEMENTATION                          *
+*------------------------------------------------------------------*
+CLASS lcl_airplane IMPLEMENTATION.
+
+  METHOD constructor.
+
+    DATA:
+      ls_planetype TYPE saplane.
+
+    mv_name          = iv_name.
+    mv_planetype     = iv_planetype.
+
+    SELECT SINGLE * FROM saplane
+                    INTO ls_planetype
+                   WHERE planetype = iv_planetype.
+
+    IF sy-subrc <> 0.
+* Exception with default text
+      RAISE EXCEPTION TYPE cx_invalid_planetype
+        EXPORTING
+*         textid    = cx_invalid_planetype=>cx_invalid_planetype
+          planetype = iv_planetype.
+
+* Exception with alternativ text
+
+*      RAISE EXCEPTION TYPE cx_invalid_planetype
+*        EXPORTING
+*          textid    = cx_invalid_planetype=>cx_invalid_planetype_t
+*          planetype = iv_planetype.
+
+    ENDIF.
+
+  ENDMETHOD.                    "constructor
+
+ENDCLASS.                    "lcl_airplane IMPLEMENTATION
+
+DATA:
+  go_plane  TYPE REF TO lcl_airplane,
+  gx_excp   TYPE REF TO cx_invalid_planetype,
+  gv_text   TYPE string.
+
+START-OF-SELECTION.
+
+  BREAK-POINT.
+
+  TRY.
+      CREATE OBJECT go_plane
+        EXPORTING
+          iv_name      = 'LH BERLIN'
+          iv_planetype = '747-500'.
+
+    CATCH cx_invalid_planetype INTO gx_excp.
+      gv_text = gx_excp->get_text( ).
+
+      WRITE:
+       / icon_failure AS ICON,
+         gv_text.
+  ENDTRY.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

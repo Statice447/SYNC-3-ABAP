@@ -1,0 +1,47 @@
+*&---------------------------------------------------------------------*
+*& Include          MZCL7_19_TASK11_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  TRANS_FROM_TC  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE trans_from_tc INPUT.
+  MOVE-CORRESPONDING sdyn_conn to wa_view.
+
+  MODIFY itab_view FROM wa_view INDEX my_table-lines.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_VIEW  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE get_view INPUT.
+  ON CHANGE OF sflight-carrid OR
+               sflight-connid.
+
+    SELECT *
+      FROM sflview INTO CORRESPONDING FIELDS OF TABLE itab_view
+      WHERE carrid = sflight-carrid
+      AND   connid = sflight-connid.
+
+    my_table-lines = lines( itab_view ).
+
+  ENDON.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

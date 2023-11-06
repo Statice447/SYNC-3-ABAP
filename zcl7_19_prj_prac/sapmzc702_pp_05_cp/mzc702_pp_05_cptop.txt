@@ -1,0 +1,84 @@
+*&---------------------------------------------------------------------*
+*& Include MZC702_PP_05TOP                          - Module Pool      SAPMZC702_PP_05
+*&---------------------------------------------------------------------*
+PROGRAM sapmzc702_pp_05 MESSAGE-ID zc702_message.
+
+TABLES: ztc702_prdmanage, zsc702_prdord, zsc702_qmcheck, ztc702_srmanage. " 생산 수확 추가 ST, 싱글트리ALV불러올 화면 ST
+
+DATA: ok_code TYPE sy-ucomm.
+
+*************************************TREE ALV
+TYPES: node_table_type  LIKE STANDARD TABLE OF mtreesnode WITH DEFAULT KEY.
+
+DATA: tree_con_ref TYPE REF TO cl_gui_custom_container, "컨테이너 만들기
+      g_tree       TYPE REF TO cl_gui_simple_tree.        "트리 컨테이너 참조변수
+
+TYPES: BEGIN OF gty_prdmanage .
+    INCLUDE TYPE ztc702_prdmanage .
+TYPES: color TYPE c LENGTH 4,
+       light TYPE c LENGTH 1,
+       END OF gty_prdmanage .
+
+SELECTION-SCREEN BEGIN OF SCREEN 200 AS SUBSCREEN.
+
+SELECT-OPTIONS: so_pmnum FOR ztc702_prdmanage-prmnum,
+                so_ponum FOR ztc702_prdmanage-pornum,
+                so_stdat FOR ztc702_prdmanage-ppstdat.
+
+SELECTION-SCREEN END OF SCREEN 200.
+
+DATA: gt_prdmanage   TYPE TABLE OF gty_prdmanage,
+      gs_prdmanage_f TYPE gty_prdmanage,
+      gs_prdmanage   TYPE gty_prdmanage.
+
+DATA : gt_index TYPE lvc_t_row, "ALV 선택라인 저장 인터널테이블
+       gs_index LIKE LINE OF gt_index, "ALV 선택라인 저장 스트럭쳐
+       gv_lines TYPE i. "선택한 라인수를 저장할 변수
+
+
+DATA: ws_tab  TYPE ztc702_prdmanage,
+      wt_tab  TYPE TABLE OF ztc702_prdmanage,
+      wt_tab2 TYPE TABLE OF ztc702_prdmanage. " 처음 실행했을때 밑에 alv에 생산오더 번호가 보여져서 그걸 안보이게 하기 위함.
+**************************************
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,      "컨테이너
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid,              "ALV GRID
+      gv_refresh   TYPE c   LENGTH 1.
+
+DATA: y_values TYPE TABLE OF gprval WITH HEADER LINE,        " 파이 차트 그래프 및 x축 텍스트 선언
+      x_texts  TYPE TABLE OF gprtxt WITH HEADER LINE,
+      x_labels TYPE TABLE OF gprtxtla WITH HEADER LINE.
+
+DATA: gs_fcat      TYPE lvc_s_fcat,
+      gt_fcat      TYPE lvc_t_fcat,
+      gs_layout    TYPE lvc_s_layo,
+      gs_sort      TYPE lvc_s_sort,
+      gt_sort      TYPE lvc_t_sort,
+      gs_functions TYPE ui_functions,
+      gs_refto     TYPE REF TO data,
+      gs_pos       TYPE i.
+
+DATA: gv_year      TYPE n LENGTH 4,
+      gv_check     TYPE c LENGTH 1,
+      gv_pre_month TYPE sy-datum,
+      gv_month     TYPE sy-datum.
+**********************************************
+
+* 이벤트 구현
+CLASS lcl_application DEFINITION.
+  PUBLIC SECTION.
+    METHODS : handle_node_double_click
+                  FOR EVENT node_double_click OF cl_gui_simple_tree " 트리에 노드 더블 클릭시 해당 ALV나옴.
+      IMPORTING node_key.
+ENDCLASS.
+CLASS lcl_application IMPLEMENTATION.
+  METHOD handle_node_double_click.
+    PERFORM node_double_click_0100  USING node_key.
+  ENDMETHOD.
+
+ENDCLASS.
+
+DATA: g_application TYPE REF TO lcl_application.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

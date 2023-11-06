@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC414_19_E1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc414_19_e1.
+
+DATA: gt_scarr  TYPE TABLE OF scarr,          " Internal Table
+      gs_scarr  LIKE LINE OF gt_scarr,        " Structure
+      gs_zscarr TYPE zscarr19.               " 복사용 zscarr Work Area
+
+SELECT *
+  FROM scarr CLIENT SPECIFIED
+  INTO TABLE gt_scarr
+
+  WHERE mandt = '400'
+  AND currcode = 'USD'.
+
+*WRITE: / sy-subrc, sy-dbcnt.
+
+cl_demo_output=>display_data( gt_scarr ).
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

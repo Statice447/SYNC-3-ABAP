@@ -1,0 +1,34 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOL_19_E1_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_SFLIGHT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_sflight INPUT.
+  SELECT SINGLE *
+    FROM sflight INTO CORRESPONDING FIELDS OF wa_sflight
+    WHERE carrid = sdyn_conn-carrid
+    AND connid = sdyn_conn-connid
+    AND fldate = sdyn_conn-fldate.
+
+   CHECK sy-subrc <> 0.
+   CLEAR wa_sflight.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE io_command.
+    WHEN 'X'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

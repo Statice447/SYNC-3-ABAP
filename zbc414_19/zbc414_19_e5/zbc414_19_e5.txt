@@ -1,0 +1,77 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC414_19_E5
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc414_19_e5.
+
+DATA: gt_spfli TYPE TABLE OF spfli,
+      gs_spfli LIKE LINE OF gt_spfli.
+
+*gs_spfli-carrid = 'LH'.
+*gs_spfli-connid = '0007'.
+*gs_spfli-cityto = 'SINGAPRE'.                " 추후 UPDATE르 위한 오타 넣기
+*APPEND gs_spfli TO gt_spfli.
+*
+*CLEAR gs_spfli.
+*gs_spfli-carrid = 'LH'.
+*gs_spfli-connid = '0008'.
+*gs_spfli-cityto = 'MUNICH'.
+*APPEND gs_spfli TO gt_spfli.
+*
+*CLEAR gs_spfli.
+*gs_spfli-carrid = 'LH'.
+*gs_spfli-connid = '0009'.
+*gs_spfli-cityto = 'HONG KONG'.
+*APPEND gs_spfli TO gt_spfli.
+*
+*CLEAR gs_spfli.
+*
+*INSERT zspfli19 FROM TABLE gt_spfli
+*ACCEPTING DUPLICATE KEYS.                    " 중복데이터 덤프 방지
+*WRITE: / 'INSERT' , sy-subrc, 'DB Record : ', sy-dbcnt.    " 오류 번호 및 DB 카운트 출력.
+
+" 여기까지 INSERT 부분, 가급적이면 INSERT 할 때 모든 필드에 데이터를 넣을 것
+
+*CLEAR gs_spfli.
+*gs_spfli-carrid = 'LH'.
+*gs_spfli-connid = '0007'.
+*gs_spfli-cityto = 'SINGAPORE'.                " 오타 변경 UPDATE
+*APPEND gs_spfli TO gt_spfli.
+*
+*UPDATE zspfli19 FROM gs_spfli.
+*WRITE: / 'UPDATE' , sy-subrc, 'DB Record : ', sy-dbcnt.    " 오류 번호 및 DB 카운트 출력.
+
+
+" 여기까지 UPDATE 부분,   UPDATE에서 필드에 데이터를 넣지 않으면 빈 데이터로 들어간다.
+*
+*CLEAR gs_spfli.
+*gs_spfli-carrid = 'LH'.
+*gs_spfli-connid = '0007'.
+*APPEND gs_spfli TO gt_spfli.
+*
+*CLEAR gs_spfli.
+*gs_spfli-carrid = 'LH'.
+*gs_spfli-connid = '0008'.
+*APPEND gs_spfli TO gt_spfli.
+*
+*CLEAR gs_spfli.
+*gs_spfli-carrid = 'LH'.
+*gs_spfli-connid = '0009'.
+*APPEND gs_spfli TO gt_spfli.
+*
+*DELETE zspfli19 FROM TABLE gt_spfli.
+*"DELETE FROM zspfli19 WHERE carrid = '%'.       " 모든 carrid 선택 구문, 이로인해 테이블 내 모든 데이터가 삭제된다.
+*WRITE: / 'DELETE' , sy-subrc, 'DB Record : ', sy-dbcnt.    " 오류 번호 및 DB 카운트 출력.
+
+
+" 여기까지 DELETE 부분
+
+CLEAR gs_spfli.
+SELECT *
+  FROM zspfli19 INTO CORRESPONDING FIELDS OF TABLE gt_spfli.
+                                                " 테이블 확인을 위한 SELECT 문
+cl_demo_output=>display_data( gt_spfli ).       " 테이블 학인
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

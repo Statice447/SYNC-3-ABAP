@@ -1,0 +1,31 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC414_19_LAB13_TOP                     - Module Pool      ZBC414_19_LAB13
+*&---------------------------------------------------------------------*
+PROGRAM zbc414_19_lab13.
+
+TABLES: zscustom19.
+*
+*TYPES: BEGIN OF gty_zscustom19.
+*    INCLUDE TYPE zscustom19.
+*TYPES: empty TYPE i,
+*       END OF gty_zscustom19.
+*DATA: gt_zscustom19 TYPE TABLE OF gty_zscustom19,
+*      gs_zscustom19 TYPE gty_zscustom19.
+
+DATA: gt_zscustom19 TYPE TABLE OF zscustom19,
+      gs_zscustom19 TYPE zscustom19.
+
+DATA: gv_id      TYPE scustom-id,                            " gv_id
+      gv_answer  TYPE c,                                     " POPUP 체크 용
+      gv_refresh TYPE c LENGTH 1.                            " refresh alv
+
+DATA: ok_code TYPE sy-ucomm.                                 " ok_code
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,      " container
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.              " grid
+
+DATA: gt_fcat TYPE lvc_t_fcat,                               " field catalog
+      gs_fcat TYPE lvc_s_fcat.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,195 @@
+*&---------------------------------------------------------------------*
+*& Form CHANGE_DVMT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM change_dvmt .
+  DATA: ls_dvmt TYPE ztc702_dvmt.
+
+  IF ztc702_dvmt-dcode IS NOT INITIAL.
+    MESSAGE '업체코드는 바꿀 수 없습니다.' TYPE 'I'.
+  ELSE.
+    MOVE-CORRESPONDING ztc702_dvmt TO ls_dvmt.
+
+    ls_dvmt-chnam = sy-uname.
+    ls_dvmt-chdat = sy-datum.
+    ls_dvmt-chtim = sy-uzeit.
+
+    UPDATE ztc702_dvmt FROM ls_dvmt.
+
+    CLEAR gs_dvmt_f.
+    PERFORM get_dvmt.
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_SELECT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_dvmt .
+
+  SELECT *
+    FROM ztc702_dvmt INTO CORRESPONDING FIELDS OF TABLE gt_dvmt
+    ORDER BY dcode ASCENDING.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_DVMT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_dvmt .
+  DATA: lt_dvmt TYPE TABLE OF gty_dvmt.
+
+  PERFORM get_dvmt.
+
+  IF gv_check1 = 'X'.
+    LOOP AT gt_dvmt INTO gs_dvmt.
+      APPEND gs_dvmt TO lt_dvmt.
+    ENDLOOP.
+
+    SORT lt_dvmt ASCENDING BY status dcode.
+
+    CLEAR gt_dvmt.
+    gt_dvmt = lt_dvmt.
+
+  ELSEIF gv_check2 = 'X'.
+    LOOP AT gt_dvmt INTO gs_dvmt WHERE enddat < sy-datum.
+      APPEND gs_dvmt TO lt_dvmt.
+    ENDLOOP.
+
+    CLEAR gt_dvmt.
+    gt_dvmt = lt_dvmt.
+  ELSEIF gv_check3 = 'X'.
+    LOOP AT gt_dvmt INTO gs_dvmt WHERE enddat = sy-datum OR enddat > sy-datum.
+      APPEND gs_dvmt TO lt_dvmt.
+    ENDLOOP.
+
+    CLEAR gt_dvmt.
+    gt_dvmt = lt_dvmt.
+  ENDIF.
+*WHEN gv_check1.
+*  LOOP AT gt_dvmt INTO gs_dvmt.
+*    MODIFY gt_dvmt FROM gs_dvmt.
+*  ENDLOOP.
+*WHEN gv_check2.
+*  LOOP AT gt_dvmt INTO gs_dvmt WHERE enddat < sy-datum.
+*    MODIFY gt_dvmt FROM gs_dvmt.
+*  ENDLOOP.
+*WHEN gv_check3.
+*  LOOP AT gt_dvmt INTO gs_dvmt WHERE enddat = sy-datum OR enddat > sy-datum.
+*    MODIFY gt_dvmt FROM gs_dvmt.
+*  ENDLOOP.
+*ENDCASE.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_DVMT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_dvmt .
+  DATA: ls_dvmt TYPE ztc702_dvmt,
+        lv_text TYPE string.
+
+  PERFORM get_next_number CHANGING lv_text.
+
+  IF ztc702_dvmt-dcode IS NOT INITIAL.
+    MESSAGE '생성 시 업체코드를 비워두세요' TYPE 'I'.
+  ELSE.
+
+    MOVE-CORRESPONDING ztc702_dvmt TO ls_dvmt.
+
+    ls_dvmt-dcode = lv_text.
+    ls_dvmt-crnam = sy-uname.
+    ls_dvmt-erdat = sy-datum.
+    ls_dvmt-ertim = sy-uzeit.
+
+    INSERT ztc702_dvmt FROM ls_dvmt.
+
+    CLEAR gs_dvmt_f.
+    PERFORM get_dvmt.
+
+
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_NEXT_NUMBER
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_next_number CHANGING pv_text TYPE string.
+  DATA: lv_number   TYPE n,
+        lv_number_3 TYPE c LENGTH 10.
+
+  DATA: lv_text_d TYPE string,
+        lv_text_n TYPE c LENGTH 10.
+
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = '04'
+      object      = 'ZCL719FINR'
+*     toyear      = '2023'
+    IMPORTING
+      number      = lv_number.
+
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+    EXPORTING
+      input  = lv_number
+    IMPORTING
+      output = lv_number_3.
+
+*      lv_text_d = sy-datum+2(6).
+  lv_text_n = lv_number_3.
+
+  CONCATENATE 'CU' lv_text_n INTO pv_text.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form ALV_CELL
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM alv_cell .
+  CALL METHOD go_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = gt_index.
+
+  DESCRIBE TABLE gt_index LINES gv_lines.
+
+*  IF gt_index IS INITIAL.
+*    MESSAGE '라인을 선택해주세요.' TYPE 'I'.
+*  ELSEIF gv_lines > 1.
+*    MESSAGE '라인을 하나만 선택해주세요.' TYPE 'I'.
+*  ELSE.
+*    LOOP AT gt_index INTO gs_index.
+*      READ TABLE gt_data INTO gs_data INDEX gs_index-index.
+*    ENDLOOP.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

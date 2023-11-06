@@ -1,0 +1,13 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC410_SOL_19_LAB9_TOP                  - Module Pool      SAPMZBC410_SOL_19_LAB9
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZBC410_SOL_19_LAB9.
+
+DATA: gv_carrid type scarr-carrid,
+      gs_info type scarr.
+
+data: ok_code type sy-ucomm,
+      gv_subrc type sy-subrc.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

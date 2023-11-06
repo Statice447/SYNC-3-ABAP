@@ -1,0 +1,55 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_A2_19_TASK3
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_a2_19_task3.
+
+TABLES: sscrfields.
+
+DATA: gs_sflight TYPE sflight.
+
+
+PARAMETERS:      pa_car TYPE s_carr_id MODIF ID gr1.
+SELECT-OPTIONS: so_con FOR gs_sflight-connid MODIF ID gr1.
+SELECTION-SCREEN PUSHBUTTON /1(10) gv_txt USER-COMMAND on.
+
+INITIALIZATION.
+
+  gv_txt = 'Display'.
+
+AT SELECTION-SCREEN.
+
+  IF sscrfields-ucomm = 'ON'.
+    IF gv_txt = 'Display'.
+      gv_txt = 'Change'.
+    ELSEIF gv_txt = 'Change'.
+      gv_txt = 'Display'.
+    ENDIF.
+
+  ENDIF.
+
+AT SELECTION-SCREEN OUTPUT.
+  LOOP AT SCREEN.
+    IF pa_car = 'AA'.
+      CASE gv_txt.
+        WHEN 'Display'.
+          IF screen-group1 = 'GR1'.
+            screen-input = 1.
+            MODIFY SCREEN.
+          ENDIF.
+        WHEN 'Change'.
+          IF screen-group1 = 'GR1'.
+            screen-input = 0.
+            MODIFY SCREEN.
+          ENDIF.
+      ENDCASE.
+    ENDIF.
+  ENDLOOP.
+
+*Text elements
+*----------------------------------------------------------
+* 002 Display
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

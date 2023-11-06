@@ -1,0 +1,55 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E16
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_e16.
+
+TYPES: BEGIN OF gty_s_flightocc,
+         carrid TYPE sflight-carrid,
+         connid TYPE sflight-connid,
+         sumocc TYPE sflight-seatsocc,
+       END OF gty_s_flightocc.
+
+*DATA: gt_flightocc TYPE TABLE OF gty_s_flightocc.
+*
+*SELECT carrid connid SUM( seatsocc )
+*        FROM sflight
+*        INTO TABLE gt_flightocc
+*        WHERE fldate > '20090101'
+*        GROUP BY carrid connid.
+*        "HAVING SUM( seatsocc ) < 500.
+*
+*cl_demo_output=>display_data( gt_flightocc ).
+*
+TYPES: gty_t_table TYPE STANDARD TABLE OF gty_s_flightocc WITH NON-UNIQUE KEY connid.
+
+PARAMETERS pa_order TYPE c DEFAULT 'X'.
+DATA gt_flight TYPE gty_t_table.
+
+
+PERFORM call_orderby
+    CHANGING gt_flight.
+
+FORM call_orderby
+  CHANGING ct_flight TYPE gty_t_table.
+
+  CASE pa_order.
+    WHEN 'X'.
+      WRITE / 'No data'.
+    WHEN OTHERS.
+      SELECT carrid connid SUM( seatsocc )
+        INTO TABLE ct_flight
+              FROM sflight
+
+              WHERE fldate > '20090101'
+              GROUP BY carrid connid
+              HAVING SUM( seatsocc ) > 100.
+
+
+      cl_demo_output=>display_data( ct_flight ).
+  ENDCASE.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

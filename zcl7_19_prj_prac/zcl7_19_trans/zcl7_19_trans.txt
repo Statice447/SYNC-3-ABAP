@@ -1,0 +1,39 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_19_TRANS
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_19_trans.
+*
+*
+*DATA: gs_y03se  TYPE y03se_ppt_prod,
+*      gs_zy03se TYPE y03se_ppt_prod_c.
+*
+*DATA: gs_mtiv TYPE y19_fi_prac,
+*      gs_zmtiv TYPE y19_fi_prac.
+
+DATA: gs_y19mm  TYPE ztc702_mtiv,
+      gs_zy19mm TYPE y19_mm_inv.
+
+*SELECT *
+*  FROM ztc702_account
+*  INTO CORRESPONDING FIELDS OF gs_y19fi .
+*
+*  MOVE-CORRESPONDING gs_y19fi   TO gs_zy19fi .
+*  INSERT y19_fi_prac FROM gs_zy19fi.
+*ENDSELECT.
+
+SELECT *
+  FROM ztc702_mtiv
+  INTO CORRESPONDING FIELDS OF gs_y19mm .
+
+  MOVE-CORRESPONDING gs_y19mm   TO gs_zy19mm .
+  INSERT y19_mm_inv FROM gs_zy19mm.
+ENDSELECT.
+
+IF sy-subrc = 0.
+  WRITE: / 'Transfer done'.
+ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

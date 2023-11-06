@@ -1,0 +1,38 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_NEW_DATA_ELEMENTS
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc430_19_e2_structure.
+
+*PARAMETERS: pa_fname TYPE znew_firstname19,
+*            pa_lname TYPE znew_lastname19,
+*            pa_activ TYPE znew_asset19,
+*            pa_liabs TYPE znew_liabilities19.
+*
+*WRITE: /'first name : ',15 pa_fname,
+*       /'last  name : ',15 pa_lname,
+*       /'asset : ',15 pa_activ,
+*       /'liabs : ',15 pa_liabs.
+
+DATA wa_person TYPE zperson19.
+
+START-OF-SELECTION.
+
+  wa_person-name-firstname = 'Harry'.
+  wa_person-name-lastname = 'Potter'.
+
+  wa_person-street = 'Privet Drive'.
+  wa_person-nr = '3'.
+  wa_person-zip = 'GB-10889'.
+  wa_person-city = 'London'.
+
+  WRITE:  / wa_person-name-firstname,
+          / wa_person-name-lastname,
+          / wa_person-street,
+          / wa_person-nr,
+          / wa_person-zip,
+          / wa_person-city.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

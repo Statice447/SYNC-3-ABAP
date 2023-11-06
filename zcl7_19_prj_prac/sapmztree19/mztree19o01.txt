@@ -1,0 +1,70 @@
+*&---------------------------------------------------------------------*
+*& Include          MZTREE19O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_CONTAINER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_container OUTPUT.
+  IF g_custom_con IS INITIAL. "PBO Module이  실행될때마다 실행되면 안되므로 커스텀컨테이너가 비어있을때만 로직을 수행한다.
+
+* 화면 100에 생성한 HD_CON을 참조하여 오브젝트 생성
+    CREATE OBJECT g_custom_con
+      EXPORTING
+        container_name = 'ALV1'.
+
+* ALV_CON위에 ALV 오브젝트를 생성한다.
+    CREATE OBJECT g_alv
+      EXPORTING
+        i_parent = g_custom_con.
+
+*    PERFORM make_fieldcat.      "필드 카탈로그 설정
+
+* ALV 출력
+    CALL METHOD g_alv->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZTC702_BOM_I'
+        is_layout        = gs_layo
+      CHANGING
+        it_outtab        = gt_tab.
+*        it_fieldcatalog = gt_fieldcat.
+  ELSE.
+    PERFORM refresh_grid.
+  ENDIF.
+
+ENDMODULE.
+
+MODULE init_tree OUTPUT.
+  PERFORM display_data.
+  IF g_tree IS INITIAL.
+    CREATE OBJECT tree_con_ref
+      EXPORTING
+        container_name = 'TREE1'.
+    PERFORM create_tree.
+  ELSE.
+
+    g_tree->free( ).
+    PERFORM create_tree.
+  ENDIF.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,104 @@
+*&---------------------------------------------------------------------*
+*& Report zadbc_00
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zadbc_19.
+
+DATA: go_conn       TYPE REF TO cl_sql_connection,
+      go_stmt       TYPE REF TO cl_sql_statement,
+      go_result_set TYPE REF TO cl_sql_result_set,
+      gx_excp       TYPE REF TO cx_sql_exception,
+      gt_carrier    TYPE TABLE OF scarr,
+      gr_carrier    TYPE REF TO data,
+      gv_sql        TYPE string.
+
+PARAMETERS: p_cur TYPE scarr-currcode.
+
+GET REFERENCE OF gt_carrier INTO gr_carrier.
+
+TRY.
+
+* 1.  Start by getting a reference to the DB Connection
+    "(only mandatory for accessing secondary database):
+**********************************************************************
+    go_conn = cl_sql_connection=>get_connection( con_name = 'DEFAULT' ). " 로컬이 HANA DB라서 DEFAULT로 넣음
+
+* 2. Use the connection to create a statement object
+**********************************************************************
+    CREATE OBJECT go_stmt
+      EXPORTING
+        con_ref = go_conn.   " Database Connection
+
+
+* 3. Construct the code of the SQL statement in a string.
+**********************************************************************
+    " Note the following:
+    " - Columns in the SELECT clause must be separated by commas (the same applies to GROUP BY and ORDER BY)
+    " - There is no automatic client handling in Native SQL
+    " - There is no syntax check!
+    gv_sql = | select * from sapabap1.scarr        | &&
+             |   where mandt = '{ sy-mandt }' and  | &&                 " 파이프라인 안에 있는 구문은 에러를 잡지 못함
+             |         currcode = '{ p_cur }'      |.                   " 그러므로 예외처리로 오류를 잡아줘야한다(?)
+
+* 4. Execute the statement. This returns an object of type CL_SQL_RESULT_SET
+**********************************************************************
+    go_result_set = go_stmt->execute_query( statement = gv_sql ).
+
+* 5. Assign target variable for result set
+**********************************************************************
+    "Attach the internal table to a data reference.
+    GET REFERENCE OF gt_carrier INTO gr_carrier.
+
+    " Pass the data reference to the SQL result set
+    go_result_set->set_param_table( gr_carrier ).
+
+* 6. get the results
+**********************************************************************
+    go_result_set->next_package( ).
+
+
+* 7. close result set to release resources
+**********************************************************************
+    go_result_set->close(  ).
+
+
+* Display the results using ALV Object Model
+*
+    cl_demo_output=>display_data( gt_carrier ).
+
+  CATCH cx_sql_exception INTO gx_excp.
+    message gx_excp->get_text( ) type 'I'.
+
+
+ENDTRY.
+*
+*TRY.
+**    go_sql_conn = cl_sql_connection=>get_connection( 'DEFAULT' ).
+**    go_sql_stmt = go_sql_conn->create_statement(  ).
+*    CREATE OBJECT go_sql_stmt
+*      EXPORTING
+*        con_ref = cl_sql_connection=>get_connection( 'DEFA0ULT' ).
+*
+**     lv_Sql = | select * from sapabap1.scarr      | &&
+**              |   where mandt = '{ sy-mandt } and | &&
+**              |         currcode = '{ p_cur }     |.
+**
+**     lo_sql_result = lo_sql_stmt->execute_query( lv_sql ).
+**     lo_sql_result->set_param_table( lr_carrier ).
+*    CONCATENATE 'select * from sapabp1.scarr '
+*
+*
+*
+*
+*
+*catch.
+*
+*
+*ENDTRY.
+*
+*
+*
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

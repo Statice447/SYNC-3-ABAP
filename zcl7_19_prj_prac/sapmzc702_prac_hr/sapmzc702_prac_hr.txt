@@ -1,0 +1,25 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZC702_HR_01
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE MZC702_PRAC_HRTOP.
+*INCLUDE mzc702_hr_01top                         .    " Global Data
+
+INCLUDE MZC702_PRAC_HRO01.
+*INCLUDE mzc702_hr_01o01                         .  " PBO-Modules
+INCLUDE MZC702_PRAC_HRI01.
+*INCLUDE mzc702_hr_01i01                         .  " PAI-Modules
+INCLUDE MZC702_PRAC_HRF01.
+*INCLUDE mzc702_hr_01f01                         .  " FORM-Routines
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   사원번호는 변경할 수 없습니다.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

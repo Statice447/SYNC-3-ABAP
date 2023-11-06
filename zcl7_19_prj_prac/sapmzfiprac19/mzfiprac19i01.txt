@@ -1,0 +1,78 @@
+*&---------------------------------------------------------------------*
+*& Include          MZFIPRAC19I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT' OR 'CANC'.
+      LEAVE PROGRAM.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'CREATE'.
+      PERFORM create_docu.
+
+    WHEN 'ADD'.
+      PERFORM add_itab.
+
+    WHEN 'DELETE'.
+      PERFORM alv_row_delete.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_DOCUTYPE  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_docutype INPUT.
+  CASE ok_code.
+    WHEN 'TYPE'.
+      DATA: lv_type  TYPE zfidocu_19-docutype,
+            lv_type2 TYPE zfidocu_19-docutype.
+
+      IF lv_type IS NOT INITIAL.
+        lv_type2 = lv_type.
+        lv_type = zfidocu_19-docutype.
+
+        CALL FUNCTION 'POPUP_TO_CONFIRM'
+          EXPORTING
+            text_question         = '전표 유형을 변경하시면 지금까지 작업이 초기화 됩니다. 진행하시겠습니까?'
+            text_button_1         = '예'
+            text_button_2         = '아니오'
+            display_cancel_button = space
+          IMPORTING
+            answer                = gv_answer.
+
+        IF gv_answer = 1.
+          CLEAR: gt_fiprac, zfidocu_19-acccode, zfidocu_19-accname, zfidocu_19-gdname .
+        ELSE.
+          zfidocu_19-docutype = lv_type2.
+        ENDIF.
+
+      ELSE.
+
+        lv_type = zfidocu_19-docutype.
+
+      ENDIF.
+
+  ENDCASE.
+
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

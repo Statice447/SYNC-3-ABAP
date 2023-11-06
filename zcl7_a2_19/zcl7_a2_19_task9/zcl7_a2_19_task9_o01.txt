@@ -1,0 +1,192 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_19_LAB13_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100' WITH gv_id.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_AND_TRANSFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_and_transfer OUTPUT.
+  IF go_container IS INITIAL.               " 컨테이너 생성 확인
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'MY_AREA'
+      EXCEPTIONS
+        OTHERS         = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+
+    ENDIF.
+
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container
+      EXCEPTIONS
+        OTHERS   = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+    ENDIF.
+
+    gv_refresh = abap_true.                " 생성 할 경우 트루 설정
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+
+    gs_layout-zebra      = 'X'.             " 실행 시킨다는 의미의 X(체크 표시) 색깔 번갈아서
+    gs_layout-cwidth_opt = 'X'.             " 실행 시킨다는 의미의 X(체크 표시) 크기 정렬  5권 p.154
+
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CARRID'.
+    gs_fcat-ref_field = 'CARRID'.
+    gs_fcat-ref_table = 'ZSBOOK19'.
+    gs_fcat-col_pos   = 1.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CONNID'.
+    gs_fcat-ref_field = 'CONNID'.
+    gs_fcat-ref_table = 'ZSBOOK19'.
+    gs_fcat-col_pos   = 2.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'FLDATE'.
+    gs_fcat-ref_field = 'FLDATE'.
+    gs_fcat-ref_table = 'ZSBOOK19'.
+    gs_fcat-col_pos   = 3.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'BOOKID'.
+    gs_fcat-ref_field = 'BOOKID'.
+    gs_fcat-ref_table = 'ZSBOOK19'.
+    gs_fcat-col_pos   = 4.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CUSTOMID'.
+    gs_fcat-ref_field = 'CUSTOMID'.
+    gs_fcat-ref_table = 'ZSBOOK19'.
+    gs_fcat-col_pos   = 5.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CUSTTYPE'.
+    gs_fcat-ref_field = 'CUSTTYPE'.
+    gs_fcat-ref_table = 'ZSBOOK19'.
+    gs_fcat-col_pos   = 6.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'NEW_CUST'.
+    gs_fcat-ref_field = 'NEW_CUST'.
+    gs_fcat-ref_table = 'GTY_SBOOK'.
+    gs_fcat-coltext = 'New Customer Type'.
+    gs_fcat-col_pos   = 7.
+    APPEND gs_fcat TO gt_fcat.
+
+
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_default       = 'X'
+        is_layout       = gs_layout
+      CHANGING
+        it_outtab       = gt_sbook
+        it_fieldcatalog = gt_fcat
+*       it_sort         =
+      EXCEPTIONS
+        OTHERS          = 1.
+
+    gv_refresh = abap_false.                     " 그리드 생성 이후 새로고침을 위한 False로 설정
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).       " 생성된 ALV 새로고침
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'                   " Popup 함수 호출
+        EXPORTING
+          titlebar              = 'Change Customer Type'
+          text_question         = '변경이 취소 처리됩니다. 그래도 계속 진행하시겠습니까?'
+          text_button_1         = 'Yes'
+          text_button_2         = 'No'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = gv_answer.             " 버튼 확인
+
+      IF sy-subrc <> 0.
+        " no Action
+      ENDIF.
+
+      IF gv_answer = 1.
+        CALL FUNCTION 'DEQUEUE_ALL'. " 200 스크린에서 BACK 할 경우 Lock 해제
+        CLEAR: zsbook19, zscustom19.
+        LEAVE TO SCREEN 0.
+
+      ENDIF.
+
+    WHEN 'CHANGE'.
+      CALL FUNCTION 'ZFM_19_UPDATE' IN UPDATE TASK
+        EXPORTING
+          iv_id       = gv_id
+          iv_custtype = gs_sbook-new_cust
+        EXCEPTIONS
+          error       = 1
+          OTHERS      = 2.
+
+      IF sy-subrc = 0.
+        MESSAGE i001(zcl7_a2_19) WITH gv_id.
+      ENDIF.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+      go_alv_grid->refresh_table_display( ).
+      CLEAR: zscustom19, zsbook19.
+      COMMIT WORK.
+
+      LEAVE TO SCREEN 0.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0200 OUTPUT.
+  SET PF-STATUS 'S0200'.
+  SET TITLEBAR 'T0200' WITH gv_id.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

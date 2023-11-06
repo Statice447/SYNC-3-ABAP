@@ -1,0 +1,57 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_19_TASK3
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_19_task3.
+
+* self_define 선언
+TYPES: BEGIN OF gty_sflight,
+         carrid     TYPE bc400_s_flight-carrid,
+         connid     TYPE bc400_s_flight-connid,
+         fldate     TYPE bc400_s_flight-fldate,
+         seatsmax   TYPE bc400_s_flight-seatsmax,
+         seatsocc   TYPE bc400_s_flight-seatsocc,
+         percentage TYPE bc400_s_flight-percentage,
+       END OF gty_sflight.
+
+* 인터널 테이블 및 스트럭처 선언
+DATA: gt_sflight TYPE TABLE OF gty_sflight,
+      gs_sflight LIKE LINE OF gt_sflight.
+
+* 파라미터 선언
+PARAMETERS: pa_car  TYPE bc400_s_flight-carrid,
+            pa_con  TYPE bc400_s_flight-connid,
+            pa_date TYPE bc400_s_flight-fldate.
+
+CALL FUNCTION 'ZFM_CL7_19_TASK3'
+  EXPORTING
+    iv_carrid  = pa_car
+    iv_connid  = pa_con
+    iv_fldate  = pa_date
+  IMPORTING
+    es_flight  = gs_sflight
+  EXCEPTIONS
+    ex_no_data = 1
+    ex_no_auth = 2
+    OTHERS     = 3.
+IF sy-subrc = 0.
+* no Action
+ELSEIF sy-subrc = 1.
+  WRITE: / '데이터를 입력하세요'.
+ELSEIF sy-subrc = 2.
+  WRITE: / '권한 없음'.
+ELSEIF sy-subrc = 3.
+  WRITE:/ '알 수 없는 오류'.
+
+ENDIF.
+
+  WRITE: / gs_sflight-carrid,
+           gs_sflight-connid,
+           gs_sflight-fldate,
+           gs_sflight-seatsmax,
+           gs_sflight-seatsocc,
+           gs_sflight-percentage,'%'.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

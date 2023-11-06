@@ -1,0 +1,49 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E3
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_e3.
+
+DATA: gs_flight TYPE sflight,
+      gt_flight LIKE TABLE OF gs_flight.
+
+SELECT-OPTIONS: so_carr FOR gs_flight-carrid DEFAULT 'AA' OBLIGATORY,
+                so_fldt FOR gs_flight-fldate NO-EXTENSION NO INTERVALS.
+
+SELECT carrid connid fldate price currency
+  FROM sflight INTO CORRESPONDING FIELDS OF gs_flight
+  WHERE carrid IN so_carr
+  AND   fldate IN so_fldt.
+ENDSELECT.
+
+PERFORM data_output.
+PERFORM data_output2.
+*&---------------------------------------------------------------------*
+*& Form DATA_OUTPUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM data_output.
+  LOOP AT so_carr.
+    WRITE: / so_carr-sign, so_carr-option, so_carr-low, so_carr-high.
+
+  ENDLOOP.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DATA_OUTPUT2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM data_output2 .
+    WRITE: / gs_flight-carrid, gs_flight-connid, gs_flight-fldate, gs_flight-price, gs_flight-currency.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

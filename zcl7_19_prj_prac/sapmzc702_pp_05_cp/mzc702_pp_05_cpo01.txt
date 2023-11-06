@@ -1,0 +1,168 @@
+*&---------------------------------------------------------------------*
+*& Include          MZC702_PP_05O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_ALV OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_alv OUTPUT.
+**** 최초 컨테이너 생성 시
+  IF go_container IS INITIAL.
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'PRD_ALV'.
+    gv_refresh     = abap_true.             " 리프레시 체크
+  ENDIF.
+
+***** 최초 ALV 생성 시
+  IF gv_refresh = abap_true.                " 리프레시 확인
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container.
+
+***** ALV 핸들러 설정
+*    SET HANDLER lcl_handler=>on_double_click FOR go_alv_grid_100.
+
+***** ALV 레이아웃 및 필드카탈로그 설정
+    PERFORM set_layout.
+    PERFORM set_fcat.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+*       i_structure_name = 'ZTC702_PRDMANAGE'
+*       is_variant      = gs_variant
+*       i_save          = gv_save
+        i_default       = 'X'
+        is_layout       = gs_layout
+      CHANGING
+        it_outtab       = gt_prdmanage
+        it_fieldcatalog = gt_fcat
+*       it_sort         =
+*       it_filter       =
+      EXCEPTIONS
+        OTHERS          = 4.
+    IF sy-subrc <> 0.
+*       Implement suitable error handling here
+    ENDIF.
+
+    gv_refresh = abap_false.                    " 리프레시 해제
+
+  ELSE.                                         " 기존 ALV가 있을경우 리프레시
+    go_alv_grid->refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE init_100 OUTPUT.
+
+***** 초기 연도 및 생산시작일 설정.
+  PERFORM set_year_month.
+
+**** 매일 채번 초기화를 위한 로직
+  PERFORM reset_number_range.
+
+**** ALV 리스트 번호 순으로 정렬
+  SORT gt_prdmanage ASCENDING BY prmnum.
+
+**** ALV LOOP문
+  LOOP AT gt_prdmanage INTO gs_prdmanage.
+
+**** 삭제플래그 체크 시 ROW 색 변경
+    IF gs_prdmanage-delflag = 'X'.
+      gs_prdmanage-color = 'C610'.
+    ENDIF.
+
+**** 상태플래그에 따른 신호등 색 설정 ( 0 : 생산 중, 2: 생산 완료 및 검수 대기, 3: 최종 검수 완료)
+    IF gs_prdmanage-status = '2'.
+      gs_prdmanage-light = '2'.
+    ELSEIF gs_prdmanage-status = '3'.
+      gs_prdmanage-light = '3'.
+    ENDIF.
+
+    MODIFY gt_prdmanage FROM gs_prdmanage TRANSPORTING color light.
+  ENDLOOP.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_TREE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE init_tree OUTPUT.
+  SELECT * FROM ztc702_prdmanage
+    INTO CORRESPONDING FIELDS OF TABLE wt_tab.
+
+  IF g_tree IS INITIAL.
+    CREATE OBJECT tree_con_ref
+      EXPORTING
+        container_name = 'TREE1'.
+    PERFORM create_tree.
+*  ELSE.
+*    g_tree->update_calculations( no_frontend_update = ' ' ).
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0110 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0110 OUTPUT.
+  SET PF-STATUS 'S0110'.
+  SET TITLEBAR 'T0110'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_PIE_CHART OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_pie_chart OUTPUT.
+  PERFORM create_pie_chart.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0120 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0120 OUTPUT.
+  SET PF-STATUS 'S0120'.
+  SET TITLEBAR 'T0120'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_120 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE init_120 OUTPUT.
+  CLEAR zsc702_qmcheck.
+  zsc702_qmcheck-unit_o = 'EA'.
+  zsc702_qmcheck-unit_x = 'EA'.
+
+  PERFORM get_qmfield.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

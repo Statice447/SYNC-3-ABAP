@@ -1,0 +1,51 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E5
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_e5.
+
+DATA: gs_flight  TYPE sflight,
+      gs_booking TYPE sbook.
+SELECT-OPTIONS: so_car FOR gs_booking-carrid.
+
+*SELECTION-SCREEN BEGIN OF BLOCK carr WITH FRAME.
+*
+*SELECT-OPTIONS: so_carr FOR gs_flight-carrid,
+*                so_fldt FOR gs_flight-fldate.
+*
+*SELECTION-SCREEN END OF BLOCK carr.
+*
+*SELECTION-SCREEN BEGIN OF BLOCK limit1 WITH FRAME TITLE TEXT-001.
+*  SELECTION-SCREEN BEGIN OF BLOCK limit2 WITH FRAME TITLE TEXT-002.
+*
+*    PARAMETERS: pa_occ RADIOBUTTON GROUP lim DEFAULT 'X',
+*                pa_fre RADIOBUTTON GROUP lim,
+*                pa_all RADIOBUTTON GROUP lim.
+*
+*  SELECTION-SCREEN END OF BLOCK limit2.
+*
+*  SELECTION-SCREEN BEGIN OF LINE.
+*
+*    SELECTION-SCREEN COMMENT 1(20) TEXT-s03.        " 1st Position
+*
+*    SELECTION-SCREEN COMMENT pos_low(10) TEXT-s04.  " 2nd Position
+*      PARAMETERS pa_col AS CHECKBOX.
+*
+*    SELECTION-SCREEN COMMENT pos_high(8) TEXT-s05.  " 3rd Position
+*      PARAMETERS pa_ico AS CHECKBOX.
+*
+*  SELECTION-SCREEN END OF LINE.
+*
+*SELECTION-SCREEN END OF BLOCK limit1.
+
+*Text elements
+*----------------------------------------------------------
+* 001 Outer Lines
+* 002 Inner Lines
+* S03 Monday
+* S04 Wednesday
+* S05 Friday
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,93 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_e2.
+
+TYPES: BEGIN OF gty_sflights,
+         carrid   TYPE scarr-carrid,
+         connid   TYPE spfli-connid,
+         fldate   TYPE sflight-fldate,
+         price    TYPE sflight-price,
+         currency TYPE sflight-currency,
+       END OF gty_sflights.
+
+DATA: gt_sflights TYPE TABLE OF gty_sflights,
+      gs_sflights LIKE LINE OF gt_sflights.
+
+PARAMETERS: pa_carr TYPE sflight-carrid,
+            pa_name AS CHECKBOX DEFAULT 'X',
+            pa_curr AS CHECKBOX DEFAULT 'X',
+            pa_lim1 RADIOBUTTON GROUP lim DEFAULT 'X',
+            pa_lim2 RADIOBUTTON GROUP lim,
+            pa_lim3 RADIOBUTTON GROUP lim.
+
+CONSTANTS gc_mark VALUE 'X'.
+
+IF pa_name EQ gc_mark.
+  DATA: lt_scarr TYPE TABLE OF scarr,
+        ls_scarr LIKE LINE OF lt_scarr.
+
+  SELECT SINGLE carrname
+    FROM scarr INTO CORRESPONDING FIELDS OF ls_scarr
+    WHERE carrid = pa_carr.
+
+  WRITE: / TEXT-002, ls_scarr-carrname.
+ENDIF.
+
+*IF pa_curr EQ gc_mark.
+*  WRITE: / 'pa_curr', pa_carr.
+*ENDIF.
+
+CASE gc_mark.
+  WHEN pa_lim1.
+    SELECT carrid connid fldate price currency
+      FROM sflight INTO CORRESPONDING FIELDS OF TABLE gt_sflights
+      WHERE carrid = pa_carr
+      AND   price < 500.
+
+    LOOP AT gt_sflights INTO gs_sflights.
+      WRITE:/ gs_sflights-carrid,
+              gs_sflights-connid,
+              gs_sflights-fldate,
+              gs_sflights-price,
+              gs_sflights-currency.
+    ENDLOOP.
+
+  WHEN pa_lim2.
+    SELECT carrid connid fldate price currency
+      FROM sflight INTO TABLE gt_sflights
+      WHERE carrid = pa_carr
+      AND   price > 500
+      and   price < 1000.
+
+    LOOP AT gt_sflights INTO gs_sflights.
+      WRITE:/ gs_sflights-carrid,
+              gs_sflights-connid,
+              gs_sflights-fldate,
+              gs_sflights-price,
+              gs_sflights-currency.
+    ENDLOOP.
+  WHEN pa_lim3.
+      SELECT carrid connid fldate price currency
+      FROM sflight INTO TABLE gt_sflights
+      WHERE carrid = pa_carr
+      AND   price > 1000
+      and   price < 1500.
+
+    LOOP AT gt_sflights INTO gs_sflights.
+      WRITE:/ gs_sflights-carrid,
+              gs_sflights-connid,
+              gs_sflights-fldate,
+              gs_sflights-price,
+              gs_sflights-currency.
+    ENDLOOP.
+ENDCASE.
+
+*Text elements
+*----------------------------------------------------------
+* 002 Local currency
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,46 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_ALV_DEMO2_19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_dv_e2.
+
+
+
+DATA: gt_flights  TYPE TABLE OF sv_flights,
+      gs_flights  LIKE LINE OF gt_flights,
+      go_alv_grid TYPE REF TO cl_gui_alv_grid..
+
+
+SELECT-OPTIONS: so_cityf FOR gs_flights-cityfrom,
+                so_cityt FOR gs_flights-cityto.
+
+
+START-OF-SELECTION.
+
+
+* Data retribal
+START-OF-SELECTION.
+
+  WRITE: space.
+  SELECT carrid carrname connid cityfrom cityto fldate seatsmax seatsocc
+    FROM sv_flights INTO CORRESPONDING FIELDS OF TABLE gt_flights
+    WHERE cityfrom IN so_cityf
+  AND cityto IN so_cityt
+  AND seatsocc < sv_flights~seatsmax
+  ORDER BY carrid connid fldate.
+
+
+
+  CREATE OBJECT go_alv_grid
+    EXPORTING
+      i_parent = cl_gui_custom_container=>screen0.
+
+  go_alv_grid->set_table_for_first_display(
+    EXPORTING
+      i_structure_name = 'SV_FLIGHTS'
+    CHANGING
+      it_outtab        = gt_flights ).
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

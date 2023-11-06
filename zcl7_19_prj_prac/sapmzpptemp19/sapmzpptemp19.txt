@@ -1,0 +1,14 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZPPTEMP19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzpptemp19_top                          .    " Global Data
+
+INCLUDE mzpptemp19_o01                          .  " PBO-Modules
+INCLUDE mzpptemp19_i01                          .  " PAI-Modules
+INCLUDE mzpptemp19_f01                          .  " FORM-Routines
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

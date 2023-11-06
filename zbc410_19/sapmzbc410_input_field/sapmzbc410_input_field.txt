@@ -1,0 +1,43 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZBC410_SOLUTION_19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzbc410_input_fieldtop.
+*INCLUDE mzbc410_solution_19top                  .    " Global Data
+
+INCLUDE mzbc410_input_fieldo01.
+*INCLUDE mzbc410_solution_19o01                  .  " PBO-Modules
+INCLUDE mzbc410_input_fieldi01.
+*INCLUDE mzbc410_solution_19i01                  .  " PAI-Modules
+INCLUDE mzbc410_input_fieldf01.
+*INCLUDE mzbc410_solution_19f01                  .  " FORM-Routines
+
+INCLUDE mzbc410_solution_19e01.
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> Title_100 (&1)
+* T0150 --> Time (&1)
+
+*Text elements
+*----------------------------------------------------------
+* BOO Maintain Bookings
+* FLI Maintain flight
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: BC410
+*008   Error when changing
+*009   Change successful
+*109   No. of places booked exceeds capacity
+*555   & & & &
+*
+* Message class: ZBC410_19
+*007   &
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

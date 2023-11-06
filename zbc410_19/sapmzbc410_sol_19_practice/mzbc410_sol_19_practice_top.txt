@@ -1,0 +1,29 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC410_SOL_19_PRACTICE_TOP              - Module Pool      SAPMZBC410_SOL_19_PRACTICE
+*&---------------------------------------------------------------------*
+PROGRAM sapmzbc410_sol_19_practice.
+*tabstrip 선언
+CONTROLS: my_tabstrip type TABSTRIP,
+          my_table_control TYPE TABLEVIEW USING SCREEN '130'.
+
+TABLES: sdyn_conn, saplane, sdyn_book.
+
+DATA: ok_code    TYPE sy-ucomm,
+      dynnr      TYPE sy-dynnr,
+      dynnr2     TYPE sy-dynnr,
+      wa_spfli   TYPE spfli,
+      wa_sflight TYPE sflight,
+      wa_saplane type saplane.
+
+* 라디오 버튼 데이터 선언
+DATA: gv_rad1   TYPE c LENGTH 1 VALUE 'X',
+      gv_rad2   LIKE gv_rad1,
+      gv_rad3   LIKE gv_rad1.
+
+*테이블 컨트롤을 위한 스트럭처와 인터널 테이블 선언
+
+DATA: gs_book type sdyn_book,
+      itab_book like TABLE OF gs_book.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

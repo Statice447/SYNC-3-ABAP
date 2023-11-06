@@ -1,0 +1,160 @@
+*&---------------------------------------------------------------------*
+*& Include          MZPPPRACF01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_PLANT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_plant .
+  SELECT *
+    FROM ztc702_plant INTO CORRESPONDING FIELDS OF TABLE gt_plant.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form INSERT_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM insert_data .
+  DATA: ls_plant TYPE ztc702_plant.
+*
+*  ls_plant-plcode = zsplant_19-plcode.
+*  ls_plant-plname = zsplant_19-plname.
+*  ls_plant-pname = zsplant_19-pname.
+*  ls_plant-plcont = zsplant_19-plcont.
+*  ls_plant-pladr = zsplant_19-pladr.
+*
+  MOVE-CORRESPONDING zsc702_plantmaster TO ls_plant.
+
+  ls_plant-crnam = sy-uname.
+  ls_plant-erdat = sy-datum.
+  ls_plant-ertim = sy-uzeit.
+
+  INSERT ztc702_plant FROM ls_plant.
+
+  SELECT *
+  FROM ztc702_plant INTO CORRESPONDING FIELDS OF TABLE gt_plant.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form UPDATE_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM update_data .
+  DATA: ls_plant     TYPE ztc702_plant,
+        lt_all_plant TYPE TABLE OF ztc702_plant,
+        ls_all_plant TYPE ztc702_plant.
+
+  SELECT *
+    FROM ztc702_plant INTO CORRESPONDING FIELDS OF TABLE lt_all_plant.
+
+  LOOP AT gt_index INTO gs_index.
+    READ TABLE lt_all_plant INTO ls_all_plant INDEX gs_index.
+  ENDLOOP.
+
+  MOVE-CORRESPONDING ls_all_plant TO ls_plant.
+  MOVE-CORRESPONDING zsc702_plantmaster TO ls_plant.
+
+  ls_plant-chnam = sy-uname.
+  ls_plant-chdat = sy-datum.
+  ls_plant-chtim = sy-uzeit.
+
+  MODIFY ztc702_plant FROM ls_plant.
+
+  SELECT *
+    FROM ztc702_plant INTO CORRESPONDING FIELDS OF TABLE gt_plant.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DELETE_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM delete_data .
+  DATA: ls_plant TYPE zsc702_plantmaster.
+
+  LOOP AT gt_index INTO gs_index.
+    READ TABLE gt_plant INTO ls_plant INDEX gs_index.
+  ENDLOOP.
+
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      text_question         = '공장 데이터를 삭제 하시겠습니까?'
+      text_button_1         = '예'
+      text_button_2         = '아니오'
+      display_cancel_button = space
+    IMPORTING
+      answer                = gv_answer.
+
+  IF gv_answer = 1.
+    DELETE FROM ztc702_plant WHERE plcode = ls_plant-plcode.
+  ENDIF.
+
+  SELECT *
+    FROM ztc702_plant INTO CORRESPONDING FIELDS OF TABLE gt_plant.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FIELD_CATALOG
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_field_catalog .
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PLCODE'.
+  gs_fcat-coltext = '공장코드'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PLADR'.
+  gs_fcat-col_pos = 7.
+  gs_fcat-coltext = '주소'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PNAME'.
+  gs_fcat-coltext = '공장장'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PERNR'.
+  gs_fcat-coltext = '담당자번호'.
+  APPEND gs_fcat TO gt_fcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_layout .
+
+  gs_layout-cwidth_opt = 'X'.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

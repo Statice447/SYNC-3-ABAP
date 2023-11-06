@@ -1,0 +1,30 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZC702_MM_04
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE MZC702_MM_04_TEMPTOP.
+*INCLUDE MZC702_MM_04TOP                         .  " Global Data
+INCLUDE MZC702_MM_04_TEMPC01.
+*INCLUDE MZC702_MM_04C01                         .  " Class
+INCLUDE MZC702_MM_04_TEMPO01.
+*INCLUDE MZC702_MM_04O01                         .  " PBO-Modules
+INCLUDE MZC702_MM_04_TEMPI01.
+*INCLUDE MZC702_MM_04I01                         .  " PAI-Modules
+INCLUDE MZC702_MM_04_TEMPF01.
+*INCLUDE MZC702_MM_04F01                         .  " FORM-Routines
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> 입출고 관리 프로그램
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   입출고 유형을 선택하십시오.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

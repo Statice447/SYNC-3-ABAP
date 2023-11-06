@@ -1,0 +1,42 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC414_19_PRAC2_TOP                     - Module Pool      ZBC414_19_PRAC2
+*&---------------------------------------------------------------------*
+PROGRAM zbc414_19_prac2.
+
+TABLES: ztpractice19.
+
+TYPES: BEGIN OF gty_s_upd,
+         id      TYPE ztpractice19-id,
+         name    TYPE ztpractice19-name,
+         email   TYPE ztpractice19-email,
+         number1 TYPE ztpractice19-number1,
+         number2 TYPE ztpractice19-number2,
+       END OF gty_s_upd.
+
+DATA: gt_data TYPE TABLE OF ztpractice19,
+      wa_data TYPE ztpractice19,
+      gs_data TYPE ztpractice19.
+
+DATA: gs_upd TYPE gty_s_upd.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_variant TYPE disvariant,
+      gv_save TYPE c LENGTH 1.
+
+DATA: gt_rows TYPE lvc_t_row,
+      gs_row  TYPE lvc_s_row.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat TYPE lvc_s_fcat.
+
+DATA: ok_code TYPE sy-ucomm,
+      dynnr   TYPE sy-dynnr.
+
+DATA: pa_id      TYPE ztpractice19-id,
+      gv_answer  TYPE c,
+      gv_refresh TYPE c LENGTH 1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,291 @@
+*&---------------------------------------------------------------------*
+*& Include          MZC702_MM_04O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0101 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE STATUS_0101 OUTPUT.
+  SET PF-STATUS 'S0101'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OKCODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE CLEAR_OKCODE OUTPUT.
+  CLEAR OK_CODE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module ALV_GRID OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE ALV_GRID_101 OUTPUT.
+
+
+IF GO_CONTAINER2 IS INITIAL.
+        CREATE OBJECT GO_CONTAINER2
+          EXPORTING
+            CONTAINER_NAME = 'MY_CON2'.
+ENDIF.
+
+IF GO_ALV_GRID2 IS NOT INITIAL.
+  GO_ALV_GRID2->FREE( ).
+ENDIF.
+
+  CREATE OBJECT GO_ALV_GRID2
+    EXPORTING
+      I_PARENT = GO_CONTAINER2.
+
+  CASE GS_SCREEN-SRTYPE.
+    WHEN 'GR'.
+* 핸들러 메소드 실행.
+        SET HANDLER LCL_HANDLE=>ON_DOUBLE_CLICK_101 FOR GO_ALV_GRID2.
+
+*    GS_VARIANT-REPORT = SY-CPROG.
+
+* 레이아웃 변경.
+*    PERFORM LAYOUT.
+
+* 필드 카탈로그 변경.
+*    PERFORM FIELD_CATALOG.
+
+* ALV GRID 디스플레이 설정.
+        CALL METHOD GO_ALV_GRID2->SET_TABLE_FOR_FIRST_DISPLAY
+          EXPORTING
+            I_STRUCTURE_NAME = 'ZDVC702_MPO'
+*           IS_VARIANT       = GS_VARIANT
+*           I_DEFAULT        = 'X'
+*           IS_LAYOUT        = GS_LAYOUT
+          CHANGING
+*           IT_FIELDCATALOG  = GT_FIELD_CAT
+            IT_OUTTAB        = GT_MPO
+          EXCEPTIONS
+            OTHERS           = 4.
+
+    WHEN 'PR'.
+
+* 핸들러 메소드 실행.
+        SET HANDLER LCL_HANDLE=>ON_DOUBLE_CLICK_101 FOR GO_ALV_GRID2.
+
+*    GS_VARIANT-REPORT = SY-CPROG.
+
+* 레이아웃 변경.
+*    PERFORM LAYOUT.
+
+* 필드 카탈로그 변경.
+*    PERFORM FIELD_CATALOG.
+
+* ALV GRID 디스플레이 설정.
+        CALL METHOD GO_ALV_GRID2->SET_TABLE_FOR_FIRST_DISPLAY
+          EXPORTING
+            I_STRUCTURE_NAME = 'ZTC702_PRDMANAGE'
+*           IS_VARIANT       = GS_VARIANT
+*           I_DEFAULT        = 'X'
+*           IS_LAYOUT        = GS_LAYOUT
+          CHANGING
+*           IT_FIELDCATALOG  = GT_FIELD_CAT
+            IT_OUTTAB        = GT_PRD
+          EXCEPTIONS
+            OTHERS           = 4.
+
+    WHEN 'GI'.
+
+* 핸들러 메소드 실행.
+        SET HANDLER LCL_HANDLE=>ON_DOUBLE_CLICK_101 FOR GO_ALV_GRID2.
+
+*    GS_VARIANT-REPORT = SY-CPROG.
+
+* 레이아웃 변경.
+*    PERFORM LAYOUT.
+
+* 필드 카탈로그 변경.
+*    PERFORM FIELD_CATALOG.
+
+* ALV GRID 디스플레이 설정.
+        CALL METHOD GO_ALV_GRID2->SET_TABLE_FOR_FIRST_DISPLAY
+          EXPORTING
+            I_STRUCTURE_NAME = 'ZTC702_REOR_I'
+*           IS_VARIANT       = GS_VARIANT
+*           I_DEFAULT        = 'X'
+*           IS_LAYOUT        = GS_LAYOUT
+          CHANGING
+*           IT_FIELDCATALOG  = GT_FIELD_CAT
+            IT_OUTTAB        = GT_REOR
+          EXCEPTIONS
+            OTHERS           = 4.
+
+    WHEN 'DI'.
+* 핸들러 메소드 실행.
+        SET HANDLER LCL_HANDLE=>ON_DOUBLE_CLICK_101 FOR GO_ALV_GRID2.
+
+*    GS_VARIANT-REPORT = SY-CPROG.
+
+* 레이아웃 변경.
+*    PERFORM LAYOUT.
+
+* 필드 카탈로그 변경.
+*    PERFORM FIELD_CATALOG.
+
+* ALV GRID 디스플레이 설정.
+        CALL METHOD GO_ALV_GRID2->SET_TABLE_FOR_FIRST_DISPLAY
+          EXPORTING
+            I_STRUCTURE_NAME = 'ZTC702_EXP'
+*           IS_VARIANT       = GS_VARIANT
+*           I_DEFAULT        = 'X'
+*           IS_LAYOUT        = GS_LAYOUT
+          CHANGING
+*           IT_FIELDCATALOG  = GT_FIELD_CAT
+            IT_OUTTAB        = GT_EXP
+          EXCEPTIONS
+            OTHERS           = 4.
+
+    WHEN 'MD'.
+* 핸들러 메소드 실행.
+        SET HANDLER LCL_HANDLE=>ON_DOUBLE_CLICK_101 FOR GO_ALV_GRID2.
+
+*    GS_VARIANT-REPORT = SY-CPROG.
+
+* 레이아웃 변경.
+*    PERFORM LAYOUT.
+
+* 필드 카탈로그 변경.
+*    PERFORM FIELD_CATALOG.
+
+* ALV GRID 디스플레이 설정.
+        CALL METHOD GO_ALV_GRID2->SET_TABLE_FOR_FIRST_DISPLAY
+          EXPORTING
+            I_STRUCTURE_NAME = 'ZTC702_PRDORD'
+*           IS_VARIANT       = GS_VARIANT
+*           I_DEFAULT        = 'X'
+*           IS_LAYOUT        = GS_LAYOUT
+          CHANGING
+*           IT_FIELDCATALOG  = GT_FIELD_CAT
+            IT_OUTTAB        = GT_ORD
+          EXCEPTIONS
+            OTHERS           = 4.
+
+    WHEN OTHERS.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module ALV_GRID OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE ALV_GRID_100 OUTPUT.
+
+* 컨테이너 생성.
+  IF GO_CONTAINER IS INITIAL.
+    CREATE OBJECT GO_CONTAINER
+      EXPORTING
+        CONTAINER_NAME = 'MY_CON'.
+    GV_REFRESH     = ABAP_TRUE.
+  ENDIF.
+
+* ALV GRID와 컨테이너 연결.
+  IF GV_REFRESH = ABAP_TRUE.
+    CREATE OBJECT GO_ALV_GRID
+      EXPORTING
+        I_PARENT = GO_CONTAINER.
+
+* 핸들러 메소드 실행.
+    SET HANDLER LCL_HANDLE=>ON_DOUBLE_CLICK_100 FOR GO_ALV_GRID.
+
+    GS_VARIANT-REPORT = SY-CPROG.
+
+* 레이아웃 변경.
+    PERFORM LAYOUT.
+
+* 필드 카탈로그 변경.
+    PERFORM FIELD_CATALOG.
+
+* ALV GRID 디스플레이 설정.
+    CALL METHOD GO_ALV_GRID->SET_TABLE_FOR_FIRST_DISPLAY
+      EXPORTING
+        IS_VARIANT       = GS_VARIANT
+        I_DEFAULT        = 'X'
+        IS_LAYOUT        = GS_LAYOUT
+      CHANGING
+        IT_FIELDCATALOG  = GT_FIELD_CAT
+        IT_OUTTAB        = GT_TABLE2
+      EXCEPTIONS
+        OTHERS           = 4.
+
+    GV_REFRESH = ABAP_FALSE.
+
+  ELSE.
+    GO_ALV_GRID->REFRESH_TABLE_DISPLAY( ). " ALV GRID 새로고침.
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE INIT_100 OUTPUT.
+  IF GV_SWITCH = '1'.
+    IF GV_HIG IS INITIAL.
+      GV_HIG = SY-DATUM.
+    ENDIF.
+
+    IF GV_LOW IS INITIAL.
+      PERFORM CALC_GV_LOW.
+    ENDIF.
+
+    GV_SWITCH = '0'.
+
+  ELSEIF GV_SWITCH = '0'.
+
+  ENDIF.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE STATUS_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0102 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE STATUS_0102 OUTPUT.
+  SET PF-STATUS 'S0102'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_0101 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE INIT_0101 OUTPUT.
+  IF GV_SWITCH2 = '1'.
+    LOOP AT SCREEN.
+      IF SCREEN-GROUP1 = 'ALV'.
+        SCREEN-INVISIBLE = 0.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+
+  ELSEIF GV_SWITCH2 = '0'.
+    LOOP AT SCREEN.
+      IF SCREEN-GROUP1 = 'ALV'.
+        SCREEN-INVISIBLE = 1.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,116 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_19_LAB13_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.                        " 프로그램 종료 시 lock 자동 해제
+    WHEN 'CANC'.
+      CASE sy-dynnr.
+        WHEN '0100'.
+          LEAVE TO SCREEN 0.                " 100에서는 프로그램이 종료되므로 lock 설정 x
+        WHEN '0200'.
+          CALL FUNCTION 'DEQUEUE_ALL'.      " 200에서 취소 누를 시 lock 해제
+          LEAVE TO SCREEN 0.
+      ENDCASE.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'SEARCH'.
+      CALL FUNCTION 'ENQUEUE_EZCUS19'                   " Read Lock 설정
+        EXPORTING
+          mode_zscustom19 = 'S'
+          id              = gv_id
+        EXCEPTIONS
+          foreign_lock    = 1
+          system_failure  = 2
+          OTHERS          = 3.
+      CASE sy-subrc.
+        WHEN 0.
+          " no action
+        WHEN 1.
+          MESSAGE a001(zbc414_19).
+        WHEN 2.
+          MESSAGE a002(zbc414_19).
+        WHEN OTHERS.
+          MESSAGE a003(zbc414_19).
+      ENDCASE.
+
+      PERFORM read_customer_info USING gv_id.           " Lock 건 후 해당 서브루틴 실행
+
+      CALL SCREEN 200.                                  " 스크린 호출
+
+    WHEN 'CHANGE'.
+
+      CALL FUNCTION 'ENQUEUE_EZCUS219'                  " Write Lock 설정
+        EXPORTING
+          mode_zscustom19 = 'E'
+          id              = gv_id
+        EXCEPTIONS
+          foreign_lock    = 1
+          system_failure  = 2
+          OTHERS          = 3.
+      CASE sy-subrc.
+        WHEN 0.
+          " no action
+        WHEN 1.
+          MESSAGE a001(zbc414_19).
+        WHEN 2.
+          MESSAGE a002(zbc414_19).
+        WHEN OTHERS.
+          MESSAGE a003(zbc414_19).
+      ENDCASE.
+
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'                   " Popup 함수 호출
+        EXPORTING
+          titlebar              = '저장'
+          text_question         = '좌석 클래스를 변경하시겠습니까?'
+          text_button_1         = 'Yes'
+          text_button_2         = 'No'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = gv_answer.             " 버튼 확인
+
+      IF sy-subrc <> 0.
+        " no Action
+      ENDIF.
+
+      IF gv_answer = 1.                                  " popup에서 확인 일 경우
+        PERFORM change_customer_type USING gv_id         " Yes 일 경우 해당 서브루틴 실행
+                                           zscustom19-custtype.
+        COMMIT WORK.                                     " commit work 설정
+      ELSE.
+        CALL FUNCTION 'DEQUEUE_ALL'. " No 일 경우 Lock 해제
+      ENDIF.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_ZCUSTOM19  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_id INPUT.
+  CLEAR gs_zscustom19.
+  SELECT SINGLE *
+    FROM zscustom19
+    INTO CORRESPONDING FIELDS OF gs_zscustom19
+    WHERE id = gv_id.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

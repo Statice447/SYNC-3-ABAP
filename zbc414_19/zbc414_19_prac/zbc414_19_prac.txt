@@ -1,0 +1,14 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      ZBC414_19_PRAC
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE MZBC414_19_PRAC_TOP                     .    " Global Data
+
+ INCLUDE MZBC414_19_PRAC_O01                     .  " PBO-Modules
+ INCLUDE MZBC414_19_PRAC_I01                     .  " PAI-Modules
+ INCLUDE MZBC414_19_PRAC_F01                     .  " FORM-Routines
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,51 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC414_19_E2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc414_19_e2.
+
+DATA: gt_scarr TYPE TABLE OF scarr,          " Internal Table
+      gs_scarr LIKE LINE OF gt_scarr.        " Structure
+
+*gs_scarr-carrid   = 'KA'.
+*gs_scarr-carrname = 'Korea Airline'.
+*gs_scarr-currcode = 'KRW'.
+*gs_scarr-url      = 'http://www.KOREAAIR.com'.
+
+*INSERT INTO zscarr19 VALUES gs_scarr.                      " Work Area Insert
+*
+*IF sy-subrc = 0.
+*  WRITE:/ 'Insert Sucess'.
+*ELSE.
+*  WRITE:/ sy-subrc, sy-dbcnt.
+*ENDIF.
+
+CLEAR gs_scarr.
+gs_scarr-carrid   = 'KA'.
+gs_scarr-carrname = 'Korea Airline'.
+gs_scarr-currcode = 'KRW'.
+gs_scarr-url      = 'http://www.KOREAAIR.com'.
+APPEND gs_scarr TO gt_scarr.
+
+CLEAR gs_scarr.
+gs_scarr-carrid   = 'JA'.
+gs_scarr-carrname = 'Jeju Airline'.
+gs_scarr-currcode = 'KRW'.
+gs_scarr-url      = 'http://www.JEJUAIR.com'.
+APPEND gs_scarr TO gt_scarr.
+
+CLEAR gs_scarr.
+gs_scarr-carrid   = 'TA'.
+gs_scarr-carrname = 'Tway Airline'.
+gs_scarr-currcode = 'KRW'.
+gs_scarr-url      = 'http://www.TWAYAIR.com'.
+APPEND gs_scarr TO gt_scarr.
+
+INSERT zscarr19 FROM TABLE gt_scarr             " Table Insert
+  ACCEPTING DUPLICATE KEYS.                     " 중복되는 데이터가 있을 시 해당 라인은 롤백시킨다. 이로인해 덤프 방지
+
+WRITE: / sy-subrc,'DB Record : ', sy-dbcnt.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

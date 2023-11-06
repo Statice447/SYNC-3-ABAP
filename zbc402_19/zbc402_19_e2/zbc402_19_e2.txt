@@ -1,0 +1,49 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC402_19_E2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc402_19_e2.
+
+CLASS lcl_generic DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS: write_any_table
+      IMPORTING
+        ig_info TYPE simple
+        it_data TYPE ANY TABLE.
+ENDCLASS.
+
+CLASS lcl_generic IMPLEMENTATION.
+  METHOD write_any_table.
+    FIELD-SYMBOLS <ls_line> TYPE any.
+
+    LOOP AT it_data ASSIGNING <ls_line>.
+    ENDLOOP.
+
+    WRITE:/ ig_info.
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  DATA : gt_spfli TYPE TABLE OF spfli.
+
+*  FIELD-SYMBOLS <gs_spfli> TYPE simple.
+*
+*  <gs_spfli> = '123'.
+
+  SELECT *
+    FROM spfli INTO CORRESPONDING FIELDS OF TABLE gt_spfli.
+
+  IF sy-subrc <> 0.
+
+  ENDIF.
+
+  lcl_generic=>write_any_table(
+   ig_info = '123'
+   it_data = gt_spfli
+  ).
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

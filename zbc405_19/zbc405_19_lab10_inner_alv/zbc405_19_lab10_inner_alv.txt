@@ -1,0 +1,330 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_INNER_ALV
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_lab10_inner_alv.
+TYPES: BEGIN OF gty_join,
+         carrid           TYPE scarr-carrid,
+         carrname         TYPE scarr-carrname,
+         connid           TYPE spfli-connid,
+         cityfrom         TYPE spfli-cityfrom,
+         cityto           TYPE spfli-cityto,
+         fldate           TYPE sflight-fldate,
+         seatsmax         TYPE sflight-seatsmax,
+         seatsocc         TYPE sflight-seatsocc,
+       END OF gty_join.
+
+DATA: gt_join TYPE TABLE OF gty_join, " Internal Table
+      gs_join LIKE LINE OF gt_join.   " Structure
+
+DATA: ok_code TYPE sy-ucomm.          " Ok_code
+
+DATA: go_container TYPE REF TO cl_gui_custom_container, " Container
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.         " Grid
+
+DATA: gs_layout  TYPE lvc_s_layo, " Layout
+      gv_variant TYPE disvariant, " Variant
+      gv_save    TYPE c LENGTH 1. " Variant-save
+
+DATA: gt_fcat TYPE lvc_t_fcat,    " Field Catalog internal table
+      gs_fcat TYPE lvc_s_fcat.    " Field Catalog structure
+
+DATA: gt_sort TYPE lvc_t_sort,    " 정렬 internal table 선언
+      gs_sort TYPE lvc_s_sort.    " 정렬 structure 선언
+
+CLASS: lcl_handle DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS: on_double_click
+                  FOR EVENT double_click OF cl_gui_alv_grid
+      IMPORTING es_row_no,
+
+      on_toolbar
+                    FOR EVENT toolbar OF cl_gui_alv_grid
+        IMPORTING e_object,
+
+      on_user_command
+                    FOR EVENT user_command OF cl_gui_alv_grid
+        IMPORTING e_ucomm.
+
+ENDCLASS.
+
+* 클래스 구현 부분
+CLASS: lcl_handle IMPLEMENTATION.
+
+  METHOD on_double_click.
+    DATA: iv_price   TYPE sflight-price,
+          iv_curre   TYPE sflight-currency,
+          iv_text_c  TYPE string, " 메시지에 넣기 위한 문자형 변수
+          iv_text_p  TYPE string, " 메시지에 넣기 위한 문자형 변수
+          iv_message TYPE c LENGTH 100.
+
+    READ TABLE gt_join INTO gs_join INDEX es_row_no-row_id.
+
+    SELECT SINGLE price currency
+      FROM sflight INTO ( iv_price, iv_curre )
+      WHERE carrid = gs_join-carrid.
+
+    iv_text_p = iv_price.   " 메시지에 넣기 위해 정수형 변수를 문자형 변수에 넣음
+    iv_text_c = iv_curre.   " 메시지에 넣기 위해 정수형 변수를 문자형 변수에 넣음
+    CONCATENATE 'PRICE : ' iv_text_p iv_text_c INTO iv_message SEPARATED BY ' '.
+
+    MESSAGE iv_message TYPE 'I'.
+
+  ENDMETHOD.
+  METHOD on_toolbar.
+    DATA: ls_button TYPE stb_button.
+
+    " Seperater
+    ls_button-butn_type = 3.
+    INSERT ls_button INTO TABLE e_object->mt_toolbar.
+
+    " User define
+    CLEAR ls_button.
+    ls_button-function = 'PRICE'.
+    ls_button-icon = icon_calculation.
+    ls_button-butn_type = 0.
+    INSERT ls_button INTO TABLE e_object->mt_toolbar.
+
+  ENDMETHOD.
+  METHOD on_user_command.
+    DATA: lv_row     TYPE i,
+          ls_sflight TYPE sflight,
+          lv_text    TYPE string.
+
+    CASE e_ucomm.
+      WHEN 'PRICE'.
+        go_alv_grid->get_current_cell(
+        IMPORTING e_row = lv_row
+        ).
+
+        READ TABLE gt_join INTO gs_join INDEX lv_row.
+
+        SELECT SINGLE *
+          FROM sflight INTO CORRESPONDING FIELDS OF ls_sflight
+          WHERE carrid = gs_join-carrid.
+
+        CHECK sy-subrc = 0. " 정상 작동하면
+
+        lv_text = ls_sflight-price.
+        MESSAGE lv_text TYPE 'I'.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+START-OF-SELECTION.
+
+  SELECT c~carrid c~carrname p~connid p~cityfrom p~cityto f~fldate f~seatsmax f~seatsocc
+    INTO CORRESPONDING FIELDS OF TABLE gt_join
+    FROM ( scarr AS c INNER JOIN spfli AS p
+    ON c~carrid = p~carrid )
+    INNER JOIN sflight AS f ON f~carrid = p~carrid
+    WHERE seatsocc < f~seatsmax
+    ORDER BY c~carrid p~connid f~fldate.
+
+  CALL SCREEN 100.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module TRASFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE trasfer OUTPUT.
+  " 패턴 이용 시
+  CREATE OBJECT go_container                        " 클래스 : cl_gui_custom_container
+    EXPORTING                                       " 인스턴스 : go_container
+      container_name = 'MY_AREA'
+    EXCEPTIONS
+      OTHERS         = 1.
+
+  IF sy-subrc <> 0.
+    MESSAGE a001(zbc405_19).
+
+  ENDIF.
+  " 패턴 이용 시
+  CREATE OBJECT go_alv_grid                         " 클래스 : cl_gui_alv_grid
+    EXPORTING                                       " 인스턴스 : go_alv_grid
+      i_parent = go_container
+    EXCEPTIONS
+      OTHERS   = 1.
+
+  IF sy-subrc <> 0.
+    MESSAGE a001(zbc405_19).
+  ENDIF.
+
+  SET HANDLER lcl_handle=>on_double_click FOR go_alv_grid.
+  SET HANDLER lcl_handle=>on_toolbar FOR go_alv_grid.
+  SET HANDLER lcl_handle=>on_user_command FOR go_alv_grid.
+
+  gv_variant-report = sy-cprog.
+  gv_variant-variant = 'A'.                    " 이거 뭐였는지 기억이 안남
+  gv_save = 'A'. " U, X, A "
+
+  gs_layout-grid_title = 'LAB10_INNERJOIN_ALV'. " 타이틀 이름 설정
+  gs_layout-zebra      = 'X'.                   " 지브라 설정
+  gs_layout-cwidth_opt = 'X'.                   " 필드 크기 정렬
+
+  CLEAR gs_sort.                                " Sort
+  gs_sort-fieldname = 'CARRID'.                 " 정렬 필드
+  gs_sort-up        = 'X'.                      " 오름차순 설정
+  APPEND gs_sort TO gt_sort.
+
+  CLEAR gs_fcat.                                " 데이터 초기화
+  gs_fcat-fieldname = 'CARRID'.                 " 카탈로그 설정할 필드이름
+  gs_fcat-no_out = 'X'.                         " 해당 필드 숨김
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CURRCODE'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'URL'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'FLDATE'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSMAX'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSOCC'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+  " 여기까지 삭제
+
+  CLEAR gs_fcat.                             " 데이터 초기화
+  gs_fcat-fieldname = 'CARRID'.              " 필드 이름
+  gs_fcat-ref_field = 'CARRID'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SCARR'.               " 참조 테이블 설정
+  gs_fcat-coltext   = 'CARRID'.              " 필드 이름(텍스트)변경
+  gs_fcat-edit = 'X'.
+  gs_fcat-col_pos   = 1.                     " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRNAME'.
+  gs_fcat-col_pos   = 2.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CONNID'.               " 필드
+  gs_fcat-ref_field = 'CONNID'.               " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'CONNID'.               " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 3.                      " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYFROM'.             " 필드
+  gs_fcat-ref_field = 'CITYFROM'.             " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'CITYFROM'.             " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 4.                      " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYTO'.               " 필드
+  gs_fcat-ref_field = 'CITYTO'.               " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'CITYTO'.               " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 5.                      " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'FLDATE'.               " 필드
+  gs_fcat-ref_field = 'FLDATE'.               " 참조 필드 설정
+  gs_fcat-ref_table = 'SFLIGHT'.              " 참조 테이블 설정
+  gs_fcat-coltext   = 'FLDATE'.               " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 3.                      " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSMAX'.             " 필드
+  gs_fcat-ref_field = 'SEATSMAX'.             " 참조 필드 설정
+  gs_fcat-ref_table = 'SFLIGHT'.              " 참조 테이블 설정
+  gs_fcat-coltext   = 'SEATSMAX'.             " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 7.                      " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSOCC'.             " 필드
+  gs_fcat-ref_field = 'SEATSOCC'.             " 참조 필드 설정
+  gs_fcat-ref_table = 'SFLIGHT'.              " 참조 테이블 설정
+  gs_fcat-coltext   = 'SEATSOCC'.             " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 8.                      " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CALL METHOD go_alv_grid->set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'SCARR'
+      is_variant       = gv_variant     " Layout Variant
+      i_save           = gv_save
+      is_layout        = gs_layout      " Layout Structure
+    CHANGING
+      it_outtab        = gt_join
+      it_fieldcatalog  = gt_fcat
+      it_sort          = gt_sort
+    EXCEPTIONS
+**     invalid_parameter_combination = 1
+**     program_error                 = 2
+**     too_many_lines                = 3
+      OTHERS           = 1.
+**    .
+  IF sy-subrc <> 0.
+  ENDIF.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC405_19
+*001   Container Instance is not Data
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

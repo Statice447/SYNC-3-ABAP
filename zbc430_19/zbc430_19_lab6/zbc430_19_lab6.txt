@@ -1,0 +1,36 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_LAB6
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc430_19_lab6.
+
+DATA: wa_spflight TYPE zss_spfli19,
+      wa_emp TYPE zss_emp19,
+      wa_name TYPE ZSS_NAME19.
+
+
+START-OF-SELECTION.
+  wa_name-fname = 'Hyeon'.
+  wa_name-lname = 'JO'.
+  wa_emp-pernr = '01'.
+  wa_emp-phone = '010-1234-5678'.
+  wa_emp-email = 'non'.
+
+  wa_spflight-carrid = 'AA'.
+  wa_spflight-connid = '0123'.
+  wa_spflight-cityfrom = 'abc'.
+
+ WRITE:  / '---------------------------Emp-----------------------------',
+         / wa_emp-lname,  wa_emp-fname,
+         / wa_emp-pernr,
+         / wa_emp-phone,
+         / wa_emp-email,
+         / '---------------------------Spflight-----------------------------'.
+
+  WRITE: / wa_spflight-carrid,
+         / wa_spflight-connid,
+         / wa_spflight-cityfrom.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

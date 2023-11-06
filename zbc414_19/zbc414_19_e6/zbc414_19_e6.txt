@@ -1,0 +1,18 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      ZBC414_19_E6
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzbc414_zstravel19_top                  .    " Global Data
+
+INCLUDE mzbc414_zstravel19_o01                  .  " PBO-Modules
+INCLUDE mzbc414_zstravel19_i01                  .  " PAI-Modules
+INCLUDE mzbc414_zstravel19_f01                  .  " FORM-Routines
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> Ex2 Typing
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

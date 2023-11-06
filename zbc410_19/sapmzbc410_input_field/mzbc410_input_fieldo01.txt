@@ -1,0 +1,135 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOLUTION_19O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module MOVE_TO_DYNP OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE move_to_dynp OUTPUT.
+
+  MOVE-CORRESPONDING wa_sflight TO sdyn_conn.
+
+* SET PF-STATUS 'xxxxxxxx'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+
+  CASE 'X'.
+    WHEN gv_rad1.
+      SET TITLEBAR 'T0100' WITH 'Display'.
+    WHEN gv_rad2.
+      SET TITLEBAR 'T0100' WITH 'Maintain Flight'.
+    WHEN gv_rad3.
+      SET TITLEBAR 'T0100' WITH 'Maintain Bookings'.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module MODIFY_SCREEN OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE modify_screen OUTPUT.
+*  IF gv_rad2 = 'X'.
+*    LOOP AT SCREEN.
+*      IF screen-name = 'IO_COMMAND'.
+*        screen-input = 0.
+*        MODIFY SCREEN.
+*      ENDIF.
+*    ENDLOOP.
+*  ELSEIF gv_rad1 = 'X'.
+*    LOOP AT SCREEN.
+*      IF screen-name = 'IO_COMMAND'.
+*        screen-input = 1.
+*        MODIFY SCREEN.
+*      ENDIF.
+*    ENDLOOP.
+*  ENDIF.
+
+
+  IF gv_rad2 = 'X'.
+    SET PF-STATUS 'S0100'.
+
+    LOOP AT SCREEN.
+      IF screen-name = 'SDYN_CONN-PLANETYPE'.
+        screen-input = 1.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+  ELSE.
+    SET PF-STATUS 'S0100' EXCLUDING 'SAVE' .
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0150 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0150 OUTPUT.
+  SET PF-STATUS 'S0150'.
+  SET TITLEBAR 'T0150' WITH 'Flight Data'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module FILL_DYNNR OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE fill_dynnr OUTPUT.
+  CASE 'X'.
+    WHEN gv_rad1.
+      dynnr = 110.
+    WHEN gv_rad2.
+      dynnr = 120.
+    WHEN gv_rad3.
+      dynnr = 130.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module GET_SPFLI OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE get_spfli OUTPUT.
+  ON CHANGE OF wa_sflight-carrid OR wa_sflight-connid.
+
+    SELECT SINGLE *
+      FROM spfli INTO CORRESPONDING FIELDS OF sdyn_conn
+      WHERE carrid = wa_sflight-carrid
+      AND   connid = wa_sflight-connid.
+
+  ENDON.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module GET_SAPLANE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE get_saplane OUTPUT.
+  ON CHANGE OF wa_sflight-planetype.
+    SELECT SINGLE *
+      FROM saplane
+      WHERE planetype = wa_sflight-planetype.
+  ENDON.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,39 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOL_19_E2_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module MODIFY_SCREEN OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE modify_screen OUTPUT.
+* SET PF-STATUS 'xxxxxxxx'.
+* SET TITLEBAR 'xxx'.
+
+  LOOP AT SCREEN.
+    CASE sy-ucomm.
+      WHEN 'CLICK'.
+        IF screen-group1 = 'GR1'.
+          screen-input = 0.
+        ENDIF.
+*        IF screen-name = 'GS_SCREEN-CARRID'.
+**          screen-input = 0.     " 비활성화
+**          screen-output = 0.
+**          screen-invisible = 1. " 여기까지 3개를 적용시키면 active = 0 과 같다.
+**
+*          screen-active = 0.    " 0으로 하면 사라짐
+*        ENDIF.
+
+
+      WHEN OTHERS.
+        IF screen-group1 = 'GR1'.
+          screen-input = 1.
+        ENDIF.
+    ENDCASE.
+
+    MODIFY SCREEN.
+  ENDLOOP.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

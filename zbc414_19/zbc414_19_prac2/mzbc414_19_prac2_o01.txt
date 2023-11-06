@@ -1,0 +1,211 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_19_PRAC2_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0200 OUTPUT.
+  SET PF-STATUS 'S0200'.
+  SET TITLEBAR 'T0200'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_GRID OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_grid OUTPUT.
+  IF go_container IS INITIAL.
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'MY_AREA'
+      EXCEPTIONS
+        OTHERS         = 1.
+    IF sy-subrc <> 0.
+*     MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+
+    ENDIF.
+    gv_refresh = abap_true.
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container
+      EXCEPTIONS
+        OTHERS   = 5.
+    IF sy-subrc <> 0.
+*       MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*                  WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ENDIF.
+
+    SET HANDLER: lcl_handle=>on_double_click FOR go_alv_grid,
+                 lcl_handle=>on_toolbar FOR go_alv_grid,
+                 lcl_handle=>on_user_commnad FOR go_alv_grid.
+
+    gs_variant-report = sy-cprog.
+    gv_save = 'A'.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'EMAIL'.
+    gs_fcat-coltext = 'ETC'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'NUMBER1'.
+    gs_fcat-coltext = 'NUMBER1'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'NUMBER2'.
+    gs_fcat-coltext = 'NUMBER2'.
+    APPEND gs_fcat TO gt_fcat.
+
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZTPRACTICE19'
+        is_variant       = gs_variant
+        i_save           = gv_save
+        i_default        = 'X'
+*       is_layout        =
+      CHANGING
+        it_outtab        = gt_data
+        it_fieldcatalog  = gt_fcat
+*       it_sort          =
+*       it_filter        =
+      EXCEPTIONS
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+*       Implement suitable error handling here
+    ENDIF.
+
+    gv_refresh = abap_false.
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module MOVE_TO_SCREEN OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE move_to_screen OUTPUT.
+  LOOP AT gt_data INTO gs_data.
+    IF pa_id = gs_data-id.
+      MOVE-CORRESPONDING gs_data TO ztpractice19.
+    ENDIF.
+  ENDLOOP.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0210 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0210 OUTPUT.
+  SET PF-STATUS 'S0210'.
+  SET TITLEBAR 'T0210'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0220 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0220 OUTPUT.
+  SET PF-STATUS 'S0220'.
+  SET TITLEBAR 'T0220'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0220  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0220 INPUT.
+  CASE ok_code.
+    WHEN 'OKAY'.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Realy?'
+          text_question         = '정말 지우시겠습니까?'
+          text_button_1         = 'Yes'
+          text_button_2         = 'No'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = gv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+      IF gv_answer = 1.
+        CLEAR wa_data.
+
+*        wa_data-id = gs_upd-id.
+        MOVE-CORRESPONDING gs_upd TO wa_data.
+        DELETE FROM ztpractice19 WHERE id = wa_data-id.
+
+        CASE sy-subrc.
+          WHEN 0.
+          WHEN 4.
+            MESSAGE a003(zbc414_19) WITH 'id가 없습니다.'.
+          WHEN OTHERS.
+            MESSAGE a003(zbc414_19).
+        ENDCASE.
+
+        CLEAR: wa_data, gs_upd.
+
+        PERFORM set_refresh_alv.
+        LEAVE TO SCREEN 0.
+      ELSE.
+        CLEAR: wa_data, gs_upd.
+      ENDIF.
+
+  ENDCASE.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0230 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0230 OUTPUT.
+  SET PF-STATUS 'S0230'.
+  SET TITLEBAR 'T0230'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_CHAGE_DEFAULT OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_change_default OUTPUT.
+  CLEAR wa_data.
+  LOOP AT gt_rows INTO gs_row.
+    READ TABLE gt_data INDEX gs_row INTO wa_data.
+  ENDLOOP.
+  MOVE-CORRESPONDING wa_data TO gs_upd.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

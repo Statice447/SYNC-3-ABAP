@@ -1,0 +1,38 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E12_1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_e12_1.
+
+DATA: gt_flightinfo TYPE bc400_t_flights,
+      gs_flightinfo LIKE  LINE OF gt_flightinfo.
+
+gs_flightinfo-carrid = 'AB'.
+gs_flightinfo-connid = '0123'.
+gs_flightinfo-fldate = 230703.
+gs_flightinfo-seatsmax = 100.
+gs_flightinfo-seatsocc = 10.
+gs_flightinfo-percentage = '10'.
+
+INSERT gs_flightinfo INTO TABLE gt_flightinfo.
+
+LOOP AT gt_flightinfo INTO gs_flightinfo.
+
+  WRITE: / gs_flightinfo-carrid,
+           gs_flightinfo-connid,
+           gs_flightinfo-fldate,
+           gs_flightinfo-seatsmax,
+           gs_flightinfo-seatsocc,
+           gs_flightinfo-percentage,
+           '%'.
+ENDLOOP.
+IF sy-subrc = 0.
+  WRITE: / 'Insert is ~'.
+
+ENDIF.
+
+*WRITE: / gs_flightinfo-carrid.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

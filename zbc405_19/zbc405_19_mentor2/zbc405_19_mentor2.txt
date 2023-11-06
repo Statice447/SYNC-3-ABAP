@@ -1,0 +1,68 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_MENTOR2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_mentor2.
+
+TABLES zscustom19.
+
+DATA: gt_sflight TYPE TABLE OF dv_flights,
+      gs_sflight TYPE dv_flights.
+
+DATA: gt_scustom TYPE TABLE OF zscustom19,
+      gs_scustom TYPE zscustom19.
+
+DATA: dynnr TYPE sy-dynnr.
+
+CONTROLS my_table TYPE TABLEVIEW USING SCREEN '110'.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1100 AS SUBSCREEN.
+
+SELECT-OPTIONS: so_car FOR gs_sflight-carrid,
+                so_con FOR gs_sflight-connid.
+
+SELECTION-SCREEN END OF SCREEN 1100.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1200 AS SUBSCREEN.
+
+SELECTION-SCREEN BEGIN OF BLOCK radio WITH FRAME.
+
+PARAMETERS: pa_wrt RADIOBUTTON GROUP rgb1 DEFAULT 'X',
+            pa_alv RADIOBUTTON GROUP rgb1.
+
+SELECTION-SCREEN END OF BLOCK radio.
+
+SELECTION-SCREEN END OF SCREEN 1200.
+
+SELECTION-SCREEN BEGIN OF TABBED BLOCK airlines FOR 10 LINES.
+SELECTION-SCREEN TAB (20) tab1 USER-COMMAND wrt DEFAULT SCREEN 1100. " tab (20) 탭 글자 수 최대치
+SELECTION-SCREEN TAB (20) tab2 USER-COMMAND alv DEFAULT SCREEN 1200.
+SELECTION-SCREEN TAB (20) tab3 USER-COMMAND tab DEFAULT SCREEN 110.
+SELECTION-SCREEN END OF BLOCK airlines.
+
+INITIALIZATION.
+
+  tab1 = 'Connection'.
+  tab2 = 'Booking'.
+  tab3 = 'Table Control'.
+
+  SELECT *
+  FROM  zscustom19 INTO CORRESPONDING FIELDS OF TABLE gt_scustom
+  UP TO 100 ROWS                                                      " 상위 n 개 만큼 출력
+  ORDER BY id ASCENDING.
+
+
+  " id를 오름차순으로 정렬
+
+*&---------------------------------------------------------------------*
+*& Module TRAN_TO_TABLE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE tran_to_table OUTPUT.
+  MOVE-CORRESPONDING gs_scustom TO zscustom19.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

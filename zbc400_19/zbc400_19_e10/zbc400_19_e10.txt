@@ -1,0 +1,29 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E10
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC400_19_E10.
+
+DATA: gv_a TYPE i value 10,
+      gv_result TYPE i.
+
+PERFORM calc_sum
+      USING gv_a
+   CHANGING gv_result.
+
+WRITE: / 'a value is : ', gv_a.
+WRITE: / 'gv_result is : ', gv_result.
+
+FORM calc_sum  USING    value(p_gv_a)
+               CHANGING p_gv_result.
+
+  p_gv_a = p_gv_a + 10.
+  p_gv_result = p_gv_a.
+
+  WRITE: / 'formal parameter is : ', p_gv_result.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

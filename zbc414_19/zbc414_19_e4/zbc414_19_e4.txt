@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC414_19_E4
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc414_19_e4.
+
+DATA: gt_scarr TYPE TABLE OF scarr,          " Internal Table
+      gs_scarr LIKE LINE OF gt_scarr.        " Structure
+
+*CLEAR gs_scarr.
+*gs_scarr-carrid = 'TA'.
+*APPEND gs_scarr TO gt_scarr.
+*
+*CLEAR gs_scarr.
+*gs_scarr-carrid = 'JA'.
+*APPEND gs_scarr TO gt_scarr.                " 필드 아이디 Internal Table에 넣기
+*
+*DELETE zscarr19 FROM TABLE gt_scarr.        " 해당 키 값에 해당하는 데이터라인 삭제
+
+DELETE FROM zscarr19
+  WHERE carrid LIKE '%'.                     " 모든 키 값 선택 구문. 해당 구문 실행 시 테이블 내 모든 데이터 삭제
+
+WRITE: / sy-subrc, sy-dbcnt.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E11
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC400_19_E11.
+
+DATA: gv_a TYPE i value 1,
+      gv_b TYPE i value 1,
+      gv_c TYPE i.
+
+gv_c = gv_a + gv_b.
+PERFORM calc_sum
+    CHANGING gv_a
+             gv_b.
+
+WRITE: / gv_a,'+',gv_b,'=',gv_c.
+
+FORM calc_sum  CHANGING value(p_gv_a)
+                        value(p_gv_b).
+  p_gv_a = 2.
+  p_gv_b = 2.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,224 @@
+*&---------------------------------------------------------------------*
+*& Include          MZTREE19F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form NODE_DOUBLE_CLICK_0100
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_NODE_KEY  text
+*&---------------------------------------------------------------------*
+FORM node_double_click_0100  USING    p_node_key.
+  SELECT * FROM ztc702_bom_i
+    INTO CORRESPONDING FIELDS OF TABLE gt_tab
+   WHERE bomid = p_node_key.
+
+  PERFORM refresh_grid.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_GRID
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_grid .
+  DATA: l_scroll TYPE lvc_s_stbl.
+  l_scroll-row = 'X'.
+  l_scroll-col = 'X'.
+  CALL METHOD g_alv->refresh_table_display
+    EXPORTING
+      i_soft_refresh = ''
+      is_stable      = l_scroll.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BUILD_NODE_TABLE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_NODE_TABLE  text
+*&---------------------------------------------------------------------*
+FORM build_node_table  USING    node_table TYPE node_table_type.
+  DATA: node LIKE mtreesnode.
+
+  CLEAR node.
+  node-node_key = 'Root'.       "tree 상위항목
+  node-isfolder = 'X'.        "폴더모양으로 표시
+  node-text = 'BOM'.        "항공사라는 텍스트로 표시
+  APPEND node TO node_table.
+
+  CLEAR node.
+  node-node_key = 'Child1'. "root 하위 항목
+  node-relatkey = 'Root'.
+  node-isfolder = 'X'.
+  node-text = 'BOM 넘버'.
+  node-expander = 'X'. "아래에 확장해서 항공사 코드번호
+  APPEND node TO node_table.
+
+  LOOP AT gt_tab2 INTO gs_tab2.
+    CLEAR node.
+    node-node_key = gs_tab2-bomid.
+    node-relatkey = 'Child1'.
+    node-n_image = '@7T@'.
+    node-text = gs_tab2-bomid.
+    APPEND node TO node_table.
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form MAKE_FIELDCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM make_fieldcat .
+  gs_fieldcat-fieldname = 'CARRID'.
+  gs_fieldcat-coltext = '항공사 코드'.
+  gs_fieldcat-just = 'C'.
+  gs_fieldcat-key = 'X'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  gs_fieldcat-fieldname = 'CONNID'.
+  gs_fieldcat-coltext = '항공편 연결번호'.
+  gs_fieldcat-just = 'C'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  gs_fieldcat-fieldname = 'FLDATE'.
+  gs_fieldcat-coltext = '비행일자'.
+  gs_fieldcat-just = 'C'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  gs_fieldcat-fieldname = 'PRICE'.
+  gs_fieldcat-coltext = '금액'.
+  gs_fieldcat-just = 'C'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  gs_fieldcat-fieldname = 'CURRENCY'.
+  gs_fieldcat-coltext = '현지통화'.
+  gs_fieldcat-just = 'C'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  gs_fieldcat-fieldname = 'SEATSMAX'.
+  gs_fieldcat-coltext = '최대자석수'.
+  gs_fieldcat-just = 'C'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+  gs_fieldcat-fieldname = 'SEATSOCC'.
+  gs_fieldcat-coltext = '점유좌석수'.
+  gs_fieldcat-just = 'C'.
+  APPEND gs_fieldcat TO gt_fieldcat. CLEAR gs_fieldcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_data .
+  SELECT * FROM ztc702_bom_h
+    INTO CORRESPONDING FIELDS OF TABLE gt_tab2.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form ADD_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM add_data .
+  DATA: ls_bom_h TYPE ztc702_bom_h.
+  MOVE-CORRESPONDING ztc702_bom_h TO ls_bom_h.
+
+  INSERT ztc702_bom_h FROM ls_bom_h.
+  IF sy-subrc = 0.
+    MESSAGE '성공' TYPE 'I'.
+    CLEAR ls_bom_h.
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_TREE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_tree .
+  DATA: node_table TYPE node_table_type, "트리 값들 관계 넣어주기위해
+        events     TYPE cntl_simple_events, "더블클릭 이벤트
+        event      TYPE cntl_simple_event.    "더블클릭 이벤트
+
+
+
+*TREE 컨트롤 생성, CLASS를 INSTANCE
+  CREATE OBJECT g_tree
+    EXPORTING
+      parent              = tree_con_ref
+      node_selection_mode = cl_gui_simple_tree=>node_sel_mode_single. "싱글선택
+
+*노드 생성
+  PERFORM build_node_table USING node_table. "트리에 데이터 넣어줌
+
+*트리 노드 추가
+  CALL METHOD g_tree->add_nodes
+    EXPORTING
+      table_structure_name = 'MTREESNODE'
+      node_table           = node_table. "트리 데이터 들어가있는 int
+
+*이벤트
+  CREATE OBJECT g_application.
+
+  event-eventid = cl_gui_simple_tree=>eventid_node_double_click.
+  event-appl_event = 'X'.
+  APPEND event TO events.
+
+
+*트리 이벤트 등록
+  CALL METHOD g_tree->set_registered_events
+    EXPORTING
+      events                    = events
+    EXCEPTIONS
+      cntl_error                = 1
+      cntl_system_error         = 2
+      illegal_event_combination = 3.
+
+*이벤트 헨들러
+  SET HANDLER g_application->handle_node_double_click FOR g_tree.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form ITEM_ADD_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM item_add_data .
+  DATA: ls_bom_i TYPE ztc702_bom_i.
+  MOVE-CORRESPONDING ztc702_bom_i TO ls_bom_i.
+
+  INSERT ztc702_bom_i FROM ls_bom_i.
+  IF sy-subrc = 0.
+    MESSAGE '성공' TYPE 'I'.
+    SELECT *
+      FROM ztc702_bom_i INTO CORRESPONDING FIELDS OF TABLE gt_tab.
+    CLEAR ls_bom_i.
+  ENDIF.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

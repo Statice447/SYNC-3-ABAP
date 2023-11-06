@@ -1,0 +1,297 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_ALV_DEMO2_19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_dv_e1.
+
+" 신호등 및 기타 등등 추가 할 때 필요한 self-define 타입
+TYPES: BEGIN OF gty_flights.
+    INCLUDE TYPE sv_flights.
+TYPES: light TYPE c LENGTH 1,
+       END OF gty_flights.
+
+DATA: gt_flights TYPE TABLE OF gty_flights,
+      gs_flights LIKE LINE OF gt_flights.
+
+*DATA: gt_flights TYPE TABLE OF sv_flights,
+*      gs_flights LIKE LINE OF gt_flights.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA: ok_code TYPE sy-ucomm.
+
+DATA: gs_layout     TYPE lvc_s_layo.
+
+DATA: gt_fcat TYPE lvc_t_fcat,  " internal table 형
+      gs_fcat TYPE lvc_s_fcat.  " structure 형
+
+* Data retribal
+START-OF-SELECTION.
+
+  SELECT carrid carrname connid cityfrom cityto fldate seatsmax seatsocc
+    FROM sv_flights INTO CORRESPONDING FIELDS OF TABLE gt_flights
+    ORDER BY carrid connid fldate.
+
+  LOOP AT gt_flights INTO gs_flights.
+    IF gs_flights-seatsocc < 10.
+      gs_flights-light = '1'.                 " Red
+    ELSEIF gs_flights-seatsocc < 100.
+      gs_flights-light = '2'.                 " Yellow
+    ELSE.
+      gs_flights-light = '3'.                 " Green
+    ENDIF.
+
+    MODIFY gt_flights FROM gs_flights TRANSPORTING light.
+endloop.
+
+
+
+    CALL SCREEN 100.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_AND_TRANSFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_and_transfer OUTPUT.
+  CREATE OBJECT go_container
+    EXPORTING
+      container_name = 'MY_CONTROL_AREA'
+    EXCEPTIONS
+      OTHERS         = 1.
+
+  IF sy-subrc <> 0.
+    MESSAGE a001(zbc405_19).
+
+  ENDIF.
+
+  CREATE OBJECT go_alv_grid
+    EXPORTING
+      i_parent = go_container
+    EXCEPTIONS
+      OTHERS   = 1.
+
+  IF sy-subrc <> 0.
+    MESSAGE a001(zbc405_19).
+  ENDIF.
+* 그리드 생성 후 하고싶은 거 수행
+
+*  " Handler 설정 - 해당 핸들러 메소드 실행
+*  SET HANDLER lcl_handle=>on_double_click FOR go_alv_grid.
+*  SET HANDLER lcl_handle=>on_toolbar FOR go_alv_grid.
+*  SET HANDLER lcl_handle=>on_user_command FOR go_alv_grid.
+*  SET HANDLER lcl_handle=>on_button_click FOR go_alv_grid.
+*
+** List Data
+** Global Field Catalog
+** 2 Layout variant
+*  gv_variant-report = sy-cprog.
+*  gv_variant-variant = pa_lv.
+*  gv_save = 'A'. " U, X, A "
+*
+** 3 Layout Structure
+  gs_layout-grid_title = 'FLIGHT'.
+  gs_layout-zebra      = 'X'.             " 실행 시킨다는 의미의 X(체크 표시) 색깔 번갈아서
+  gs_layout-cwidth_opt = 'X'.             " 실행 시킨다는 의미의 X(체크 표시) 크기 정렬  5권 p.154
+*  gs_layout-sel_mode   = 'A'.             " 셀모드 설정 A, B, C, D 5권 p.155
+  gs_layout-excp_fname = 'LIGHT'.         " 신호등
+  gs_layout-excp_led   = 'X'.             " 해당 light만 나오게 하는 설정
+*  gs_layout-info_fname = 'ROW_COLOR'.     " Row_color 변경
+*  gs_layout-ctab_fname = 'IT_COLFIELDS'.  " Cell color 변경
+*  gs_layout-stylefname = 'IT_CELL_TYPE'.  " on Button Click 타입 선언
+*
+*
+* 7 Field Catalog
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRID'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRNAME'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CONNID'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'COUNTRYFR'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'AIRPFROM'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'COUNTRYTO'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYFROM'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYTO'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'AIRPTO'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'FLDATE'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSMAX'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSOCC'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  " 여기까지 삭제
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRID'.              " 필드
+  gs_fcat-ref_field = 'CARRID'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = '항공사'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 1.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRNAME'.              " 필드
+  gs_fcat-ref_field = 'CARRNAME'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SCARR'.                " 참조 테이블 설정
+  gs_fcat-coltext   = '항공사 이름'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 2.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.                     " 필드 카탈로그에 추가
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CONNID'.              " 필드
+  gs_fcat-ref_field = 'CONNID'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SFLIGHT'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'ID'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 3.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYFROM'.              " 필드
+  gs_fcat-ref_field = 'CITYFROM'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = '출발도시'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 4.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYTO'.              " 필드
+  gs_fcat-ref_field = 'CITYTO'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = '도착도시'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 5.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'FLDATE'.              " 필드
+  gs_fcat-ref_field = 'FLDATE'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SFLIGHT'.                " 참조 테이블 설정
+  gs_fcat-coltext   = '시간'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 6.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSMAX'.              " 필드
+  gs_fcat-ref_field = 'SEATSMAX'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SFLIGHT'.                " 참조 테이블 설정
+  gs_fcat-coltext   = '총좌석'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 7.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'SEATSOCC'.              " 필드
+  gs_fcat-ref_field = 'SEATSOCC'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SFLIGHT'.                " 참조 테이블 설정
+  gs_fcat-coltext   = '남은좌석'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 8.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CALL METHOD go_alv_grid->set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'SV_FLIGHTS'
+*     is_variant       = gv_variant     " Layout Variant
+*     i_save           = gv_save
+*     i_default        = 'X'
+      is_layout        = gs_layout      " Layout Structure
+*     it_toolbar_excluding = gt_exclude     " exclude toolbar 툴바 숨기기
+    CHANGING
+      it_outtab        = gt_flights
+*     it_sort          = gt_sort
+      it_fieldcatalog  = gt_fcat
+    EXCEPTIONS
+      OTHERS           = 1.
+
+  IF sy-subrc <> 0.
+    "  MESSAGE
+  ENDIF.
+
+
+ENDMODULE.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC405_19
+*001   Container Instance is not Data
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

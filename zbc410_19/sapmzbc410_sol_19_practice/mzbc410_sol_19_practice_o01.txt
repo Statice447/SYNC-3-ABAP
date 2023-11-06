@@ -1,0 +1,109 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOL_19_PRACTICE_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  CASE 'X'.
+    WHEN gv_rad1.
+      SET TITLEBAR 'T0100' WITH '1번 라디오 버튼'.
+      dynnr2 = 140.
+    WHEN gv_rad2.
+      SET TITLEBAR 'T0100' WITH '2번 라디오 버튼'.
+      dynnr2 = 141.
+    WHEN gv_rad3.
+      SET TITLEBAR 'T0100' WITH '3번 라디오 버튼'.
+      dynnr2 = 142.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module MOVE_TO_SDYN OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE move_to_sdyn OUTPUT.
+  MOVE-CORRESPONDING wa_spfli TO sdyn_conn.
+  MOVE-CORRESPONDING wa_saplane TO saplane.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0150 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0150 OUTPUT.
+  SET PF-STATUS 'S0150'.
+  SET TITLEBAR 'T0150'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module FILL_DYNNR OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE fill_dynnr OUTPUT.
+  CASE my_tabstrip-activetab.
+    WHEN 'VIEW1'.
+      dynnr = 110.
+    WHEN 'VIEW2'.
+      dynnr = 120.
+    WHEN 'VIEW3'.
+      dynnr = 130.
+    WHEN OTHERS.
+      my_tabstrip-activetab = 'VIEW1'.
+      dynnr = 110.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module GET_BOOK OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE get_book OUTPUT.
+  ON CHANGE OF wa_spfli-carrid OR
+               wa_spfli-connid.
+
+    SELECT *
+      FROM sbook INTO CORRESPONDING FIELDS OF TABLE itab_book
+      WHERE carrid = wa_spfli-carrid
+      AND   connid = wa_spfli-connid.
+
+    my_table_control-lines = lines( itab_book ).
+
+  ENDON.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module TRANS_TO_TC OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE trans_to_tc OUTPUT.
+  MOVE-CORRESPONDING gs_book TO sdyn_book.
+*  MODIFY itab_book FROM gs_book INDEX my_table_control-current_line.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_SAPLANE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_saplane OUTPUT.
+    SELECT SINGLE *
+    FROM saplane "INTO CORRESPONDING FIELDS OF saplane
+    WHERE planetype = sdyn_conn-planetype.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

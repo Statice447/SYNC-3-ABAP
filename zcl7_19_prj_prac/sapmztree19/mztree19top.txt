@@ -1,0 +1,67 @@
+*&---------------------------------------------------------------------*
+*& Include MZTREE19TOP                              - Module Pool      SAPMZTREE19
+*&---------------------------------------------------------------------*
+PROGRAM sapmztree19.
+
+TYPES: node_table_type  LIKE STANDARD TABLE OF mtreesnode WITH DEFAULT KEY.
+DATA: tree_con_ref TYPE REF TO cl_gui_custom_container, "컨테이너
+      g_tree       TYPE REF TO cl_gui_simple_tree.        "트리 컨테이너 참조변수
+
+*TABLES: sflight, scarr.
+TABLES: ztc702_bom_h,ztc702_bom_i.
+
+*DATA: gs_tab  TYPE sflight,
+*      gt_tab  TYPE TABLE OF sflight,
+*      gs_tab2 TYPE scarr,
+*      gt_tab2 TYPE TABLE OF scarr.
+
+DATA: gs_tab  TYPE ztc702_bom_i,
+      gt_tab  TYPE TABLE OF ztc702_bom_i,
+      gs_tab2 TYPE ztc702_bom_h,
+      gt_tab2 TYPE TABLE OF ztc702_bom_h.
+
+
+DATA: ok_code TYPE sy-ucomm.
+
+*ALV 관련 데이터 오브젝트
+DATA: g_custom_con TYPE REF TO cl_gui_custom_container,      "컨테이너
+      g_alv        TYPE REF TO cl_gui_alv_grid.              "ALV GRID
+
+DATA: gs_fieldcat  TYPE lvc_s_fcat,
+      gt_fieldcat  TYPE lvc_t_fcat,
+      gs_layo      TYPE lvc_s_layo,
+      gs_sort      TYPE lvc_s_sort,
+      gt_sort      TYPE lvc_t_sort,
+      gs_functions TYPE ui_functions,
+      gs_refto     TYPE REF TO data,
+      gs_pos       TYPE i.
+
+
+*FIELD-SYMBOLS : <fcat> TYPE lvc_t_fcat.
+*
+*SELECT-OPTIONS: s_carrid FOR sflight-carrid.      "항공사 코드
+
+
+CLASS lcl_application DEFINITION.
+  PUBLIC SECTION.
+    METHODS : frontend_update,
+      handle_node_double_click
+                    FOR EVENT node_double_click OF cl_gui_simple_tree
+        IMPORTING node_key.
+ENDCLASS.
+
+
+CLASS lcl_application IMPLEMENTATION.
+  METHOD frontend_update.
+    CALL METHOD me->frontend_update.
+  ENDMETHOD.
+  METHOD handle_node_double_click.
+    PERFORM node_double_click_0100  USING node_key.
+  ENDMETHOD.
+
+ENDCLASS.
+
+DATA: g_application TYPE REF TO lcl_application.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

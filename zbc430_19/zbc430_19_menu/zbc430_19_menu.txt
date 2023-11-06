@@ -1,0 +1,29 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_MENU
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC430_19_MENU.
+
+data: gt_menu TYPE TABLE OF zztmenureq_19,
+      gs_menu TYPE zztmenureq_19.
+
+PARAMETERS: pa_mana TYPE ys_manager_19,
+            pa_reqid TYPE ys_reqid_19.
+
+gs_menu-manager = pa_mana.
+gs_menu-reqdt = pa_reqid.
+
+gs_menu-zzerdat = sy-datum.
+gs_menu-zzertim = sy-uzeit.
+gs_menu-zzcrnam = sy-uname.
+
+INSERT zztmenureq_19 from gs_menu.
+
+IF sy-subrc = 0.
+  WRITE:/ '성공'.
+
+ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

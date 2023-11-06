@@ -1,0 +1,63 @@
+FUNCTION zfmc702_cont.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     REFERENCE(FV_CONT) TYPE  STRING
+*"  EXPORTING
+*"     REFERENCE(FV_CHANGE_CONT) TYPE  STRING
+*"----------------------------------------------------------------------
+
+  DATA: lv_check  TYPE c LENGTH 4,   " 숫자 판별 NUMC/CHAR
+        lv_len    TYPE n LENGTH 2,
+        lv_num1   TYPE c LENGTH 3,   " 맨 앞 2글자 또는 3글자
+        lv_num2   TYPE c LENGTH 4,   " 중간  4글자
+        lv_num3   TYPE c LENGTH 4.   " 마지막 4글자
+
+  lv_len = strlen( fv_cont ).
+
+  CALL FUNCTION 'NUMERIC_CHECK'
+    EXPORTING
+      string_in = fv_cont
+    IMPORTING
+*     STRING_OUT       =
+      htype     = lv_check.
+
+  IF lv_check = 'NUMC'.
+    IF lv_len = 11.
+      lv_num1 = fv_cont(3).
+      lv_num2 = fv_cont+3(4).
+      lv_num3 = fv_cont+7(4).
+
+      CONCATENATE lv_num1 '-' lv_num2 '-' lv_num3 INTO fv_change_cont.
+
+    ELSEIF lv_len = 9.
+      lv_num1 = fv_cont(2).
+      lv_num2 = fv_cont+2(3).
+      lv_num3 = fv_cont+5(4).
+
+      CONCATENATE lv_num1 '-' lv_num2 '-' lv_num3 INTO fv_change_cont.
+
+    ELSE.
+      MESSAGE '전화번호는 - 없이 10자리 혹은 11자리로 입력하세요.' TYPE 'E'.
+    ENDIF.
+  ELSE.
+    MESSAGE '전화번호는 - 없이 숫자만 입력하세요.' TYPE 'E'.
+
+  ENDIF.
+
+
+
+
+
+
+ENDFUNCTION.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   전화번호는 - 없이 10자리 혹은 11자리로 입력하세요.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

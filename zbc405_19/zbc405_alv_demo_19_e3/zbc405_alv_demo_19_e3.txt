@@ -1,0 +1,63 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_ALV_DEMO_19_E3
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_alv_demo_19_e3.
+
+DATA: gs_spfli    TYPE spfli,
+      gt_sflights TYPE TABLE OF sflight,
+      go_alv_grid TYPE REF TO cl_gui_alv_grid.
+
+SELECT-OPTIONS: so_car FOR gs_spfli-carrid.
+
+START-OF-SELECTION.
+
+  SELECT *
+    FROM spfli INTO CORRESPONDING FIELDS OF gs_spfli
+    WHERE carrid IN so_car.
+
+    WRITE: / gs_spfli-carrid COLOR COL_KEY,
+             gs_spfli-connid COLOR COL_KEY,
+             gs_spfli-cityfrom,
+             gs_spfli-airpfrom,
+             gs_spfli-cityto,
+             gs_spfli-airpto,
+             gs_spfli-fltime,
+             gs_spfli-distance UNIT gs_spfli-distid,
+             gs_spfli-distid.
+
+    HIDE: gs_spfli-carrid,
+          gs_spfli-connid.      "clear해도 메모리에서 지워지지 않도록 함
+
+  ENDSELECT.
+
+  CLEAR gs_spfli.
+
+AT LINE-SELECTION.      " write 글자 더블 클릭 시 실행
+
+  IF gs_spfli IS NOT INITIAL.
+    WRITE: space.
+
+    SELECT *
+      FROM sflight INTO CORRESPONDING FIELDS OF TABLE gt_sflights
+      WHERE carrid = gs_spfli-carrid
+      AND   connid = gs_spfli-connid.
+
+    WINDOW STARTING AT 10 10.
+
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = cl_gui_container=>screen1. "level check
+        " 팝업은 Screen1로 해야 한다.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'SFLIGHT'
+      CHANGING
+        it_outtab        = gt_sflights.
+
+  ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

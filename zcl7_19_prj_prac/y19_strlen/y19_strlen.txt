@@ -1,0 +1,21 @@
+*&---------------------------------------------------------------------*
+*& Report Y19_STRLEN
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT y19_strlen.
+
+PARAMETERS: pa_cont TYPE c LENGTH 15.
+
+DATA: gv_cont TYPE string.
+
+CALL FUNCTION 'ZFMC702_CONT'
+  EXPORTING
+    fv_cont        = pa_cont
+  CHANGING
+    fv_change_cont = gv_cont.
+
+WRITE: gv_cont.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,13 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC414_19_LAB13_TOP                     - Module Pool      ZBC414_19_LAB13
+*&---------------------------------------------------------------------*
+PROGRAM ZBC414_19_LAB13.
+
+TABLES: scustom, zscustom19.
+
+DATA gv_id TYPE scustom-id.
+
+DATA ok_code TYPE sy-ucomm.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,176 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_19_PRAC2_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      CASE sy-dynnr.
+        WHEN '0100'.
+          LEAVE TO SCREEN 0.                " 100에서는 프로그램이 종료되므로 lock 설정 x
+        WHEN '0200'.
+          LEAVE TO SCREEN 0.                " 100에서는 프로그램이 종료되므로 lock 설정 x
+        WHEN '0210' or '0220' or '0230'.
+          PERFORM popup_screen_no.
+      ENDCASE.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'DISPLAY'.
+      CALL SCREEN 200.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'REFRESH'.
+      PERFORM set_refresh_alv.
+    WHEN 'APPEND'.
+      CALL SCREEN 210
+        STARTING AT 10 10
+        ENDING AT 50 20.
+    WHEN 'DELETE'.
+      CALL SCREEN 220
+        STARTING AT 10 10
+        ENDING AT 50 20.
+    WHEN 'CHANGE'.
+      CALL METHOD go_alv_grid->get_selected_rows  " 선택 row 인덱스 찾기
+        IMPORTING
+          et_index_rows = gt_rows.
+      CALL SCREEN 230
+        STARTING AT 10 10
+        ENDING AT 50 20.
+
+  ENDCASE.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_DATA  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE get_data INPUT.
+  SELECT *
+    FROM ztpractice19 INTO CORRESPONDING FIELDS OF TABLE gt_data.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0210  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0210 INPUT.
+  CASE ok_code.
+    WHEN 'OKAY'.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Realy?'
+          text_question         = '저장 하시겠습니까?'
+          text_button_1         = 'Yes'
+          text_button_2         = 'No'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = gv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+      IF gv_answer = 1.
+        CLEAR wa_data.
+        MOVE-CORRESPONDING gs_upd TO wa_data.
+
+        INSERT ztpractice19 FROM wa_data.
+        IF sy-subrc <> 0.
+          MESSAGE a003(zbc414_19) WITH '덤프'.
+        ENDIF.
+
+        CLEAR: wa_data, gs_upd.
+
+        PERFORM set_refresh_alv.
+
+        LEAVE TO SCREEN 0.
+      ELSE.
+        CLEAR: wa_data, gs_upd.
+      ENDIF.
+
+  ENDCASE.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0230  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0230 INPUT.
+  CASE ok_code.
+    WHEN 'OKAY'.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Realy?'
+          text_question         = '정말 수정하시겠습니까?'
+          text_button_1         = 'Yes'
+          text_button_2         = 'No'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = gv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+      IF gv_answer = 1.
+        CLEAR wa_data.
+
+        MOVE-CORRESPONDING gs_upd TO wa_data.
+        UPDATE ztpractice19 FROM wa_data.
+
+        CASE sy-subrc.
+          WHEN 0.
+          WHEN 4.
+            MESSAGE a003(zbc414_19) WITH 'id가 없습니다.'.
+          WHEN OTHERS.
+            MESSAGE a003(zbc414_19).
+        ENDCASE.
+
+        CLEAR: wa_data, gs_upd.
+
+        PERFORM set_refresh_alv.
+
+        LEAVE TO SCREEN 0.
+      ELSE.
+        CLEAR: wa_data, gs_upd.
+      ENDIF.
+  ENDCASE.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

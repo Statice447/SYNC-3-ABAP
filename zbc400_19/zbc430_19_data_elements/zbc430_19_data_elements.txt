@@ -1,0 +1,19 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_DATA_ELEMENTS
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc430_19_data_elements.
+
+*PARAMETERS: pa_fname TYPE zfirstname19,
+*            pa_lname TYPE zlastname19,
+*            pa_activ TYPE zassets19,
+*            pa_liabs TYPE zliabilities19.
+*
+*WRITE: /'first name : ',15 pa_fname,
+*       /'last  name : ',15 pa_lname,
+*       /'asset : ',15 pa_activ,
+*       /'liabs : ',15  pa_liabs.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

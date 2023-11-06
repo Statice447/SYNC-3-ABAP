@@ -1,0 +1,119 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_19_PRAC3_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      CASE sy-dynnr.
+        WHEN '0100'.
+          LEAVE TO SCREEN 0.
+        WHEN '0200'.
+          LEAVE TO SCREEN 0.
+        WHEN '0210'.
+          CALL FUNCTION 'POPUP_TO_CONFIRM'
+            EXPORTING
+              titlebar              = 'Realy?'
+              text_question         = '취소하고 뒤로 가시겠습니까?'
+              text_button_1         = 'Yes'
+              text_button_2         = 'No'
+              display_cancel_button = ''
+            IMPORTING
+              answer                = gv_answer
+            EXCEPTIONS
+              text_not_found        = 1
+              OTHERS                = 2.
+          IF sy-subrc <> 0.
+* Implement suitable error handling here
+          ENDIF.
+
+          IF gv_answer = 1.
+            LEAVE TO SCREEN 0.
+          ENDIF.
+      ENDCASE.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'DISPLAY'.
+      CALL SCREEN 200.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0210  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0210 INPUT.
+  CASE ok_code.
+    WHEN 'OKAY'.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Realy?'
+          text_question         = '저장 하시겠습니까?'
+          text_button_1         = 'Yes'
+          text_button_2         = 'No'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = gv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+      IF gv_answer = 1.
+        IF sy-subrc <> 0.
+          MESSAGE a003(zbc414_19) WITH '덤프'.
+        ENDIF.
+        LEAVE TO SCREEN 0.
+      ELSE.
+      ENDIF.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_DATA  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE get_data INPUT.
+  SELECT *
+    FROM ztpractice19 INTO CORRESPONDING FIELDS OF TABLE gt_data.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'CREATE'.
+      CALL SCREEN 210
+        STARTING AT 10 10
+        ENDING AT 50 20.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

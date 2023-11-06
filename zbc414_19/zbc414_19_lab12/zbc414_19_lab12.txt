@@ -1,0 +1,75 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC414_19_LAB12_1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc414_19_lab12.
+
+DATA: gt_zscustom TYPE TABLE OF zscustom19,
+      gs_zscustom LIKE LINE OF gt_zscustom.
+
+PARAMETERS pa_id TYPE zscustom19-id DEFAULT 77. " 초기 값 77 설정
+
+
+CALL FUNCTION 'ENQUEUE_EZCUS19'                 " READ Lock 모듈
+  EXPORTING
+    mode_zscustom19 = 'S'                       " READ Lock 모드
+    id              = pa_id
+  EXCEPTIONS
+    foreign_lock    = 1
+    system_failure  = 2
+    OTHERS          = 3.
+
+CASE sy-subrc.
+  WHEN 0.
+    WRITE:/ ' 성공'.
+  WHEN 1.
+    WRITE:/ ' 1번 에러'.
+  WHEN 2.
+    WRITE:/ ' 2번 시스템 에러'.
+  WHEN OTHERS.
+    WRITE:/ ' 그 외 에러'.
+ENDCASE.
+
+CALL FUNCTION 'ENQUEUE_EZCUS219'                " WRITE Lock 모듈
+  EXPORTING
+    mode_zscustom19 = 'E'                       " WRITE Lock 모드
+    id              = pa_id
+  EXCEPTIONS
+    foreign_lock    = 1
+    system_failure  = 2
+    OTHERS          = 3.
+CASE sy-subrc.
+  WHEN 0.
+    WRITE:/ ' 성공'.
+  WHEN 1.
+    WRITE:/ ' 1번 에러'.
+  WHEN 2.
+    WRITE:/ ' 2번 시스템 에러'.
+  WHEN OTHERS.
+    WRITE:/ ' 그 외 에러'.
+ENDCASE.
+
+PERFORM set_zscustom19 USING pa_id              " 77번 아이디 확인 서브루틴
+                             gs_zscustom.
+
+cl_demo_output=>display_data( gs_zscustom ).
+*&---------------------------------------------------------------------*
+*& Form SET_ZSCUSTOM19
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_GS_ZSCUSTOM  text
+*&---------------------------------------------------------------------*
+FORM set_zscustom19  USING  lv_id TYPE zscustom19-id
+                            ls_zscustom TYPE zscustom19.
+  SELECT *
+    FROM zscustom19 INTO CORRESPONDING FIELDS OF ls_zscustom
+    WHERE id = lv_id.
+
+  ENDSELECT.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

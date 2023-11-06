@@ -1,0 +1,25 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      ZCL7_19_TASK8
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzcl7_19_task8_top                      .    " Global Data
+
+INCLUDE mzcl7_19_task8_o01                      .  " PBO-Modules
+INCLUDE mzcl7_19_task8_i01                      .  " PAI-Modules
+INCLUDE mzcl7_19_task8_f01                      .  " FORM-Routines
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> Airline Flight Connection Condition
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZCL7_19
+*002   &
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

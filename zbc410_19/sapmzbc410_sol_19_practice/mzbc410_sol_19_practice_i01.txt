@@ -1,0 +1,148 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOL_19_PRACTICE_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'CANC'.
+      CLEAR wa_spfli.
+      CLEAR wa_saplane.
+      LEAVE SCREEN.
+
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'VIEW1' OR 'VIEW2' OR 'VIEW3'.
+      my_tabstrip-activetab = ok_code.
+    WHEN 'CLEAR'.
+      CLEAR wa_spfli.
+      CLEAR wa_saplane.
+      CLEAR sdyn_conn.
+
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'FLTIME'.
+      IF sdyn_conn-carrid IS INITIAL OR sdyn_conn-connid IS INITIAL.
+        MESSAGE i001(zbc410_19) WITH '파라미터 없음'.
+        CLEAR wa_spfli.
+        CLEAR wa_saplane.
+      ELSE.
+        CALL SCREEN 150
+          STARTING AT 10 10
+          ENDING AT 50 20.
+      ENDIF.
+    WHEN 'TIME'.
+      CALL SCREEN 150
+      STARTING AT 10 10
+      ENDING AT 50 20.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_SFLIGHT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE get_spfli INPUT.
+  SELECT SINGLE *
+    FROM spfli INTO CORRESPONDING FIELDS OF wa_spfli
+    WHERE carrid = sdyn_conn-carrid
+    AND   connid = sdyn_conn-connid.
+
+*    check sy-subrc <> 0.
+*      MESSAGE w001(zbc410_19) with '파라미터 없음'.
+*      clear wa_spfli.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0150  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0150 INPUT.
+  CASE ok_code.
+    WHEN '150EXIT'.
+      LEAVE TO SCREEN 0.
+    WHEN 'OKAY'.
+      LEAVE TO SCREEN 0.
+    WHEN 'NO'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_MAX_OCC  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE get_max_occ INPUT.
+    SELECT SINGLE seatsmax seatsocc
+      FROM sflight INTO (sdyn_conn-seatsmax,sdyn_conn-seatsocc)
+      WHERE carrid = sdyn_conn-carrid
+      AND   connid = sdyn_conn-connid.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_SFLIGHT_PLANETYPE  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE get_sflight_planetype INPUT.
+  SELECT SINGLE planetype
+    FROM sflight INTO sdyn_conn-planetype
+    WHERE carrid = sdyn_conn-carrid
+    AND   connid = sdyn_conn-connid.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  GET_SAPLANE  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE get_saplane INPUT.
+  SELECT SINGLE *
+  FROM saplane INTO CORRESPONDING FIELDS OF wa_saplane
+  WHERE planetype = sdyn_conn-planetype.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  TRANS_FROM_TC  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE trans_from_tc INPUT.
+  MOVE-CORRESPONDING sdyn_book TO gs_book.
+
+*  MODIFY itab_book FROM gs_book INDEX my_table_control-lines.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0142  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0142 INPUT.
+  CASE sy-ucomm.
+    WHEN 'PEXIT'.
+      LEAVE PROGRAM.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

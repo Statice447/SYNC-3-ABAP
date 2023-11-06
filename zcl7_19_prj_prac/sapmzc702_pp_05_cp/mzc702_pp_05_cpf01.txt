@@ -1,0 +1,1276 @@
+*&---------------------------------------------------------------------*
+*& Include          MZC702_PP_05F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_PRDMANAGE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_prdmanage .
+  PERFORM get_prdmanage_data.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_layout .
+
+  gs_layout-info_fname = 'COLOR'.
+  gs_layout-excp_led = 'X'.
+  gs_layout-excp_fname = 'LIGHT'.
+  gs_layout-sel_mode = 'A'.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fcat .
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'LIGHT'.
+  gs_fcat-ref_table = 'GTY_PRDMANAGE'.
+  gs_fcat-coltext = '상태표시'.
+  gs_fcat-outputlen = 5.
+  gs_fcat-col_pos = 1.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PRMNUM'.
+  gs_fcat-coltext = '생산관리번호'.
+  gs_fcat-key = 'X'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 14.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PLCODE'.
+  gs_fcat-coltext = '공장번호'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 5.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'GDCODE'.
+  gs_fcat-coltext = '품목코드'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 5.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'GDNAME'.
+  gs_fcat-coltext = '품목명'.
+  gs_fcat-outputlen = 35.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'QUAN'.
+  gs_fcat-coltext = '수량'.
+  gs_fcat-qfieldname = 'UNIT'.
+  gs_fcat-outputlen = 5.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'UNIT'.
+  gs_fcat-coltext = '단위'.
+  gs_fcat-quantity = 'EA'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 3.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PPSTDAT'.
+  gs_fcat-coltext = '생산시작일'.
+  gs_fcat-outputlen = 11.
+  gs_fcat-just = 'C'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'PPEDDAT'.
+  gs_fcat-coltext = '생산종료일'.
+  gs_fcat-outputlen = 11.
+  gs_fcat-just = 'C'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CRNAM'.
+  gs_fcat-coltext = '생성자'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 10.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'ERDAT'.
+  gs_fcat-coltext = '생성일자'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 10.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'ERTIM'.
+  gs_fcat-coltext = '생성시간'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 10.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CHNAM'.
+  gs_fcat-coltext = '변경자'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 10.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CHDAT'.
+  gs_fcat-coltext = '변경일자'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 10.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CHTIM'.
+  gs_fcat-coltext = '변경시간'.
+  gs_fcat-just = 'C'.
+  gs_fcat-outputlen = 10.
+  APPEND gs_fcat TO gt_fcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_TREE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_tree.
+  DATA: node_table TYPE node_table_type, "트리 값들 관계 넣어주기위해
+        events     TYPE cntl_simple_events, "더블클릭 이벤트
+        event      TYPE cntl_simple_event.    "더블클릭 이벤트
+
+  CREATE OBJECT g_tree
+    EXPORTING
+      parent              = tree_con_ref
+      node_selection_mode = cl_gui_simple_tree=>node_sel_mode_single. "싱글선택
+
+*노드 생성
+  PERFORM build_node_table USING node_table. "트리에 데이터 넣어줌
+
+*트리 노드 추가
+  CALL METHOD g_tree->add_nodes
+    EXPORTING
+      table_structure_name = 'MTREESNODE'
+      node_table           = node_table. "트리 데이터 들어가있는 int
+
+*이벤트
+  CREATE OBJECT g_application.
+
+  event-eventid = cl_gui_simple_tree=>eventid_node_double_click.
+  event-appl_event = 'X'.
+  APPEND event TO events.
+
+*트리 이벤트 등록
+  CALL METHOD g_tree->set_registered_events
+    EXPORTING
+      events                    = events
+    EXCEPTIONS
+      cntl_error                = 1
+      cntl_system_error         = 2
+      illegal_event_combination = 3.
+
+*이벤트 헨들러
+  SET HANDLER g_application->handle_node_double_click FOR g_tree.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BUILD_NODE_TABLE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_NODE_TABLE  text
+*&---------------------------------------------------------------------*
+FORM build_node_table  USING node_table TYPE node_table_type.
+  DATA: node           LIKE mtreesnode,
+        lv_month       TYPE string,
+        lv_node_month  TYPE string,
+        lv_text        TYPE string,
+        lv_check_month TYPE string,
+        lv_key_pornum  TYPE string,
+        lv_child_key   TYPE string.
+
+
+  CLEAR node.
+  " Sort 시 root가 최상위가 되야하므로 키 이름을 최상단에 올릴수 있도록 이름 설정
+  node-node_key = 'AA'.       "tree 상위항목 , 최상위 항목임.
+  node-isfolder = 'X'.        "폴더모양으로 표시  , 모양이 폴더
+  node-text = gv_year.
+  APPEND node TO node_table.
+
+  DO 12 TIMES.
+    CLEAR: lv_text, lv_month, lv_node_month.
+
+    IF sy-index < 10.                                   " 1~12월 폴더를 만들기 위한 인덱스 체크
+      lv_month = sy-index.
+    ELSEIF sy-index = 10.                               " 10,11,12는 노드 정렬을 위해 A, B, C로 변경
+      lv_month = 'A'.
+    ELSEIF sy-index = 11.
+      lv_month = 'B'.
+    ELSEIF sy-index = 12.
+      lv_month = 'C'.
+    ENDIF.
+
+* 월단위 폴더 생성 - 숫자 뒤에 월 붙히기.
+    CONCATENATE 'AA' lv_month INTO lv_text.
+    IF sy-index < 10.                                   " 10보다 작을 경우는 lv_month가 인덱스 이므로 바로 붙히기
+      CONCATENATE lv_month '월' INTO lv_node_month.
+    ELSE.
+      lv_month = sy-index.                              " 10이상 일 경우는 lv_month가 영어 이므로 현재 인덱스(월)로 바꿔주고 월 붙히기.
+      CONCATENATE lv_month '월' INTO lv_node_month.
+    ENDIF.
+
+    CLEAR node.
+    " child는 root 아래에 올 수 있도록 이름 설정
+    node-node_key = lv_text. "root 하위 항목
+    node-relatkey = 'AA'.
+    node-isfolder = 'X'.
+    node-text = lv_node_month.
+*    node-expander = 'X'. "아래로 확장
+    APPEND node TO node_table.
+
+    LOOP AT wt_tab INTO ws_tab WHERE erdat+0(4) = gv_year.
+      lv_check_month = ws_tab-erdat+4(2).
+      IF lv_check_month = sy-index.
+        CONCATENATE 'AA' lv_check_month ws_tab-prmnum INTO lv_key_pornum.
+        CLEAR node.
+        node-node_key = ws_tab-pornum.
+        node-relatkey = lv_text.
+        node-n_image = '@A8@'.                        " 프로그램 SHOWICON 실행 후 원하는 아이콘 코드 찾기
+        node-text = ws_tab-pornum.
+        APPEND node TO node_table.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDDO.
+
+*    중복 키값을 제거 하기위해 Sort 오름/내림 차순은 명명에 따라서 선택, sort안하면 중복키값들이 제대로 삭제 안됨
+  SORT node_table ASCENDING BY node_key.
+*     node table에 있는 중복 키값 삭제
+  DELETE ADJACENT DUPLICATES FROM node_table COMPARING node_key.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form NODE_DOUBLE_CLICK_0100
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_NODE_KEY  text
+*&---------------------------------------------------------------------*
+FORM node_double_click_0100  USING    p_node_key.
+  DATA: lv_node_key   TYPE string,
+        lv_check_node TYPE string,
+        lv_check_type TYPE c LENGTH 4,
+        lv_text       TYPE string.
+
+  lv_node_key = p_node_key+2(1).
+  lv_check_node = 'AA*'.
+
+  CALL FUNCTION 'NUMERIC_CHECK'             " 마지막이 숫자인지 문자인지 체크 (10월 이후 A,B,C)
+    EXPORTING
+      string_in = lv_node_key
+    IMPORTING
+      htype     = lv_check_type.
+
+  CASE lv_check_type.
+    WHEN 'NUMC'.                          " 1~9월 일 경우
+      CONCATENATE '____' '0' lv_node_key '%' INTO lv_text.   "월 앞에 0을 붙혀서 조건 설정
+
+      SELECT *
+        FROM ztc702_prdmanage INTO CORRESPONDING FIELDS OF TABLE gt_prdmanage
+        WHERE erdat LIKE lv_text. "트리 월 폴더 더블 클릭 시 월 단위 정보 가져오기.
+
+    WHEN 'CHAR'.                          " 10~12월 일 경우
+      IF lv_node_key = 'R'.             " 폴더 안 데이터 더블클릭 시
+        SELECT *
+          FROM ztc702_prdmanage INTO CORRESPONDING FIELDS OF TABLE gt_prdmanage
+          WHERE pornum = p_node_key.      "트리 생산번호 더블 클릭 시 그에 맞는 정보만 가져오기.
+
+      ELSE.                               " 폴더(월 단위) 더블 클릭 시
+        IF lv_node_key = 'A'.
+          lv_text = gv_year && '10%'.
+        ELSEIF lv_node_key = 'B'.
+          lv_text = gv_year && '11%'.
+        ELSEIF lv_node_key = 'C'.
+          lv_text = gv_year && '12%'.
+        ENDIF.
+
+        SELECT *
+          FROM ztc702_prdmanage INTO CORRESPONDING FIELDS OF TABLE gt_prdmanage
+          WHERE erdat LIKE lv_text. "트리 생산번호 더블 클릭 시 그에 맞는 정보만 가져오기.
+
+      ENDIF.
+
+  ENDCASE.
+*  PERFORM refresh_grid. " alv grid refresh.
+  go_alv_grid->refresh_table_display( ).
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form REFRESH_GRID
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_grid .
+  DATA: l_scroll TYPE lvc_s_stbl.
+  l_scroll-row = 'X'.
+  l_scroll-col = 'X'.
+  CALL METHOD go_alv_grid->refresh_table_display
+    EXPORTING
+      i_soft_refresh = ''
+      is_stable      = l_scroll.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CONFIRM_PRDMANAGE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM confirm_prdmanage .
+  DATA : lt_index  TYPE lvc_t_row, "ALV 선택라인 저장 인터널테이블
+         ls_index  LIKE LINE OF lt_index, "ALV 선택라인 저장 스트럭쳐
+         lv_lines  TYPE i, "선택한 라인수를 저장할 변수
+         lv_answer TYPE c LENGTH 1.   " 팝업 체크 용 변수.
+
+  DATA: ls_prdmanage TYPE ztc702_prdmanage,
+        ls_alv_prm   LIKE LINE OF gt_prdmanage.
+
+***** alv row 인데스 찾기
+  CALL METHOD go_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = lt_index.
+
+***** 선택된 ROW 개수 찾기
+  DESCRIBE TABLE lt_index LINES lv_lines.
+
+  IF lt_index IS INITIAL.
+    MESSAGE '라인을 선택해주세요.' TYPE 'I'.
+  ELSEIF lv_lines > 1.
+    MESSAGE '라인을 하나만 선택해주세요.' TYPE 'I'.
+  ELSE.
+    LOOP AT lt_index INTO ls_index.
+      READ TABLE gt_prdmanage INTO ls_prdmanage INDEX ls_index.
+    ENDLOOP.
+
+    IF ls_prdmanage-status <> space.
+      MESSAGE '생산 중인 라인만 검수가 가능합니다.' TYPE 'I'.
+    ELSE.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = '생산 완료'
+          text_question         = '품질 검수 대기를 하시겠습니까?'
+          text_button_1         = '예'
+          text_button_2         = '아니오'
+          display_cancel_button = space
+        IMPORTING
+          answer                = lv_answer.
+
+**** 팝업에서 YES 일 경우 데이터 생성 작업
+      IF lv_answer = 1.
+        ls_prdmanage-chnam = sy-uname.
+        ls_prdmanage-chdat = sy-datum.
+        ls_prdmanage-chtim = sy-uzeit.
+        ls_prdmanage-status = '2'.         " 신호등 승인(노란색)으로 변경
+        UPDATE ztc702_prdmanage FROM ls_prdmanage.
+
+
+***** alv 리스트 즉시 반영
+        LOOP AT gt_prdmanage INTO ls_alv_prm WHERE prmnum = ls_prdmanage-prmnum.
+          CLEAR ls_alv_prm.
+          MOVE-CORRESPONDING ls_prdmanage TO ls_alv_prm.
+          MODIFY gt_prdmanage FROM ls_alv_prm TRANSPORTING status.
+        ENDLOOP.
+
+**** SY-SUBRC 체크
+        IF sy-subrc = 0.
+          MESSAGE i012 WITH ls_prdmanage-prmnum.
+          COMMIT WORK.
+
+        ELSE.
+          MESSAGE '변경 실패' TYPE 'I'.          " 실패 시 이전 작업들 롤백
+          ROLLBACK WORK.
+
+        ENDIF.
+
+      ENDIF.
+
+    ENDIF.
+
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CHECK_PRDMANAGE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM check_prdmanage .
+  DATA : lt_index  TYPE lvc_t_row, "ALV 선택라인 저장 인터널테이블
+         ls_index  LIKE LINE OF lt_index, "ALV 선택라인 저장 스트럭쳐
+         lv_lines  TYPE i, "선택한 라인수를 저장할 변수
+         lv_answer TYPE c LENGTH 1.   " 팝업 체크 용 변수.
+
+  DATA: ls_prdmanage TYPE ztc702_prdmanage,
+        ls_alv_prm   LIKE LINE OF gt_prdmanage.
+
+***** alv row 인데스 찾기
+  CALL METHOD go_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = lt_index.
+
+***** 선택된 ROW 개수 찾기
+  DESCRIBE TABLE lt_index LINES lv_lines.
+
+  IF lt_index IS INITIAL.
+    MESSAGE '라인을 선택해주세요.' TYPE 'I'.
+  ELSEIF lv_lines > 1.
+    MESSAGE '라인을 하나만 선택해주세요.' TYPE 'I'.
+  ELSE.
+    LOOP AT lt_index INTO ls_index.
+      READ TABLE gt_prdmanage INTO ls_prdmanage INDEX ls_index.
+    ENDLOOP.
+
+    IF ls_prdmanage-status <> '2'.
+      MESSAGE '생산 완료된 라인만 품질 검수가 가능합니다.' TYPE 'I'.
+    ELSE.
+      gt_index = lt_index.
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = '품질 검수'
+          text_question         = '품질 검수를 하시겠습니까?'
+          text_button_1         = '예'
+          text_button_2         = '아니오'
+          display_cancel_button = space
+        IMPORTING
+          answer                = lv_answer.
+
+**** 팝업에서 YES 일 경우 데이터 생성 작업
+      IF lv_answer = 1.
+        CALL SCREEN 120
+          STARTING AT 10 10
+          ENDING AT 65 15.
+
+        IF gv_check = 'O'.                   " 정상적으로 수불대장에 데이터가 넣었을 경우
+          ls_prdmanage-chnam = sy-uname.
+          ls_prdmanage-chdat = sy-datum.
+          ls_prdmanage-chtim = sy-uzeit.
+          ls_prdmanage-status = '3'.         " 신호등 승인(초록색)으로 변경
+          UPDATE ztc702_prdmanage FROM ls_prdmanage.
+
+**** SY-SUBRC 체크
+          IF sy-subrc = 0.
+            MESSAGE i012 WITH ls_prdmanage-prmnum.
+*        PERFORM get_prdmanage_data.
+            COMMIT WORK.
+
+          ELSE.
+            MESSAGE '변경 실패' TYPE 'I'.          " 실패 시 이전 작업들 롤백
+            ROLLBACK WORK.
+
+          ENDIF.
+
+        ELSEIF gv_check = 'X'.
+
+        ENDIF.
+
+      ENDIF.
+
+    ENDIF.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SAVE_PRDMANAGE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM save_prdmanage .
+  DATA: lt_prdmanage TYPE TABLE OF ztc702_prdmanage,
+        ls_prdmanage TYPE ztc702_prdmanage.
+
+  DATA: lt_prdord TYPE TABLE OF zdvc702_prdord,
+        ls_prdord TYPE zdvc702_prdord.
+
+
+  DATA: lv_text   TYPE string,
+        lv_num    TYPE string,
+        lv_answer TYPE c LENGTH 1.
+
+
+**** 필드 조건 설정
+  IF  zsc702_prdord-pornum IS INITIAL OR
+      zsc702_prdord-plcode IS INITIAL OR
+      zsc702_prdord-gdcode IS INITIAL OR
+      zsc702_prdord-gdname IS INITIAL OR
+      zsc702_prdord-ppstdat IS INITIAL OR
+      zsc702_prdord-ppeddat IS INITIAL.
+
+    MESSAGE '모든 데이터를 입력해 주세요.' TYPE 'I'.
+
+  ELSE.
+**** 모든 조건이 충족 될 경우 생성 진행
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = '생산 등록'
+        text_question         = '생산을 시작하시겠습니까?'
+        text_button_1         = '예'
+        text_button_2         = '아니오'
+        display_cancel_button = space
+      IMPORTING
+        answer                = lv_answer.
+
+**** 팝업에서 YES 일 경우 데이터 생성 작업
+    IF lv_answer = 1.
+
+      SELECT *
+        FROM zdvc702_prdord INTO CORRESPONDING FIELDS OF TABLE lt_prdord
+        WHERE pornum = zsc702_prdord-pornum
+        AND gdcode = zsc702_prdord-gdcode.
+
+
+**** 채번 펑션 모듈 실행
+      CALL FUNCTION 'ZFMC702_CNRO'
+        EXPORTING
+          fv_module_name   = 'PRM'
+          fv_cnro_nr       = '05'
+          fv_object        = 'ZNRC702PP1'
+        CHANGING
+          fv_change_codenr = lv_text.
+
+
+**** 실재고량 및 유통기한 테이블 업데이트
+      PERFORM update_mtiv_exp USING zsc702_prdord lv_text.
+
+**** 채번코드 및 생성자 입력
+      MOVE-CORRESPONDING  zsc702_prdord TO ls_prdmanage.
+      ls_prdmanage-prmnum = lv_text.
+      ls_prdmanage-crnam = sy-uname.
+      ls_prdmanage-erdat = sy-datum.
+      ls_prdmanage-ertim = sy-uzeit.
+
+      UPDATE ztc702_prdord_i SET prmstatus = 'X' WHERE pornum = ls_prdmanage-pornum AND gdcode = ls_prdmanage-gdcode.
+      INSERT ztc702_prdmanage FROM ls_prdmanage.
+
+**** SY-SUBRC 체크
+      IF sy-subrc = 0.
+        MESSAGE i000 WITH lv_text.
+*        PERFORM display_prdmanage.
+        CLEAR: zsc702_prdord, gt_prdmanage.
+        COMMIT WORK.
+
+        g_tree->free( ).
+        SELECT * FROM ztc702_prdmanage
+          INTO CORRESPONDING FIELDS OF TABLE wt_tab.
+
+        PERFORM create_tree.
+        LEAVE TO SCREEN 0.
+      ELSE.
+        MESSAGE '등록 실패' TYPE 'I'.          " 실패 시 이전 작업들 롤백
+        ROLLBACK WORK.
+
+      ENDIF.
+    ENDIF.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CHANGE_TREE_YEAR
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM change_tree_year .
+  CLEAR : gt_prdmanage.
+  g_tree->free( ).
+  PERFORM create_tree.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_PRDMANAGE_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_prdmanage_data .
+**** 조건 검색을 위한 range 타입 설정 -> 사용 필드만큼 선언
+  DATA: lt_pornum TYPE RANGE OF gty_prdmanage-pornum,   " 생산 오더 번호
+        ls_pornum LIKE LINE OF lt_pornum.
+
+  DATA: lt_prmnum TYPE RANGE OF gty_prdmanage-prmnum,   " 생산 번호
+        ls_prmnum LIKE LINE OF lt_prmnum.
+
+  DATA: lt_plcode TYPE RANGE OF gty_prdmanage-plcode,   " 공장 코드
+        ls_plcode LIKE LINE OF lt_plcode.
+
+  DATA: lt_gdcode TYPE RANGE OF gty_prdmanage-gdcode,     " 품목 코드
+        ls_gdcode LIKE LINE OF lt_gdcode.
+
+  DATA: lv_year TYPE string.                              " 연도 조건
+
+  lv_year = gv_year && '%'.
+
+**** 조건 검색을 위한 range 타입 조건 설정 => 필드가 입력되면 필드와 동일한 조건으로
+
+  IF ztc702_prdmanage-pornum IS NOT INITIAL.
+    ls_pornum-sign = 'I'.
+    ls_pornum-option = 'EQ'.
+    ls_pornum-low = ztc702_prdmanage-pornum.
+    APPEND ls_pornum TO lt_pornum.
+  ENDIF.
+
+  IF ztc702_prdmanage-prmnum IS NOT INITIAL.
+    ls_prmnum-sign = 'I'.
+    ls_prmnum-option = 'EQ'.
+    ls_prmnum-low = ztc702_prdmanage-prmnum.
+    APPEND ls_prmnum TO lt_prmnum.
+  ENDIF.
+
+  IF ztc702_prdmanage-plcode IS NOT INITIAL.
+    ls_plcode-sign = 'I'.
+    ls_plcode-option = 'EQ'.
+    ls_plcode-low = ztc702_prdmanage-plcode.
+    APPEND ls_plcode TO lt_plcode.
+  ENDIF.
+
+  IF ztc702_prdmanage-gdcode IS NOT INITIAL.
+    ls_gdcode-sign = 'I'.
+    ls_gdcode-option = 'EQ'.
+    ls_gdcode-low = ztc702_prdmanage-gdcode.
+    APPEND ls_gdcode TO lt_gdcode.
+  ENDIF.
+
+**** Select문 range 타입으로 선언했으므로 where ~ in 조건 + 삭제플래그가 체크가 안될 경우 검색.
+
+  IF gv_pre_month > gv_month.
+    SELECT *
+      FROM ztc702_prdmanage INTO CORRESPONDING FIELDS OF TABLE gt_prdmanage
+      WHERE pornum IN lt_pornum
+      AND prmnum IN lt_prmnum
+      AND plcode IN lt_plcode
+      AND gdcode IN lt_gdcode
+      AND ppstdat BETWEEN gv_month AND gv_pre_month
+      AND erdat LIKE lv_year.
+
+  ELSE.
+    SELECT *
+      FROM ztc702_prdmanage INTO CORRESPONDING FIELDS OF TABLE gt_prdmanage
+      WHERE pornum IN lt_pornum
+      AND prmnum IN lt_prmnum
+      AND plcode IN lt_plcode
+      AND gdcode IN lt_gdcode
+      AND ppstdat BETWEEN gv_pre_month AND gv_month
+      AND erdat LIKE lv_year.
+
+  ENDIF.
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_PIE_CHART
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_pie_chart .
+  DATA: lv_sum TYPE i,
+        lv_avr TYPE f.
+
+  REFRESH y_values.
+  REFRESH x_texts.
+
+  PERFORM set_pie_text.           " 그래프 값 설정
+
+  CALL FUNCTION 'GFW_PRES_SHOW'
+    EXPORTING
+      container         = 'PIE'
+      presentation_type = 8       " 가로 막대그래프 번호
+      header            = '차트는 최종 검수가 완료된 품목을 기준'
+    TABLES
+      values            = y_values
+      column_texts      = x_texts.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_PIE_TEXT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_pie_text .
+  DATA: ls_prdmanager TYPE ztc702_prdmanage.
+
+  DATA: lv_sum    TYPE i,                " 품목당 합계
+        lv_gdcode TYPE string,         " gdcode 체크
+        lv_index  TYPE string.         " do-enddo 인덱스 체크
+
+  DATA: ly_values TYPE TABLE OF gprval WITH HEADER LINE,
+        ls_values LIKE LINE OF ly_values.
+
+  CLEAR: y_values, ly_values.
+  DO 20 TIMES.                         " 현재 완제품 품목 갯수 만큼 - 11개
+    IF sy-index < 10.                  " index 숫자에 따른 품목코드 검색
+      lv_gdcode = 'P00' && sy-index.
+    ELSEIF sy-index < 99.
+      lv_gdcode = 'P0' && sy-index.
+    ELSE.
+      lv_gdcode = 'P' && sy-index.
+    ENDIF.
+
+    CLEAR y_values-val1.               " 품목당 수량 체크를 위해 합계초기화.
+    CLEAR ly_values-val1.
+
+*    LOOP AT gt_prdmanage INTO ls_prdmanager WHERE status = '3' AND mtcode = 'P'.
+*      IF ls_prdmanager-gdcode = lv_gdcode.
+*        y_values-val1 = y_values-val1 + ls_prdmanager-quan.
+*        lv_sum = lv_sum + ls_prdmanager-quan.
+*        y_values-rowtxt = ls_prdmanager-gdname+6(10).
+*      ENDIF.
+*    ENDLOOP.
+
+    LOOP AT gt_prdmanage INTO ls_prdmanager WHERE status = '3' AND mtcode = 'P'.
+      IF ls_prdmanager-gdcode = lv_gdcode.
+        ly_values-val1 = ly_values-val1 + ls_prdmanager-quan.
+        lv_sum = lv_sum + ls_prdmanager-quan.
+        ly_values-rowtxt = ls_prdmanager-gdname+6(10).
+      ENDIF.
+    ENDLOOP.
+
+    IF ly_values-val1 <> 0.             " 해당 품목의 수량이 있으면 차트 추가.
+      APPEND ly_values.
+    ENDIF.
+
+  ENDDO.
+
+  SORT ly_values DESCENDING BY val1.
+
+  LOOP AT ly_values[] INTO ls_values FROM 1 TO 5.
+    APPEND ls_values TO y_values.
+
+  ENDLOOP.
+
+  CLEAR x_texts.
+  x_texts-coltxt = '생산량'.
+  APPEND x_texts.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form RESET_NUMBER_RANGE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM reset_number_range .
+  DATA: ls_date TYPE ztc702_prdmanage.  " 현재 날짜 확인을 위한 데이터 선언
+
+  IF ls_date IS INITIAL.          " 값이 없을 때 한번만 돌리기 위해 조건문 설정
+    SELECT prmnum                 " 문서번호만 확인하기 위해 필드 하나만 설정
+      FROM ztc702_prdmanage INTO CORRESPONDING FIELDS OF ls_date
+      UP TO 1 ROWS                " 맨 위 한줄만
+      ORDER BY prmnum DESCENDING. " 가장 마지막 데이터를 내림차순으로 정렬
+    ENDSELECT.
+  ENDIF.
+
+  IF ls_date-prmnum+3(6) <> sy-datum+2(6).      " 문서번호의 연월일과 현재 날짜 연월일 6자리만 비교
+    CALL FUNCTION 'NUMBER_RANGE_INTERVAL_INIT'  " 채번 초기화 함수
+      EXPORTING
+        object            = 'ZCL719FINR'        " 초기화 할 snro 오브젝트
+      EXCEPTIONS
+        no_interval_found = 1
+        object_not_found  = 2.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_QMFIELD
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_qmfield .
+  DATA: ls_index     TYPE lvc_s_row,
+        ls_prdmanage TYPE gty_prdmanage.
+
+  LOOP AT gt_index INTO ls_index.
+    READ TABLE gt_prdmanage INTO ls_prdmanage INDEX ls_index.
+  ENDLOOP.
+  MOVE-CORRESPONDING ls_prdmanage TO zsc702_qmcheck.
+  zsc702_qmcheck-quan = zsc702_qmcheck-quan / 1000. " 정확한 수량을 넣기위한 나눗셈
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DELETE_ZERO
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      <--P_LV_QUAN_O  text
+*      <--P_LV_QUAN_X  text
+*&---------------------------------------------------------------------*
+FORM delete_zero  CHANGING pv_quan_o
+                           pv_quan_x.
+
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+    EXPORTING
+      input  = pv_quan_o
+    IMPORTING
+      output = pv_quan_o.
+
+  CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+    EXPORTING
+      input  = pv_quan_x
+    IMPORTING
+      output = pv_quan_x.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SAVE_QMCHECK
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      <--P_GV_CHECK  text
+*&---------------------------------------------------------------------*
+FORM save_qmcheck  CHANGING pv_check.
+  DATA: lv_sumquan TYPE p DECIMALS 3,
+        lv_subrc   TYPE string,
+        lv_gdcode  TYPE string,
+        lv_text    TYPE string.
+
+  DATA: lv_num TYPE n LENGTH 9.
+
+  DATA: lt_mtiv TYPE TABLE OF ztc702_mtiv,
+        ls_mtiv TYPE ztc702_mtiv.
+
+  DATA: lv_quan_o TYPE p DECIMALS 0,
+        lv_quan_x TYPE p DECIMALS 0.
+
+  DATA: lv_text_quan_o TYPE string,
+        lv_text_quan_x TYPE string.
+
+  DATA: ls_srmanager TYPE ztc702_srmanage.
+
+  SELECT *
+    FROM ztc702_mtiv INTO CORRESPONDING FIELDS OF TABLE lt_mtiv.
+
+  lv_sumquan = zsc702_qmcheck-quan_o + zsc702_qmcheck-quan_x.
+
+  IF  lv_sumquan <> zsc702_qmcheck-quan.
+    MESSAGE '전체수량을 맞춰서 입력하세요.' TYPE 'I'.
+    ROLLBACK WORK.
+  ELSE.
+    MOVE-CORRESPONDING zsc702_qmcheck TO ls_srmanager.
+
+    CALL FUNCTION 'ZFMC702_CNRO_LOT'
+      EXPORTING
+        fv_module_name   = 'LOT'
+        fv_cnro_nr       = '1'
+        fv_object        = 'ZNRC702MM2'
+      CHANGING
+        fv_change_codenr = lv_text.
+
+    ls_srmanager-lotnum =  lv_text.
+
+***** 정상 개수 채번 및 테이블 데이터 넣기
+    CLEAR lv_text.
+* 채번 펑션.
+    CALL FUNCTION 'NUMBER_GET_NEXT'
+      EXPORTING
+        nr_range_nr = '1'
+        object      = 'ZNRC702MM7'
+      IMPORTING
+        number      = lv_num.
+
+    lv_num = lv_num + 550.
+
+* 수불 대기 문서 채번.
+    CONCATENATE 'SRD' sy-datum+0(4) lv_num+4(5) INTO lv_text.
+
+    ls_srmanager-srdocu = lv_text.
+    ls_srmanager-reference = zsc702_qmcheck-prmnum.
+    ls_srmanager-quantity = zsc702_qmcheck-quan_o * 1000.   " 소수점으로 받아오기 때문에 1000을 곱해준다.
+    ls_srmanager-srtype = 'PR'.
+    ls_srmanager-crnam = sy-uname.
+    ls_srmanager-erdat = sy-datum.
+    ls_srmanager-ertim = sy-uzeit.
+
+    LOOP AT lt_mtiv INTO ls_mtiv WHERE gdcode = ls_srmanager-gdcode AND status = 'A'.
+      ls_mtiv-rinven = ls_mtiv-rinven + ls_srmanager-quantity.
+      ls_mtiv-chnam = sy-uname.
+      ls_mtiv-chdat = sy-datum.
+      ls_mtiv-chtim = sy-uzeit.
+      MODIFY lt_mtiv FROM ls_mtiv.
+
+    ENDLOOP.
+
+    UPDATE ztc702_mtiv FROM TABLE lt_mtiv.
+    IF sy-subrc <> 0.
+      MESSAGE '정상 실재고 에러' TYPE 'E'.
+      ROLLBACK WORK.
+
+    ENDIF.
+
+    INSERT ztc702_srmanage FROM ls_srmanager.
+    IF sy-subrc = 0.
+    ELSE.
+      lv_subrc = sy-subrc.
+      MESSAGE '정상 수불 에러' && lv_subrc TYPE 'I'.
+      ROLLBACK WORK.
+    ENDIF.
+
+**** 불량 개수 채번 및 테이블 데이터 넣기
+    CLEAR lv_text.
+* 채번 펑션.
+    CALL FUNCTION 'NUMBER_GET_NEXT'
+      EXPORTING
+        nr_range_nr = '1'
+        object      = 'ZNRC702MM7'
+      IMPORTING
+        number      = lv_num.
+
+    lv_num = lv_num + 550.
+
+* 수불 대기 문서 채번.
+    CONCATENATE 'SRD' sy-datum+0(4) lv_num+4(5) INTO lv_text.
+    ls_srmanager-srdocu = lv_text.
+    ls_srmanager-quantity = zsc702_qmcheck-quan_x * 1000.   " 소수점으로 받아오기 때문에 1000을 곱해준다.
+    ls_srmanager-srtype = 'DI'.
+
+    LOOP AT lt_mtiv INTO ls_mtiv WHERE gdcode = ls_srmanager-gdcode AND status = 'D'.
+      ls_mtiv-rinven = ls_mtiv-rinven + ls_srmanager-quantity.
+      ls_mtiv-chnam = sy-uname.
+      ls_mtiv-chdat = sy-datum.
+      ls_mtiv-chtim = sy-uzeit.
+      MODIFY lt_mtiv FROM ls_mtiv.
+    ENDLOOP.
+
+    UPDATE ztc702_mtiv FROM TABLE lt_mtiv.
+    INSERT ztc702_srmanage FROM ls_srmanager.
+    IF sy-subrc = 0.
+    ELSE.
+      lv_subrc = sy-subrc.
+      MESSAGE '불량 수불 에러' && lv_subrc TYPE 'I'.
+      ROLLBACK WORK.
+    ENDIF.
+
+**** 0 제거
+    lv_quan_o = zsc702_qmcheck-quan_o * 1000.
+    lv_quan_x = zsc702_qmcheck-quan_x * 1000.
+
+**** 메시지 출력을 위한 string 형 변환
+    lv_text_quan_o = lv_quan_o.
+    lv_text_quan_x = lv_quan_x.
+
+    IF sy-subrc = 0.
+      MESSAGE i013 WITH lv_quan_o lv_quan_x.
+      UPDATE ztc702_prdmanage SET chdat = sy-datum chtim = sy-uzeit WHERE prmnum = zsc702_qmcheck-prmnum.
+      COMMIT WORK.
+      CLEAR: zsc702_qmcheck, gt_prdmanage.
+      pv_check = 'O'.
+      LEAVE TO SCREEN 0.
+    ELSE.
+      lv_subrc = sy-subrc.
+      MESSAGE lv_subrc TYPE 'I'.
+      ROLLBACK WORK.
+
+    ENDIF.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form RESET_SCREEN
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM reset_screen .
+  CLEAR: ztc702_prdmanage, gt_prdmanage.
+
+  gv_month = sy-datum.
+  CALL FUNCTION 'RP_CALC_DATE_IN_INTERVAL'
+    EXPORTING
+      date      = sy-datum
+      days      = '00'
+      months    = '01'
+      signum    = '-'
+      years     = '00'
+    IMPORTING
+      calc_date = gv_pre_month.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_YEAR_MONTH
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_year_month .
+  IF gv_year IS INITIAL.                    " 초기 연도 설정
+    gv_year = sy-datum+0(4).
+  ENDIF.
+
+  IF gv_month IS INITIAL.
+    gv_month = sy-datum.
+
+    CALL FUNCTION 'RP_CALC_DATE_IN_INTERVAL'
+      EXPORTING
+        date      = sy-datum
+        days      = '00'
+        months    = '01'
+        signum    = '-'
+        years     = '00'
+      IMPORTING
+        calc_date = gv_pre_month.
+
+
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form UPDATE_MTIV_EXP
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM update_mtiv_exp USING ps_prdord TYPE zsc702_prdord
+                           pv_text.
+
+  DATA: lt_exp  TYPE TABLE OF ztc702_exp,
+        ls_exp  TYPE ztc702_exp,
+        ls_row  TYPE i,
+        lt_srm  TYPE TABLE OF ztc702_srmanage,
+        ls_srm  TYPE ztc702_srmanage,
+        lt_mtiv TYPE TABLE OF ztc702_mtiv,
+        ls_mtiv TYPE ztc702_mtiv,
+        lv_i    TYPE c LENGTH 1 VALUE 1,    " WHILE문 INDEX 번호.
+        lv_e    TYPE i,                     " WHILE문 유통기한 테이블 데이터 품목 수량.
+        lv_s    TYPE i.                     " WHILE문 수불 관리 테이블 데이터 품목 수량.
+
+
+  DATA: lt_bom TYPE TABLE OF zdvc702_bom,
+        ls_bom TYPE zdvc702_bom.
+
+  DATA: lt_mrp TYPE TABLE OF zdvc702_mrplist,
+        ls_mrp TYPE zdvc702_mrplist.
+
+  DATA: lt_srmanager TYPE TABLE OF ztc702_srmanage,
+        ls_srmanager TYPE ztc702_srmanage.
+
+  DATA: lv_check TYPE c LENGTH 1 VALUE '1',
+        lv_text  TYPE string,
+        lv_num   TYPE n LENGTH 9.
+
+  DATA: lv_exp_num TYPE n LENGTH 3.
+
+***** 재고 업데이트를 위한 MRP, 유통기한, 실재고 테이블 정보 불러오기
+  SELECT *
+    FROM zdvc702_mrplist INTO CORRESPONDING FIELDS OF TABLE lt_mrp
+    WHERE pplnum = ps_prdord-pplnum.
+
+
+  SELECT *
+    FROM ztc702_exp INTO CORRESPONDING FIELDS OF TABLE lt_exp
+    WHERE gdcode LIKE 'R%'
+    AND delflag = space
+    AND expfin > sy-datum
+    ORDER BY gdcode lotnum ASCENDING.
+
+  DELETE ADJACENT DUPLICATES FROM lt_exp COMPARING gdcode.  " 중복 로트넘버 제거 -> 단 다음 로트넘버 생각 안하고 한거
+
+  SELECT *
+    FROM ztc702_mtiv INTO CORRESPONDING FIELDS OF TABLE lt_mtiv
+    WHERE ( gdcode LIKE 'R%' OR gdcode LIKE 'A%' )
+    AND   status = 'A'.
+
+***** SD로 부터 생산오더가 바로 들어올 경우
+  IF ps_prdord-pplnum = space.
+    SELECT *
+      FROM zdvc702_bom INTO CORRESPONDING FIELDS OF TABLE lt_bom
+      WHERE gdcode = ps_prdord-gdcode.
+
+    LOOP AT lt_bom INTO ls_bom.
+      ls_bom-quan = ls_bom-quan * ps_prdord-quan.
+      MODIFY lt_bom FROM ls_bom TRANSPORTING quan.
+    ENDLOOP.
+
+    LOOP AT lt_bom INTO ls_bom.
+
+***** 수불 문서 채번
+      CALL FUNCTION 'NUMBER_GET_NEXT'
+        EXPORTING
+          nr_range_nr = '1'
+          object      = 'ZNRC702MM7'
+        IMPORTING
+          number      = lv_num.
+
+      lv_num = lv_num + 550.
+      CONCATENATE 'SRD' sy-datum+0(4) lv_num+4(5) INTO lv_text.
+
+      LOOP AT lt_exp INTO ls_exp WHERE gdcode = ls_bom-gdcode_m.
+        ls_exp-quan = ls_exp-quan - ls_bom-quan.
+        ls_exp-chnam = sy-uname.
+        ls_exp-chdat = sy-datum.
+        ls_exp-chtim = sy-uzeit.
+        MODIFY lt_exp FROM ls_exp TRANSPORTING quan chnam chdat chtim.
+      ENDLOOP.
+
+      LOOP AT lt_mtiv INTO ls_mtiv WHERE gdcode = ls_bom-gdcode_m.
+        ls_mtiv-rinven = ls_mtiv-rinven - ls_bom-quan.
+        ls_mtiv-chnam = sy-uname.
+        ls_mtiv-chdat = sy-datum.
+        ls_mtiv-chtim = sy-uzeit.
+        MODIFY lt_mtiv FROM ls_mtiv TRANSPORTING rinven chnam chdat chtim.
+
+        MOVE-CORRESPONDING ls_bom TO ls_srmanager.
+        ls_srmanager-gdcode = ls_bom-gdcode_m.
+        ls_srmanager-srdocu = lv_text.
+        ls_srmanager-reference = pv_text.
+        ls_srmanager-quantity = ls_bom-quan.   " 소수점으로 받아오기 때문에 1000을 곱해준다.
+        ls_srmanager-srtype = 'MD'.
+        ls_srmanager-crnam = sy-uname.
+        ls_srmanager-erdat = sy-datum.
+        ls_srmanager-ertim = sy-uzeit.
+        APPEND ls_srmanager TO lt_srmanager.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+***** 생산계획에서 mrp를 타고 온 경우
+  ELSE.
+    SELECT *
+      FROM zdvc702_mrplist INTO CORRESPONDING FIELDS OF TABLE lt_mrp
+      WHERE pplnum = ps_prdord-pplnum.
+
+    LOOP AT lt_mrp INTO ls_mrp.
+      CALL FUNCTION 'NUMBER_GET_NEXT'
+        EXPORTING
+          nr_range_nr = '1'
+          object      = 'ZNRC702MM7'
+        IMPORTING
+          number      = lv_num.
+
+      lv_num = lv_num + 550.
+
+* 수불 대기 문서 채번.
+      CONCATENATE 'SRD' sy-datum+0(4) lv_num+4(5) INTO lv_text.
+
+      LOOP AT lt_exp INTO ls_exp WHERE gdcode = ls_mrp-gdcode_m.
+        ls_exp-quan = ls_exp-quan - ls_mrp-quan_m.
+        ls_exp-chnam = sy-uname.
+        ls_exp-chdat = sy-datum.
+        ls_exp-chtim = sy-uzeit.
+        MODIFY lt_exp FROM ls_exp TRANSPORTING quan chnam chdat chtim.
+      ENDLOOP.
+
+      LOOP AT lt_mtiv INTO ls_mtiv WHERE gdcode = ls_mrp-gdcode_m.
+        ls_mtiv-rinven = ls_mtiv-rinven - ls_mrp-quan_m.
+        ls_mtiv-chnam = sy-uname.
+        ls_mtiv-chdat = sy-datum.
+        ls_mtiv-chtim = sy-uzeit.
+        MODIFY lt_mtiv FROM ls_mtiv TRANSPORTING rinven chnam chdat chtim.
+
+        MOVE-CORRESPONDING ls_mrp TO ls_srmanager.
+        ls_srmanager-gdcode = ls_mrp-gdcode_m.
+        ls_srmanager-srdocu = lv_text.
+        ls_srmanager-reference = pv_text.
+        ls_srmanager-quantity = ls_mrp-quan_m.   " 소수점으로 받아오기 때문에 1000을 곱해준다.
+        ls_srmanager-srtype = 'MD'.
+        ls_srmanager-crnam = sy-uname.
+        ls_srmanager-erdat = sy-datum.
+        ls_srmanager-ertim = sy-uzeit.
+        APPEND ls_srmanager TO lt_srmanager.
+
+      ENDLOOP.
+
+    ENDLOOP.
+  ENDIF.
+
+*******
+
+******* MRP 수량 만큼 유통기한 테이블 과 실재고 테이블 재고량 차감
+
+** 각 테이블 업데이트.
+  INSERT ztc702_srmanage FROM TABLE lt_srmanager.
+  IF sy-subrc <> 0.
+    MESSAGE '수불 테이블 에러' TYPE 'E'.
+    ROLLBACK WORK.
+
+  ENDIF.
+  UPDATE ztc702_exp FROM TABLE lt_exp.
+  IF sy-subrc <> 0.
+    MESSAGE '유통기한 테이블 에러 ' TYPE 'E'.
+    ROLLBACK WORK.
+
+  ENDIF.
+  UPDATE ztc702_mtiv FROM TABLE lt_mtiv.
+  IF sy-subrc <> 0.
+    MESSAGE '실재고 테이블 에러 ' TYPE 'E'.
+    ROLLBACK WORK.
+  ENDIF.
+
+
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

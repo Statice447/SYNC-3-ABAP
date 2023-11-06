@@ -1,0 +1,11 @@
+*&---------------------------------------------------------------------*
+*& Include MZCL7_19_TASK7_TOP                       - Module Pool      ZCL7_19_TASK7
+*&---------------------------------------------------------------------*
+PROGRAM ZCL7_19_TASK7.
+
+TABLES: spfli, scarr.
+
+DATA: ok_code  TYPE sy-ucomm.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

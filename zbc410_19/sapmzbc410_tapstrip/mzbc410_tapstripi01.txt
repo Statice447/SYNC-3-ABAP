@@ -1,0 +1,129 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOLUTION_19I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_SFLIGHT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_sflight INPUT.
+  SELECT SINGLE *
+    FROM sflight INTO CORRESPONDING FIELDS OF wa_sflight
+    WHERE carrid = sdyn_conn-carrid
+      AND connid = sdyn_conn-connid
+      AND fldate = sdyn_conn-fldate.
+
+  CHECK sy-subrc <> 0.
+  CLEAR wa_sflight.
+  MESSAGE e007(zbc410_19) WITH 'Error'.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+*  CASE io_command.
+*    WHEN 'T'.
+*      CALL SCREEN 150
+*      STARTING AT 10 10
+*      ENDING AT 50 20.
+*      CLEAR io_command.
+*    WHEN 'X'.
+*      LEAVE TO SCREEN 0.
+*  ENDCASE.
+
+  CASE ok_code.
+    WHEN 'FC1' OR 'FC2' OR 'FC3'.
+      my_tabstrip-activetab = ok_code.
+    WHEN  'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'TIME'.
+      CALL SCREEN 150
+      STARTING AT 10 10
+      ENDING AT 50 20.
+      CLEAR io_command.
+    WHEN'SAVE'.
+      UPDATE zflight19 FROM wa_sflight.
+
+      IF sy-subrc <> 0.
+        MESSAGE a008(bc410).  "업데이트에서 오류가 나면 무조건 a타입 메세지 사용
+      ENDIF.
+
+      MESSAGE s009(bc410).
+
+  ENDCASE.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0150  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0150 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+
+  CASE ok_code.
+    WHEN 'CANC'.
+*      clear sdyn_conn.
+      CLEAR wa_sflight.
+      SET PARAMETER ID: 'CAR' FIELD wa_sflight-carrid,
+                        'CON' FIELD wa_sflight-connid,
+                        'DAY' FIELD wa_sflight-fldate.
+
+      LEAVE TO SCREEN 100.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_PLANETYPE  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_planetype INPUT.
+  IF sdyn_conn-planetype IS INITIAL.
+    MESSAGE e555(bc410) WITH 'Plane type needed'.
+  ENDIF.
+
+  SELECT SINGLE seatsmax
+    FROM saplane
+    INTO sdyn_conn-seatsmax
+    WHERE planetype = sdyn_conn-planetype.
+
+  IF sdyn_conn-seatsocc > sdyn_conn-seatsmax.
+    MESSAGE e109(bc410).
+  ELSE.
+    MOVE-CORRESPONDING sdyn_conn TO wa_sflight.
+
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  TRANS_FROM_TC  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE trans_from_tc INPUT.
+  MOVE-CORRESPONDING sdyn_book to wa_sdyn_book.
+
+  MODIFY it_sdyn_book from wa_sdyn_book index my_table_control-lines.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

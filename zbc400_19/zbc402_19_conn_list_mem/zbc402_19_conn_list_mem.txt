@@ -1,0 +1,127 @@
+*&---------------------------------------------------------------------*
+*& Report  BC402_PCt_CONN_LIST
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+REPORT  zbc402_19_conn_list_mem MESSAGE-ID bc402.
+
+TYPES: BEGIN OF gty_s_conn,
+        carrid TYPE spfli-carrid,
+        connid TYPE spfli-connid,
+        cityfrom TYPE spfli-cityfrom,
+        cityto TYPE spfli-cityto,
+        deptime TYPE spfli-deptime,
+        arrtime TYPE spfli-arrtime,
+        period TYPE spfli-period,
+      END OF gty_s_conn.
+
+TYPES gty_t_conn TYPE STANDARD TABLE OF gty_s_conn
+                 WITH NON-UNIQUE DEFAULT KEY.
+
+DATA gt_conn TYPE gty_t_conn.
+
+DATA gv_msg TYPE string.
+
+DATA: go_alv TYPE REF TO cl_salv_table,
+      go_evt TYPE REF TO cl_salv_events_table,
+      gx_msg TYPE REF TO cx_salv_msg.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_handler DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_handler DEFINITION.
+
+  PUBLIC SECTION.
+
+    CLASS-METHODS:
+
+          on_double_click FOR EVENT double_click
+                                 OF if_salv_events_actions_table
+                          IMPORTING row column.
+
+ENDCLASS.                    "lcl_handler DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_handler IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_handler IMPLEMENTATION.
+
+  METHOD on_double_click.
+
+    DATA: lt_bdc TYPE TABLE OF bdcdata,
+          ls_bdc TYPE bdcdata.
+
+    DATA ls_conn LIKE LINE OF gt_conn.
+
+    READ TABLE gt_conn INTO ls_conn INDEX row.
+
+    CASE column.
+      WHEN 'CARRID'.
+
+        ls_bdc-program = 'SAPMBC402_IND_CARRIER'.
+        ls_bdc-dynpro  = '0100'.
+        ls_bdc-dynbegin = 'X'.
+        APPEND ls_bdc TO lt_bdc.
+
+        CLEAR ls_bdc.
+        ls_bdc-fnam = 'BC402_S_CARRIER-CARRID'.
+        ls_bdc-fval = ls_conn-carrid.
+        APPEND ls_bdc TO lt_bdc.
+
+        CLEAR ls_bdc.
+        ls_bdc-fnam = 'BDC_OKCODE'.
+        ls_bdc-fval = 'GO'.
+        APPEND ls_bdc TO lt_bdc.
+
+        CALL TRANSACTION 'BC402MCAR'
+             USING lt_bdc
+             MODE  'E'.
+
+      WHEN OTHERS.
+
+        SUBMIT bc402_ins_flight_list
+               AND RETURN
+               WITH pa_car EQ ls_conn-carrid
+               WITH so_con EQ ls_conn-connid.
+
+    ENDCASE.
+
+  ENDMETHOD.                    "on_double_click
+
+ENDCLASS.                    "lcl_handler IMPLEMENTATION
+
+
+START-OF-SELECTION.
+
+  SELECT carrid connid cityfrom cityto
+         deptime arrtime period
+    FROM spfli
+    INTO TABLE gt_conn.
+
+  TRY.
+      CALL METHOD cl_salv_table=>factory
+        IMPORTING
+          r_salv_table = go_alv
+        CHANGING
+          t_table      = gt_conn.
+    CATCH cx_salv_msg INTO gx_msg.
+      gv_msg = gx_msg->get_text( ).
+      MESSAGE gv_msg TYPE 'E'.
+  ENDTRY.
+
+  go_evt = go_alv->get_event( ).
+
+  SET HANDLER lcl_handler=>on_double_click
+          FOR go_evt.
+
+  go_alv->display( ).
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

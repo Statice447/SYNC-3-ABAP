@@ -1,0 +1,71 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_NEW_DATA_ELEMENTS
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc430_19_e4_deep_structure.
+
+*PARAMETERS: pa_fname TYPE znew_firstname19,
+*            pa_lname TYPE znew_lastname19,
+*            pa_activ TYPE znew_asset19,
+*            pa_liabs TYPE znew_liabilities19.
+*
+*WRITE: /'first name : ',15 pa_fname,
+*       /'last  name : ',15 pa_lname,
+*       /'asset : ',15 pa_activ,
+*       /'liabs : ',15 pa_liabs.
+
+DATA: wa_person TYPE zperson19,     "사람 정보가 들어 있는 zperson19 테이블 불러옴
+      wa_phone  TYPE str_phone.     "핸드폰 정보가 들어 있는 str_phone 테이블 불러옴
+
+
+START-OF-SELECTION.
+
+  wa_person-name-firstname = 'Harry'.
+  wa_person-name-lastname = 'Potter'.
+
+  wa_person-street = 'Privet Drive'.
+  wa_person-nr = '3'.
+  wa_person-zip = 'GB-10889'.
+  wa_person-city = 'London'.
+
+* 핸드폰 정보 wa_phone 인터널 테이블에 넣기
+  wa_phone-p_type = 'AA'.
+  wa_phone-p_number = '000-1111-2222'.
+  INSERT wa_phone INTO TABLE wa_person-phone.
+* wa_phone에 들어간 핸드폰 정보를 wa_person 안에 있는 phone 인터널 테이블에 데이터 추가 -wa_person-phone = deep structure
+
+  wa_phone-p_type = 'BB'.
+  wa_phone-p_number = '000-2222-3333'.
+  INSERT wa_phone INTO TABLE wa_person-phone.
+* wa_phone에 들어간 핸드폰 정보를 wa_person 안에 있는 phone 인터널 테이블에 데이터 추가 -wa_person-phone = deep structure
+
+
+  wa_phone-p_type = 'CC'.
+  wa_phone-p_number = '000-3333-4444'.
+  INSERT wa_phone INTO TABLE wa_person-phone.
+* wa_phone에 들어간 핸드폰 정보를 wa_person 안에 있는 phone 인터널 테이블에 데이터 추가 -wa_person-phone = deep structure
+
+
+* 사람정보 출력
+
+  WRITE:  / wa_person-name-firstname,
+          / wa_person-name-lastname,
+          / wa_person-street,
+          / wa_person-nr,
+          / wa_person-zip,
+          / wa_person-city.
+
+  WRITE:  / 'phone number'.
+
+* wa_person 인터널 테이블 안에 있는 핸드폰 정보를 wa_phone 인터널 테이블에 데이터 넣기
+  LOOP AT wa_person-phone INTO wa_phone.
+    WRITE: AT 20 wa_phone-p_type,
+                 wa_phone-p_number.
+* 헨드폰 정보 출력
+    NEW-LINE.
+
+  ENDLOOP.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

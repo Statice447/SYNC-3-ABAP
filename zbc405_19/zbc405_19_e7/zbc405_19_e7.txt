@@ -1,0 +1,44 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E7
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_e7.
+
+*NODES: spfli, sflight, sbook.
+
+SELECTION-SCREEN BEGIN OF BLOCK add WITH FRAME TITLE TEXT-001.
+
+PARAMETERS: pa_add AS CHECKBOX DEFAULT 'X'.
+
+SELECTION-SCREEN END OF BLOCK add.
+
+* 1000번 이후는 정해져 있기 때문에 따로 설정을 해줘야함
+SELECTION-SCREEN BEGIN OF SCREEN 1100.
+
+SELECTION-SCREEN BEGIN OF BLOCK detail WITH FRAME TITLE TEXT-001.
+  PARAMETERS: pa_cus AS CHECKBOX,
+              pa_agy AS CHECKBOX.
+SELECTION-SCREEN END OF BLOCK detail.
+
+SELECTION-SCREEN END OF SCREEN 1100.
+
+INITIALIZATION.
+
+at SELECTION-SCREEN on pa_add.
+  IF pa_add = 'X'.
+    call SELECTION-SCREEN 1100
+    STARTING AT 5 5
+    ENDING AT 50 10.
+
+    IF sy-subrc <> 0.
+      LEAVE TO SCREEN 1000.
+    ENDIF.
+  ENDIF.
+
+*Text elements
+*----------------------------------------------------------
+* 001 Pa_Add
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,93 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_LDB_E1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_ldb_e1.
+
+NODES: spfli, sflight, sbook. " 노드 선언
+
+SELECT-OPTIONS: so_dept FOR spfli-deptime DEFAULT '080000' TO '220000',
+                so_price FOR sflight-price DEFAULT '500' TO '1000'.
+
+GET spfli FIELDS carrid connid cityfrom cityto deptime arrtime.
+FORMAT COLOR COL_GROUP INTENSIFIED.
+WRITE: / sy-vline, spfli-carrid,
+                   spfli-connid,
+                   spfli-cityfrom,
+                   spfli-cityto,
+                   spfli-deptime USING EDIT MASK '__:__',
+                   spfli-arrtime USING EDIT MASK '__:__',
+             AT 85 sy-vline.
+
+GET sflight FIELDS fldate price currency.
+*CHECK SELECT-OPTIONS
+CHECK so_price.                             " 값이 들어 왔을 때 조건에 안맞으면 빠져나옴
+FORMAT COLOR COL_NEGATIVE INTENSIFIED = 0.
+
+WRITE: / sy-vline, sflight-fldate,
+                   sflight-price,
+                   sflight-currency,
+             AT 85 sy-vline.
+
+START-OF-SELECTION.
+
+  FORMAT COLOR COL_TOTAL.
+  WRITE: / 'START-OF-SELECTION'.
+  SKIP 1.
+
+END-OF-SELECTION.
+  SKIP 1.                           " 한 칸 띄우기
+  FORMAT COLOR COL_TOTAL.
+  WRITE: / 'END-OF-SELECTION'.
+  SKIP 1.
+
+"---------------------------------------------------------------------------------------------
+
+*INITIALIZATION.
+*
+*  MOVE 'DL' TO carrid-low.
+*  MOVE 'I'  TO carrid-sign.
+*  MOVE 'EQ' TO carrid-option.
+*  APPEND carrid.
+*
+*START-OF-SELECTION.
+*
+*  FORMAT COLOR COL_TOTAL.
+*  WRITE: / 'START-OF-SELECTION'.
+*  SKIP 1.
+*
+*END-OF-SELECTION.
+*
+*  FORMAT COLOR COL_TOTAL.
+*  WRITE: / 'END-OF-SELECTION'.
+*  SKIP 1.
+*
+*  " Get Spfli Event
+*GET spfli FIELDS carrid connid cityfrom cityto.
+*  WRITE: /(10) 'GET SPFLI' COLOR COL_HEADING INTENSIFIED.
+*  FORMAT RESET.
+*  WRITE:30 spfli-carrid,
+*           spfli-connid.
+*
+*GET sflight.
+*  WRITE: /(10) 'GET FLIGHT' COLOR COL_NORMAL INTENSIFIED.
+*  FORMAT RESET.
+*  WRITE:30 sflight-fldate.
+
+  "-----------------------------------------------------------------------------------------
+  " Get Spfli Event
+*  GET spfli FIELDS carrid connid cityfrom cityto.
+*  WRITE: / spfli-carrid,
+*           spfli-connid,
+*           spfli-cityfrom,
+*           spfli-cityto.
+*
+*  GET sflight FIELDS fldate seatsmax seatsocc.
+*
+*  WRITE: / sflight-fldate,
+*           sflight-seatsmax,
+*           sflight-seatsocc.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

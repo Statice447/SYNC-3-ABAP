@@ -1,0 +1,189 @@
+*&---------------------------------------------------------------------*
+*& Include          MZFIPRAC19F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form CREATE_DOCU
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_docu.
+
+  DATA: lv_check  TYPE zfidocu_19-docutype,
+        lv_text_c TYPE string.
+
+  lv_check = zfidocu_19-docutype.
+  PERFORM get_next_number USING lv_check CHANGING lv_text_c.
+
+  gs_fihead-company = zfidocu_19-company.
+  gs_fihead-docunum = lv_text_c.
+  gs_fihead-docutype = zfidocu_19-docutype.
+  gs_fihead-pname = zfidocu_19-gdname.
+
+  INSERT ztfiprac_19 FROM gs_fihead.
+
+  CLEAR gs_fiprac.
+
+  LOOP AT gt_fiprac INTO gs_fiprac.
+    gs_fiprac-docunum = lv_text_c.
+    INSERT ztfipracitem_19 FROM gs_fiprac.
+    IF sy-subrc = 4.
+      MESSAGE '중복된 품목이 있습니다.' TYPE 'A'.
+
+    ENDIF.
+  ENDLOOP.
+
+  IF sy-subrc = 0.
+    MESSAGE '성공' TYPE 'I'.
+  ENDIF.
+
+  CLEAR gt_fiprac.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_NEXT_NUMBER
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form GET_NEXT_NUMBER
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_LV_CHECK  text
+*&---------------------------------------------------------------------*
+FORM get_next_number  USING    VALUE(pv_check) TYPE c  CHANGING pv_text TYPE string.
+  DATA: lv_number   TYPE n,
+        lv_number_3 TYPE c LENGTH 3.
+
+  DATA: lv_text_d TYPE string,
+        lv_text_n TYPE c LENGTH 3.
+
+  CASE pv_check.
+    WHEN '입고'.
+      CALL FUNCTION 'NUMBER_GET_NEXT'
+        EXPORTING
+          nr_range_nr = '01'
+          object      = 'ZCL719FINR'
+          toyear      = '2023'
+        IMPORTING
+          number      = lv_number.
+
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+        EXPORTING
+          input  = lv_number
+        IMPORTING
+          output = lv_number_3.
+
+      lv_text_d = sy-datum+2(6).
+      lv_text_n = lv_number_3.
+
+      CONCATENATE lv_text_d 'A1' lv_text_n INTO pv_text.
+    WHEN '출고'.
+      CALL FUNCTION 'NUMBER_GET_NEXT'
+        EXPORTING
+          nr_range_nr = '02'
+          object      = 'ZCL719FINR'
+          toyear      = '2023'
+        IMPORTING
+          number      = lv_number.
+
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+        EXPORTING
+          input  = lv_number
+        IMPORTING
+          output = lv_number_3.
+
+      lv_text_d = sy-datum+2(6).
+      lv_text_n = lv_number_3.
+
+      CONCATENATE lv_text_d 'A2' lv_text_n INTO pv_text.
+    WHEN '매입'.
+      CALL FUNCTION 'NUMBER_GET_NEXT'
+        EXPORTING
+          nr_range_nr = '03'
+          object      = 'ZCL719FINR'
+          toyear      = '2023'
+        IMPORTING
+          number      = lv_number.
+
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+        EXPORTING
+          input  = lv_number
+        IMPORTING
+          output = lv_number_3.
+
+      lv_text_d = sy-datum+2(6).
+      lv_text_n = lv_number_3.
+
+      CONCATENATE lv_text_d 'B1' lv_text_n INTO pv_text.
+    WHEN '매출'.
+      CALL FUNCTION 'NUMBER_GET_NEXT'
+        EXPORTING
+          nr_range_nr = '04'
+          object      = 'ZCL719FINR'
+          toyear      = '2023'
+        IMPORTING
+          number      = lv_number.
+
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+        EXPORTING
+          input  = lv_number
+        IMPORTING
+          output = lv_number_3.
+
+      lv_text_d = sy-datum+2(6).
+      lv_text_n = lv_number_3.
+
+      CONCATENATE lv_text_d 'B2' lv_text_n INTO pv_text.
+  ENDCASE.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form ALV_ROW_DELETE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM alv_row_delete .
+  CALL METHOD go_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = gt_index.
+
+  DESCRIBE TABLE gt_index LINES gv_lines.
+
+  DELETE gt_fiprac INDEX gv_lines.
+
+  go_alv_grid->refresh_table_display( ).
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form ADD_ITAB
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM add_itab .
+
+  gs_fiprac-company = zfidocu_19-company.
+  gs_fiprac-docutype = zfidocu_19-docutype.
+  gs_fiprac-drcrtype = zfidocu_19-drcrtype.
+  gs_fiprac-acccode = zfidocu_19-acccode.
+  gs_fiprac-accname = zfidocu_19-accname.
+  gs_fiprac-gdname = zfidocu_19-gdname.
+
+  APPEND gs_fiprac TO gt_fiprac.
+
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

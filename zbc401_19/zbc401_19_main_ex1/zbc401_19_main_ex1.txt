@@ -1,0 +1,90 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC401_19_MAIN_E1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc401_19_main_ex1.
+
+TYPE-POOLS icon.
+
+CLASS lcl_airplane DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      set_attributes
+        IMPORTING
+          iv_name      TYPE string
+          iv_planetype TYPE saplane-planetype,
+
+      display_methods.
+
+    CLASS-METHODS: display_n_o_airplanes,
+      get_n_o_ariplanes RETURNING VALUE(rv_count) TYPE i.
+  PRIVATE SECTION.
+    DATA: mv_name      TYPE string,
+          mv_planetype TYPE saplane-planetype.
+
+    CLASS-DATA: gv_n_o_airplanes TYPE i.
+ENDCLASS.
+
+CLASS lcl_airplane IMPLEMENTATION.
+  METHOD set_attributes.
+    mv_name = iv_name.
+    mv_planetype = iv_planetype.
+
+    gv_n_o_airplanes = gv_n_o_airplanes + 1.
+  ENDMETHOD.
+
+  METHOD display_methods.                 " instance method
+    WRITE:/ icon_ws_plane AS ICON,
+          / ' Name      : ', mv_name,
+          / ' Planetype : ', mv_planetype.
+  ENDMETHOD.
+
+  METHOD display_n_o_airplanes.           " static method
+    SKIP.
+    WRITE:/ ' Number of airplanes : ', gv_n_o_airplanes.
+  ENDMETHOD.
+  METHOD get_n_o_ariplanes.
+    rv_count = gv_n_o_airplanes.
+  ENDMETHOD.
+ENDCLASS.
+
+DATA: go_airplanes  TYPE REF TO lcl_airplane,
+      gt_airplanes TYPE TABLE OF REF TO lcl_airplane.
+
+DATA: gv_count TYPE i.                  " fuctional method에서 return된 데이터 넣을 변수
+
+START-OF-SELECTION.
+
+  CREATE OBJECT go_airplanes.
+  go_airplanes->set_attributes(
+    iv_name = 'NAME1'
+    iv_planetype = '747-700' ).
+  APPEND go_airplanes TO gt_airplanes.
+
+  CLEAR go_airplanes.
+  CREATE OBJECT go_airplanes.
+  go_airplanes->set_attributes(
+    iv_name = 'NAME2'
+    iv_planetype = '747-702' ).
+  APPEND go_airplanes TO gt_airplanes.
+
+  CLEAR go_airplanes.
+  CREATE OBJECT go_airplanes.
+  go_airplanes->set_attributes(
+    iv_name = 'NAME3'
+    iv_planetype = '747-703' ).
+  APPEND go_airplanes TO gt_airplanes.
+
+  LOOP AT gt_airplanes INTO go_airplanes.
+    go_airplanes->display_methods( ).
+    WRITE:/ ' ', /.
+  ENDLOOP.
+
+  lcl_airplane=>display_n_o_airplanes( ).               " static method
+
+  gv_count = lcl_airplane=>get_n_o_ariplanes( ).        " static functional method의 returning 값을 넣어줌
+  WRITE:/ ' Total of Ariplanes  : ', gv_count.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

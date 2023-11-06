@@ -1,0 +1,12 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC410_SOL_19_E1_TOP                    - Module Pool      SAPMZBC410_SOL_19_E1
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZBC410_SOL_19_E1.
+
+TABLES: sdyn_conn.
+
+DATA: wa_sflight type sflight,
+      io_command type c LENGTH 1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

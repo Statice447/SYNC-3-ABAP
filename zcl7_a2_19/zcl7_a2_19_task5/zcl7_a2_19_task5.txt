@@ -1,0 +1,238 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_A2_19_TASK4
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_a2_19_task5.
+
+TYPE-POOLS icon.
+
+TYPES: BEGIN OF gty_sbook.
+    INCLUDE TYPE sbook.
+TYPES: light          TYPE c LENGTH 1,
+       row_color      TYPE c LENGTH 4,
+       it_colfields   TYPE lvc_t_scol,
+       cancelled_icon TYPE icon-id,
+       END OF gty_sbook.
+
+
+DATA: ok_code    TYPE sy-ucomm,
+      gv_refresh TYPE c LENGTH 1.
+
+DATA: gt_sbook TYPE TABLE OF gty_sbook,
+      gs_sbook TYPE gty_sbook.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_layout   TYPE lvc_s_layo,
+      gv_variant  TYPE disvariant,
+      gv_save     TYPE c LENGTH 1,
+      gs_colfield LIKE LINE OF gs_sbook-it_colfields.
+
+DATA: gt_sort TYPE lvc_t_sort,
+      gs_sort TYPE lvc_s_sort.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat TYPE lvc_s_fcat.
+
+PARAMETERS: pa_car TYPE sbook-carrid,
+            pa_con TYPE sbook-connid.
+
+INITIALIZATION.
+pa_car = 'AA'.
+pa_con = '0017'.
+
+START-OF-SELECTION.
+  SELECT *
+    FROM sbook INTO CORRESPONDING FIELDS OF TABLE gt_sbook
+    WHERE carrid = pa_car
+    AND   connid = pa_con.
+
+  LOOP AT gt_sbook INTO gs_sbook.
+
+*----------------------light-------------------------------
+    IF gs_sbook-luggweight > 20. " Light
+      gs_sbook-light = '1'.                 " Red
+    ELSEIF gs_sbook-luggweight > 15.
+      gs_sbook-light = '2'.                 " Yellow
+    ELSE.
+      gs_sbook-light = '3'.                 " Green
+    ENDIF.
+*----------------cancelled icon으로 변경
+    IF gs_sbook-cancelled = 'X'.
+      gs_sbook-cancelled_icon = icon_cancel.       " icon_cancel 아이콘 넣기
+    ENDIF.
+*---------------color------------------
+    IF gs_sbook-cancelled = 'X'.
+      gs_sbook-row_color = 'C600'.
+    ENDIF.
+
+    IF gs_sbook-smoker = 'X'.
+      gs_colfield-fname = 'SMOKER'.
+      gs_colfield-color-col = col_negative.       " C601 설정 (Dark Red)
+      gs_colfield-color-int = 1.                  " C601 설정 (Dark Red)
+
+      APPEND gs_colfield TO gs_sbook-it_colfields.
+    ENDIF.
+
+*-------------------modify--------------
+    MODIFY gt_sbook FROM gs_sbook TRANSPORTING light
+                                               it_colfields
+                                               row_color
+                                               cancelled_icon.
+
+  ENDLOOP.
+
+  CALL SCREEN 100.
+
+
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_TO_TRANSFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_to_transfer OUTPUT.
+  IF go_container IS INITIAL.               " 컨테이너 생성 확인
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'MY_AREA'
+      EXCEPTIONS
+        OTHERS         = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+
+    ENDIF.
+
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container
+      EXCEPTIONS
+        OTHERS   = 1.
+
+    gv_variant-report = sy-cprog.
+    gv_save = 'A'.
+
+    gs_layout-zebra      = 'X'.
+    gs_layout-cwidth_opt = 'X'.
+    gs_layout-sel_mode   = 'A'.
+
+    gs_layout-excp_fname = 'LIGHT'.
+    gs_layout-excp_led   = 'X'.
+
+    gs_layout-info_fname = 'ROW_COLOR'.     " Row_color 변경
+    gs_layout-ctab_fname = 'IT_COLFIELDS'.  " Cell color 변경
+
+
+    CLEAR gs_sort.
+    gs_sort-fieldname = 'FLDATE'.
+    gs_sort-up = 'X'.
+    APPEND gs_sort TO gt_sort.
+
+    CLEAR gs_sort.
+    gs_sort-fieldname = 'BOOKID'.
+    gs_sort-up        = 'X'.
+    APPEND gs_sort TO gt_sort.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CANCELLED_ICON'.
+    gs_fcat-icon = 'X'.
+    gs_fcat-coltext = 'Cancelled'.
+    gs_fcat-col_pos = 11.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CANCELLED'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+
+
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+    ENDIF.
+
+    gv_refresh = abap_true.                " 생성 할 경우 트루 설정
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'SBOOK'
+        is_variant       = gv_variant     " Layout Variant
+        i_save           = gv_save
+        i_default        = 'X'
+        is_layout        = gs_layout      " Layout Structure
+      CHANGING
+        it_outtab        = gt_sbook
+        it_sort          = gt_sort
+        it_fieldcatalog  = gt_fcat
+      EXCEPTIONS
+        OTHERS           = 1.
+
+    gv_refresh = abap_false.                     " 그리드 생성 이후 새로고침을 위한 False로 설정
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).       " 생성된 ALV 새로고침
+  ENDIF.
+ENDMODULE.
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> Create ALV
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC414_19
+*001   1번 에러
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

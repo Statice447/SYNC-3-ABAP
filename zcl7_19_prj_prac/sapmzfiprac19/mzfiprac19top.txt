@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Include MZFIPRAC19TOP                            - Module Pool      SAPMZFIPRAC19
+*&---------------------------------------------------------------------*
+PROGRAM sapmzfiprac19.
+
+TABLES: ztfiprac_19, ztfipracitem_19, zfidocu_19.
+
+DATA: gt_fiprac  TYPE TABLE OF zfidocu_19,
+      gs_fiprac  TYPE zfidocu_19,
+      gv_docutype TYPE zfidocu_19-docutype,
+      gv_answer  TYPE c LENGTH 1,
+      gv_refresh TYPE c LENGTH 1.
+
+DATA: gt_fihead TYPE TABLE OF ztfiprac_19,
+      gs_fihead TYPE ztfiprac_19.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA : gt_index TYPE lvc_t_row,
+       gs_index TYPE lvc_s_row,
+       gv_lines TYPE i.
+
+DATA: ok_code TYPE sy-ucomm.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

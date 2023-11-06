@@ -1,0 +1,34 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_LAB4
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_lab4.
+
+DATA gv_result TYPE p LENGTH 16 DECIMALS 2.
+
+PARAMETERS:
+  Pa_num1 TYPE i,
+  Pa_op   TYPE c LENGTH 1,
+  Pa_num2 TYPE i.
+
+  CALL FUNCTION 'Z_BC400_19_CAL'
+    EXPORTING
+      iv_op            = Pa_op
+      iv_num1          = Pa_num1
+      iv_num2          = Pa_num2
+    IMPORTING
+      ev_result        = gv_result
+    EXCEPTIONS
+      division_by_zero = 1
+      OTHERS           = 2.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+  WRITE: / 'PA_num1 : ' , Pa_num1,
+         / 'PA_num2 : ' , Pa_num2,
+         / 'Result  : ' , gv_result.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

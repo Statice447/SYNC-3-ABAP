@@ -1,0 +1,31 @@
+*&---------------------------------------------------------------------*
+*& Include MZCL7_19_TASK11_TOP                      - Module Pool      ZCL7_19_TASK11
+*&---------------------------------------------------------------------*
+PROGRAM zcl7_19_task11.
+
+CONTROLS: my_table TYPE TABLEVIEW USING SCREEN '101'.
+
+TABLES: sdyn_conn, sflight, spfli, scarr.
+
+TYPES: BEGIN OF gty_view,
+         carrid   TYPE scarr-carrid,
+         carrname TYPE scarr-carrname,
+         connid   TYPE sflight-connid,
+         airpfrom TYPE spfli-airpfrom,
+         airpto   TYPE spfli-airpto,
+         deptime  TYPE spfli-deptime,
+         arrtime  TYPE spfli-arrtime,
+         fldate   TYPE sflight-fldate,
+         price    TYPE sflight-price,
+         currency TYPE sflight-currency,
+       END OF gty_view.
+
+DATA: ok_code TYPE sy-ucomm,
+      dynnr   TYPE sy-dynnr.
+
+
+DATA: wa_view      TYPE gty_view,
+      itab_view    LIKE TABLE OF wa_view.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

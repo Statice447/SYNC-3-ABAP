@@ -1,0 +1,57 @@
+*&---------------------------------------------------------------------*
+*& Include MZPPTEMP19_01TOP                         - Module Pool      SAPMZPPTEMP19_01
+*&---------------------------------------------------------------------*
+PROGRAM sapmzpptemp19_01.
+
+TABLES: ztc702_plant.
+
+TYPES: BEGIN OF gty_plant .
+    INCLUDE TYPE ztc702_plant .
+TYPES: color TYPE c LENGTH 4,
+       END OF gty_plant .
+
+
+DATA: gt_plant   TYPE TABLE OF gty_plant ,
+      gs_plant_f TYPE gty_plant ,
+      gs_plant    TYPE gty_plant .
+
+*DATA: gv_check1 TYPE c LENGTH 1,
+*      gv_check2 TYPE c LENGTH 1,
+*      gv_check3 TYPE c LENGTH 1.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_custom_alv_grid.
+
+DATA: ok_code    TYPE sy-ucomm,
+      gv_refresh TYPE c LENGTH 1,
+      gs_layout  TYPE lvc_s_layo.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat TYPE lvc_s_fcat.
+
+DATA : gt_index TYPE lvc_t_row, "ALV 선택라인 저장 인터널테이블
+       gs_index LIKE LINE OF gt_index, "ALV 선택라인 저장 스트럭쳐
+       gv_lines TYPE i. "선택한 라인수를 저장할 변수
+
+CLASS lcl_handler DEFINITION.
+  PUBLIC SECTION.
+*    CLASS-DATA : gv_rowid TYPE i.
+    CLASS-METHODS: on_double_click
+                  FOR EVENT double_click OF cl_gui_alv_grid
+      IMPORTING es_row_no.
+ENDCLASS.
+CLASS lcl_handler IMPLEMENTATION.
+  METHOD on_double_click.
+*    DATA: ls_dvmt TYPE ztc702_dvmt.
+
+    READ TABLE gt_plant  INTO gs_plant_f INDEX es_row_no-row_id.
+
+    CALL METHOD cl_gui_cfw=>set_new_ok_code
+      EXPORTING
+        new_code = 'ENTER'.
+
+  ENDMETHOD.
+ENDCLASS.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

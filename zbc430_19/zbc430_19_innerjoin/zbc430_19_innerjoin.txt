@@ -1,0 +1,58 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_INNERJOIN
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc430_19_innerjoin.
+
+TYPES: BEGIN OF gty_flight,
+         carrid   TYPE sv_flights-carrid,
+         carrname TYPE sv_flights-carrname,
+         connid   TYPE sv_flights-connid,
+         cityfrom TYPE sv_flights-cityfrom,
+         cityto   TYPE sv_flights-cityto,
+         fldate   TYPE sv_flights-fldate,
+         seatsmax TYPE sv_flights-seatsmax,
+         seatsocc TYPE sv_flights-seatsocc,
+       END OF gty_flight.
+
+DATA: wa_flights   TYPE gty_flight,
+      itab_flights LIKE STANDARD TABLE OF wa_flights.
+
+SELECT-OPTIONS: so_cityf FOR wa_flights-cityfrom,
+                so_cityt FOR wa_flights-cityto.
+
+*  START-OF-SELECTION.
+*  SELECT carrid carrname connid cityfrom cityto fldate seatsmax seatsocc
+*    into table itab_flights
+*    from sv_flights
+*    WHERE cityfrom in so_cityf
+*    and cityto in so_cityt
+*    and seatsocc < sv_flights~seatsmax
+*    ORDER BY carrid connid fldate.
+*
+*    IF sy-subrc <> 0.
+*      write: / 'No booking exise'.
+*
+*    ENDIF.
+
+START-OF-SELECTION.
+
+SELECT c~carrid c~carrname p~connid p~cityfrom p~cityto f~fldate f~seatsmax f~seatsocc
+  INTO TABLE itab_flights
+  FROM ( scarr AS c INNER JOIN spfli AS p
+                        ON c~carrid = p~carrid )
+  INNER JOIN sflight AS f
+    ON f~carrid = p~carrid
+    AND f~connid = p~connid
+
+  WHERE cityfrom IN so_cityf
+    AND cityto IN so_cityt
+    AND seatsocc < f~seatsmax
+
+  ORDER BY c~carrid p~connid f~fldate.
+
+cl_demo_output=>display_data( itab_flights ).
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

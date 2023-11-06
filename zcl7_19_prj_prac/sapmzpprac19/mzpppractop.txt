@@ -1,0 +1,30 @@
+*&---------------------------------------------------------------------*
+*& Include MZPPPRACTOP                              - Module Pool      SAPMZPPRAC19
+*&---------------------------------------------------------------------*
+PROGRAM sapmzpprac19.
+
+TABLES: ztc702_plant, zsc702_plantmaster.
+
+DATA: gt_plant TYPE TABLE OF zsc702_plantmaster,
+      gs_plant TYPE zsc702_plantmaster,
+      gt_all_plant TYPE TABLE OF ztc702_plant,
+      gs_all_plant TYPE ztc702_plant.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA : gt_index TYPE lvc_t_row,
+       gs_index TYPE lvc_s_row,
+       gv_lines TYPE i.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat TYPE lvc_s_fcat.
+
+
+DATA: ok_code    TYPE sy-ucomm,
+      gs_layout  TYPE lvc_s_layo,
+      gv_answer  TYPE c LENGTH 1,
+      gv_refresh TYPE c LENGTH 1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

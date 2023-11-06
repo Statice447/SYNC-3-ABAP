@@ -1,0 +1,12 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC410_SOL_19_E2_TOP                    - Module Pool      SAPMZBC410_SOL_19_E2
+*&---------------------------------------------------------------------*
+PROGRAM sapmzbc410_sol_19_e2.
+
+*TABLES: sydn_conn.
+
+DATA: gs_screen TYPE scarr,
+      gs_abap   LIKE gs_screen.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

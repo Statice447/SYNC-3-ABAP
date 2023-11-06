@@ -1,0 +1,19 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_13_E8
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC400_13_E8.
+
+data : gv_fldate type d value '20230808',
+       gv_carrid type c LENGTH 8 VALUE 'KO'.
+
+if not ( gv_carrid = 'AA' or gv_carrid = 'UA' )
+  and gv_fldate > sy-datum.
+  WRITE : '아오밥나무' .
+  else.
+    WRITE 'no data'.
+ endif.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

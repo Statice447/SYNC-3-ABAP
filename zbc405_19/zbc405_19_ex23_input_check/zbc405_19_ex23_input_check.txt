@@ -1,0 +1,99 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E8
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_ex23_input_check.
+
+DATA: gs_flight TYPE dv_flights.
+
+CONSTANTS gc_mark VALUE 'X'.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1100 AS SUBSCREEN.
+
+SELECT-OPTIONS: so_car FOR gs_flight-carrid MEMORY ID car,
+                so_con FOR gs_flight-connid.
+
+SELECTION-SCREEN END OF SCREEN 1100.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1200 AS SUBSCREEN.
+
+SELECT-OPTIONS: so_fdt FOR gs_flight-fldate NO-EXTENSION."no-extension 필드 내 high 로 되어있는 value를 없앰
+
+SELECTION-SCREEN END OF SCREEN 1200.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1300 AS SUBSCREEN.
+
+SELECTION-SCREEN BEGIN OF BLOCK param WITH FRAME.
+SELECTION-SCREEN BEGIN OF BLOCK radio WITH FRAME.
+
+PARAMETERS: pa_all RADIOBUTTON GROUP rgb1,
+            pa_nat RADIOBUTTON GROUP rgb1,
+            pa_int RADIOBUTTON GROUP rgb1 DEFAULT 'X'.
+
+SELECTION-SCREEN END OF BLOCK radio.
+
+PARAMETERS: pa_ctry LIKE gs_flight-countryfr.
+
+SELECTION-SCREEN END OF BLOCK param.
+
+SELECTION-SCREEN END OF SCREEN 1300.
+
+SELECTION-SCREEN BEGIN OF TABBED BLOCK airlines FOR 8 LINES.
+SELECTION-SCREEN TAB (20) tab1 USER-COMMAND con DEFAULT SCREEN 1100. " tab (20) 탭 글자 수 최대치
+SELECTION-SCREEN TAB (20) tab2 USER-COMMAND dat DEFAULT SCREEN 1200.
+SELECTION-SCREEN TAB (20) tab3 USER-COMMAND typ DEFAULT SCREEN 1300.
+SELECTION-SCREEN END OF BLOCK airlines.
+
+INITIALIZATION.
+
+  MOVE: 'AA' TO so_car-low,
+        'QF' TO so_car-high,
+        'BT' TO so_car-option,
+        'I'  TO so_car-sign.
+  APPEND so_car. "to so_car[]이 생략 헤더라인이라서 생략해도 됨
+
+  MOVE: 'AZ' TO so_car-low,
+        'EQ' TO so_car-option,
+        'E'  TO so_car-sign.
+
+  tab1 = 'Connection'.
+  tab2 = 'Date'.
+  tab3 = 'Booking'.
+
+  airlines-activetab = 'TYP'. " 시작 탭 위치 선정. 대문자로 해야함
+  airlines-dynnr = '1300'.    " 시작 화면 표시 선정.
+
+* 위 두개는 달라도 됨. 나만 서로 맞지 않은 화면이니 좋은 프로그램이 아니다. 조심할 것
+
+AT SELECTION-SCREEN ON BLOCK param.
+  CHECK pa_nat = 'X' AND pa_ctry = space.
+
+  MESSAGE e000(zbc405_19).
+
+
+START-OF-SELECTION.
+  SELECT *
+    FROM dv_flights INTO gs_flight
+    WHERE carrid IN so_car
+      AND connid IN so_con
+      AND fldate IN so_fdt
+      AND countryto = dv_flights~countryfr
+      AND countryto = pa_ctry.
+
+    WRITE: / gs_flight-carrid,
+             gs_flight-connid,
+             gs_flight-fldate,
+             gs_flight-countryfr,
+             gs_flight-cityfrom.
+  ENDSELECT.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC405_19
+*000   시간을 잘못 입력하였습니다.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

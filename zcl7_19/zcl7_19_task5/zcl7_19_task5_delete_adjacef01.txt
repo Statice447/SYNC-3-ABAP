@@ -1,0 +1,19 @@
+*----------------------------------------------------------------------*
+***INCLUDE ZCL7_19_TASK5_DELETE_ADJACEF01.
+*----------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form DELETE_ADJACENT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      <--P_GT_FLIGHT  text
+*&---------------------------------------------------------------------*
+FORM delete_adjacent  CHANGING ct_flight TYPE gty_t_flight .
+  CLEAR ct_flight.
+  SELECT DISTINCT carrid connid
+    FROM sflight INTO CORRESPONDING FIELDS OF TABLE ct_flight.
+  DELETE ADJACENT DUPLICATES FROM ct_flight.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

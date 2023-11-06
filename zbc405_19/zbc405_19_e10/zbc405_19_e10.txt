@@ -1,0 +1,34 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E10
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_e10.
+
+NODES: spfli.
+
+SELECT-OPTIONS: so_dept FOR spfli-deptime DEFAULT '080000' TO '220000' NO-EXTENSION.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1100.
+MESSAGE i000(zbc405_19).
+SELECTION-SCREEN END OF SCREEN 1100.
+
+* F1 헬프 request 부분 = HELP-REQUEST
+*AT SELECTION-SCREEN ON HELP-REQUEST FOR so_dept.
+*  CALL SCREEN 1100 STARTING AT 5 5
+*                   ENDING   AT 50 10.
+
+* F4 헬프 request 부분 = VALUE-REQUEST FOR 뒤에 필드명으로 정확하게 입력해야함.
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR so_dept-low.
+  CALL SELECTION-SCREEN 1100 STARTING AT 5 5
+                             ENDING   AT 50 10.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC405_19
+*000   시간을 잘못 입력하였습니다.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

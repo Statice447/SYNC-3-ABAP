@@ -1,0 +1,52 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E9
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_e9.
+
+TYPES tv_perc TYPE p DECIMALS 1.
+
+PARAMETERS: pa_int1 TYPE i,
+            pa_op TYPE c LENGTH 1,
+            pa_int2 TYPE i.
+
+DATA gv_result TYPE tv_perc.
+
+IF ( pa_op = '+' OR
+     pa_op = '-' OR
+     pa_op = '*' OR
+     pa_op = '/' AND pa_int2 <> 0 ).
+
+  CASE pa_op.
+    WHEN '+'.
+      gv_result = pa_int1 + pa_int2.
+    WHEN '-'.
+      gv_result = pa_int1 - pa_int2.
+    WHEN '*'.
+      gv_result = pa_int1 * pa_int2.
+    WHEN '/'.
+      gv_result = pa_int1 / pa_int2.
+  ENDCASE.
+
+  WRITE: 'Result'(res), gv_result.
+
+ELSEIF pa_op = '/' AND pa_int2 = 0.
+  WRITE 'No division by zero!'(dbz).
+
+ELSE.
+  WRITE 'Invalid operatior!'(iop).
+ENDIF.
+WRITE: / 'before gv_Result', gv_result.
+
+PERFORM calc_perc
+      USING pa_int1
+            pa_int2
+   CHANGING gv_result.
+
+WRITE: / 'gv_Result', gv_result.
+
+INCLUDE zbc400_19_e9_calc_percf01.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

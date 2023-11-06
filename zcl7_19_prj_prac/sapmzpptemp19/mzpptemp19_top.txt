@@ -1,0 +1,33 @@
+*&---------------------------------------------------------------------*
+*& Include MZPPTEMP19_TOP                           - Module Pool      SAPMZPPTEMP19
+*&---------------------------------------------------------------------*
+PROGRAM sapmzpptemp19.
+
+TABLES: ztc702_bom_h, ztc702_bom_i.
+
+DATA: ok_code TYPE sy-ucomm.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid,
+      gv_refresh   TYPE c LENGTH 1.
+
+DATA: go_container2 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid2  TYPE REF TO cl_gui_alv_grid,
+      gv_refresh2   TYPE c LENGTH 1.
+
+DATA: gt_bom_h     TYPE TABLE OF ztc702_bom_h,
+      gs_bom_200_h TYPE ztc702_bom_h,
+      gs_bom_h     TYPE ztc702_bom_h.
+
+DATA: gt_bom_i TYPE TABLE OF ztc702_bom_i,
+      gs_bom_i TYPE ztc702_bom_i.
+
+DATA: gt_fcat TYPE lvc_t_fcat,
+      gs_fcat TYPE lvc_s_fcat.
+
+DATA : gt_index TYPE lvc_t_row,
+       gs_index TYPE lvc_s_row,
+       gv_lines TYPE i.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

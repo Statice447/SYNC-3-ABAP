@@ -1,0 +1,32 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E9
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_e9.
+
+NODES: spfli.
+
+SELECT-OPTIONS: so_dept FOR spfli-deptime DEFAULT '010000' TO '020000'.
+
+INITIALIZATION.
+  MOVE: 'AA' TO carrid-low,
+        'I' TO carrid-sign,
+        'EQ' TO carrid-option.
+
+  APPEND carrid.
+
+AT SELECTION-SCREEN ON so_dept.
+
+*    IF   ( so_dept-low < '133000' or so_dept-high < '180000' )
+*      or ( so_dept-low >= '220000' or so_dept-high >= '240000' ).
+*
+*      MESSAGE w000(zbc405_19).
+*
+*    ENDIF.
+  GET spfli.
+
+  WRITE: / spfli-carrid, spfli-connid.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

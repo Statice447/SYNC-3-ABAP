@@ -1,0 +1,97 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC430_19_ZCHEON19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc430_19_zcheon19.
+
+TYPES: BEGIN OF gty_cheon19,
+         carrier    TYPE scarr-carrid,
+         carrid     TYPE scarr-carrid,
+         department TYPE zdepment19-department,
+         carrname   TYPE scarr-carrname,
+         currcode   TYPE scarr-currcode,
+         url        TYPE scarr-url,
+         first_name TYPE zname19-firstname,
+         last_name  TYPE zname19-lastname,
+         dephead    TYPE zdepment19-dephead,
+       END OF gty_cheon19.
+
+TYPES: BEGIN OF gty_cheont19,
+         carrier    TYPE zdepmentt19-carrier,
+         department TYPE zdepmentt19-department,
+         language   TYPE zdepmentt19-language,
+         descr      TYPE zdepmentt19-descr,
+       END OF gty_cheont19.
+
+DATA: gs_cheon19_scarr  TYPE gty_cheon19,
+      gs_cheon19_zdep   TYPE gty_cheon19,
+
+*      gs_cheont19       TYPE gty_cheont19,
+*      gt_cheont19       LIKE TABLE OF gs_cheont19,
+
+
+
+      gs_zcheon19_scarr TYPE zcheon19,
+      gs_zcheon19_zdep  TYPE zcheon19,
+*      gs_zcheont19      TYPE zcheont19,
+
+      gt_cheon19_scarr  LIKE TABLE OF gs_cheon19_scarr,
+      gt_cheon19_zdep   LIKE TABLE OF gs_cheon19_zdep.
+
+
+START-OF-SELECTION.
+
+
+  SELECT carrier department dephead
+    FROM zdepment19 INTO CORRESPONDING FIELDS OF gs_cheon19_zdep.
+
+    MOVE-CORRESPONDING gs_cheon19_zdep TO gs_zcheon19_zdep.
+    MOVE gs_cheon19_zdep-carrier TO gs_zcheon19_zdep-carrid.
+
+    INSERT gs_zcheon19_zdep INTO TABLE gt_cheon19_scarr.
+    INSERT zcheon19 FROM gs_zcheon19_zdep.
+  ENDSELECT.
+
+  SELECT carrid carrname currcode url
+    FROM scarr INTO CORRESPONDING FIELDS OF gs_cheon19_scarr.
+
+
+    MOVE-CORRESPONDING gs_cheon19_scarr TO gs_zcheon19_scarr.
+*    UPDATE zcheon19 from gs_zcheon19_scarr.
+    UPDATE zcheon19 SET carrname = @gs_zcheon19_scarr-carrname ,
+                        currcode = @gs_zcheon19_scarr-currcode ,
+                        url      = @gs_zcheon19_scarr-url
+                        WHERE carrid = @gs_zcheon19_scarr-carrid.
+
+
+*    UPDATE zcheon19 SET carrname = gs_zcheon19_scarr-carrname WHERE carrid = gs_zcheon19_scarr-carrid.
+*    UPDATE zcheon19 SET currcode = gs_zcheon19_scarr-currcode WHERE carrid = gs_zcheon19_scarr-carrid.
+*    UPDATE zcheon19 SET url      = gs_zcheon19_scarr-url      WHERE carrid = gs_zcheon19_scarr-carrid.
+
+    MODIFY gt_cheon19_scarr FROM gs_zcheon19_scarr TRANSPORTING carrname currcode url
+        WHERE carrid = gs_zcheon19_scarr-carrid.
+
+*    MODIFY zcheon19 FROM gs_zcheon19_scarr TRANSPORTING carrname currcode url
+*    WHERE carrid = gs_zcheon19_scarr-carrid.
+
+
+  ENDSELECT.
+
+*  SELECT *
+*    FROM zdepmentt19 INTO CORRESPONDING FIELDS OF gs_cheont19.
+*
+*    MOVE-CORRESPONDING gs_cheont19 TO gs_zcheont19.
+*
+*    INSERT zcheont19 FROM gs_zcheont19.
+*  ENDSELECT.
+
+*  INSERT zcheon19 FROM TABLE gt_cheon19_scarr.
+
+*LOOP AT gs_cheon19_scarr into gt_cheon19_scarr.
+*
+*ENDLOOP.
+  cl_demo_output=>display_data( gt_cheon19_scarr ).
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

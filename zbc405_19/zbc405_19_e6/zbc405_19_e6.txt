@@ -1,0 +1,128 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_E6
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC405_19_E6.
+
+type-POOLs: icon.
+
+DATA: gs_flight TYPE sflight,
+      gt_flight LIKE TABLE OF gs_flight.
+
+SELECT-OPTIONS: so_carr FOR gs_flight-carrid DEFAULT 'AA',
+                so_fldt FOR gs_flight-fldate.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK limit WITH FRAME TITLE TEXT-001.
+
+  PARAMETERS: pa_all RADIOBUTTON GROUP lim DEFAULT 'X',
+              pa_fre RADIOBUTTON GROUP lim,
+              pa_occ RADIOBUTTON GROUP lim.
+
+SELECTION-SCREEN END OF BLOCK limit.
+
+SELECTION-SCREEN BEGIN OF BLOCK limit2 WITH FRAME.
+  SELECTION-SCREEN BEGIN OF LINE.
+
+    SELECTION-SCREEN COMMENT 1(20) TEXT-s01.        " 1st Position
+
+    SELECTION-SCREEN COMMENT pos_low(10) TEXT-s02.  " 2nd Position
+      PARAMETERS pa_col AS CHECKBOX.
+
+    SELECTION-SCREEN COMMENT pos_high(8) TEXT-s03.  " 3rd Position
+      PARAMETERS pa_ico AS CHECKBOX.
+
+  SELECTION-SCREEN END OF LINE.
+SELECTION-SCREEN END OF BLOCK limit2.
+
+CONSTANTS gc_mark VALUE 'X'.
+
+INITIALIZATION.
+
+  MOVE: 'I' TO so_carr-sign,
+        'BT' TO so_carr-option,
+        'AA' TO so_carr-low,
+        'QF' TO so_carr-high.
+  APPEND so_carr.
+
+  CLEAR so_carr.
+
+  MOVE: 'E' TO so_carr-sign,
+        'EQ' TO so_carr-option,
+        'AZ' TO so_carr-low.
+  APPEND so_carr.
+
+START-OF-SELECTION.
+
+
+CASE gc_mark.
+  when pa_all.
+    perform data_out_all.
+  WHEN pa_fre.
+    PERFORM data_out_occ.
+
+ENDCASE.
+*&---------------------------------------------------------------------*
+*& Form DATA_OUT_OCC
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM data_out_occ .
+  data lv_free type i.
+
+    select connid carrid fldate seatsmax seatsocc
+    from sflight into CORRESPONDING FIELDS OF TABLE gt_flight
+    where carrid in so_carr
+    and fldate in so_fldt.
+
+  LOOP AT gt_flight into gs_flight.
+    lv_free = gs_flight-seatsmax - gs_flight-seatsocc.
+
+    WRITe: / 'Free = ', lv_free, gs_flight-carrid, gs_flight-seatsmax, gs_flight-seatsocc COLOR COL_NORMAL.
+
+IF pa_col = gc_mark.
+  IF gs_flight-seatsocc < gs_flight-seatsmax.
+      WRITE: icon_green_light as ICON.
+   else.
+      WRITE: icon_red_light as ICON.
+    ENDIF.
+ENDIF.
+
+
+  ENDLOOP.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DATA_OUT_ALL
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM data_out_all .
+  select carrid connid fldate seatsmax seatsocc
+    from sflight into CORRESPONDING FIELDS OF TABLE gt_flight
+    where carrid in so_carr
+    and fldate in so_fldt.
+
+      LOOP AT gt_flight into gs_flight.
+    WRITe: / 'All = ', gs_flight-seatsmax.
+
+  ENDLOOP.
+
+*    cl_demo_output=>display_data( gt_flight ).
+
+ENDFORM.
+
+*Text elements
+*----------------------------------------------------------
+* S01 MON
+* S02 Color
+* S03 Icon
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

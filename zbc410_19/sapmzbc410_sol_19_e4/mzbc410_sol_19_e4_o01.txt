@@ -1,0 +1,84 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOL_19_E4_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_ICON OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_icon OUTPUT.
+
+*  PERFORM set_icon USING gv_carrid
+*                   CHANGING gv_icon.
+
+  CASE gv_carrid.
+    WHEN 'AA'.
+      CALL FUNCTION 'ICON_CREATE'
+        EXPORTING
+          name                  = 'ICON_CHECKED'
+*         TEXT                  = ' '
+*         INFO                  = ' '
+*         ADD_STDINF            = 'X'
+        IMPORTING
+          result                = gv_icon
+        EXCEPTIONS
+          icon_not_found        = 1
+          outputfield_too_short = 2
+          OTHERS                = 3.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+        MESSAGE i000(zbc410_19) WITH 'System Error'.
+      ENDIF.
+
+    WHEN OTHERS.
+      CALL FUNCTION 'ICON_CREATE'
+        EXPORTING
+          name                  = 'ICON_INCOMPLETE'
+*         TEXT                  = ' '
+*         INFO                  = ' '
+*         ADD_STDINF            = 'X'
+        IMPORTING
+          result                = gv_icon
+        EXCEPTIONS
+          icon_not_found        = 1
+          outputfield_too_short = 2
+          OTHERS                = 3.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+        MESSAGE i000(zbc410_19) WITH 'System Error'.
+      ENDIF.
+
+
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE init_100 OUTPUT.
+
+  gv_chk2 = 'X'.
+  gv_rad2 = 'X'.
+
+  IF wa_sflight-carrid is INITIAL or wa_sflight-connid is INITIAL.
+    sdyn_conn-carrid = 'AA'.
+    sdyn_conn-connid = '0017'.
+
+
+  ENDIF.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,55 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC401_19_EVENTS
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc401_19_events.
+
+CLASS lcl_sender DEFINITION.                                    " 책에 있는 순서 p.227~
+  PUBLIC SECTION.
+    METHODS: set_name IMPORTING iv_name TYPE string.
+    EVENTS: name_changed EXPORTING VALUE(ev_name) TYPE string.  " 1번
+
+  PRIVATE SECTION.
+    DATA: mv_name TYPE string.
+ENDCLASS.
+
+CLASS lcl_sender IMPLEMENTATION.
+  METHOD set_name.
+    mv_name = iv_name.
+    RAISE EVENT name_changed                                    " 2번
+      EXPORTING ev_name = mv_name.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_handler DEFINITION.                                   " 3번 -1
+  PUBLIC SECTION.
+    METHODS: on_name_changed FOR EVENT name_changed OF lcl_sender IMPORTING ev_name.
+ENDCLASS.
+
+CLASS lcl_handler IMPLEMENTATION.                               " 3번 -2
+  METHOD on_name_changed.
+    WRITE:/ ' Handler Name : ', ev_name.
+  ENDMETHOD.
+ENDCLASS.
+
+DATA: go_sender  TYPE REF TO lcl_sender,
+      go_sender2 TYPE REF TO lcl_sender,
+      go_handler TYPE REF TO lcl_handler.
+
+
+START-OF-SELECTION.
+  CREATE OBJECT go_sender.                                      " 수행되어지는 오브젝트 생성
+  CREATE OBJECT go_sender2.
+  CREATE OBJECT go_handler.                                     " 수행되어지는 오브젝트 생성
+
+*  SET HANDLER go_handler->on_name_changed FOR go_sender.        " 4번 - 해당 raise class만 실행
+*  SET HANDLER go_handler->on_name_changed FOR ALL INSTANCES.     " 모든 raise class 실행
+  SET HANDLER go_handler->on_name_changed FOR ALL INSTANCES ACTIVATION space.
+  SET HANDLER go_handler->on_name_changed FOR go_sender2 ACTIVATION 'X' .
+
+  go_sender->set_name( 'hyeon' ).
+  go_sender2->set_name( 'rae' ).
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

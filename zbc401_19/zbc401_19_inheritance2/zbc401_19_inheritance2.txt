@@ -1,0 +1,301 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC401_19_upcast
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc401_19_interface2.
+
+CLASS lcl_vehicle DEFINITION.
+  PUBLIC SECTION.
+
+    CLASS-METHODS: class_constructor.                   " static constructor
+
+    METHODS:
+      set_attributes IMPORTING iv_make  TYPE s_make     " instance method
+                               iv_model TYPE s_model,
+
+      constructor    IMPORTING  iv_make  TYPE s_make    " instance method
+                                iv_model TYPE s_model
+                     EXCEPTIONS wrong_type,
+
+      display_attributes,                               " instance method
+      display_attributes_sql.                           " instance method
+
+    CLASS-METHODS:
+      display_no_vehicles,                              " static method
+      get_no_vehicles RETURNING VALUE(rv_count) TYPE i. " static functional method, returning이 있다면 functioal method
+
+*  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+    TYPES: gty_t_vehicle TYPE STANDARD TABLE OF zsvehicle19
+                         WITH NON-UNIQUE KEY make model.
+
+    DATA: mv_make    TYPE s_make,                         " instance attribute
+          mv_model   TYPE s_model,
+          mv_tankcap TYPE s_capacity,
+          mv_consum  TYPE s_consum,
+          mv_speed   TYPE s_speed.
+
+    CLASS-DATA: gv_no_vehicles TYPE i,                  " static attribute
+                gt_zsvehicle19 TYPE gty_t_vehicle.
+
+ENDCLASS.
+
+
+CLASS lcl_vehicle IMPLEMENTATION.
+  METHOD class_constructor.           " static constructor
+    SELECT *
+      FROM zsvehicle19
+      INTO CORRESPONDING FIELDS OF TABLE gt_zsvehicle19.
+
+  ENDMETHOD.
+  METHOD set_attributes.
+    mv_make  = iv_make.
+    mv_model = iv_model.
+
+    gv_no_vehicles = gv_no_vehicles + 1.
+
+  ENDMETHOD.
+
+  METHOD constructor.
+    DATA ls_vehicle TYPE zsvehicle19.
+
+    SELECT SINGLE *
+      FROM zsvehicle19 INTO CORRESPONDING FIELDS OF ls_vehicle
+      WHERE make = iv_make
+      AND   model = iv_model.
+
+    IF sy-subrc <> 0.
+      RAISE wrong_type.                     " Exception.
+    ELSE.
+      mv_make = iv_make.
+      mv_model = iv_model.
+      mv_tankcap = ls_vehicle-tankcap.
+      mv_consum = ls_vehicle-consum.
+      mv_speed = ls_vehicle-speed.
+
+      gv_no_vehicles = gv_no_vehicles + 1.
+
+    ENDIF.
+
+*    mv_make = iv_make.
+*    mv_model = iv_model.
+*
+*    ADD 1 TO gv_no_vehicles.
+  ENDMETHOD.
+
+  METHOD display_attributes.                    " no SQL 버전
+    WRITE:/ ' Manufacture : ', mv_make,
+          / ' Model       : ', mv_model.
+
+  ENDMETHOD.
+
+  METHOD display_attributes_sql.                " SQL 버전
+    WRITE:/ ' Manufacture : ', mv_make,
+          / ' Model       : ', mv_model,
+          / ' Tankcap     : ', mv_tankcap,
+          / ' Consum      : ', mv_consum,
+          / ' Speed       : ', mv_speed.
+
+  ENDMETHOD.
+
+
+  METHOD display_no_vehicles.
+    WRITE:/ ' Total number of vehicle : ', gv_no_vehicles.
+  ENDMETHOD.
+
+  METHOD get_no_vehicles.
+    rv_count = gv_no_vehicles.
+*    WRITE:/ ' rv_count : ', rv_count.
+  ENDMETHOD.
+ENDCLASS.
+CLASS lcl_truck DEFINITION INHERITING FROM lcl_vehicle.
+  PUBLIC SECTION.
+    METHODS:
+      constructor    IMPORTING  iv_make  TYPE s_make    " instance method
+                                iv_model TYPE s_model
+                                iv_cargo TYPE s_capacity
+                     EXCEPTIONS wrong_type,
+      display_attributes REDEFINITION.
+  PRIVATE SECTION.
+    DATA: mv_cargo TYPE s_capacity.
+ENDCLASS.
+
+CLASS lcl_truck IMPLEMENTATION.
+  METHOD constructor.
+    super->constructor(
+      EXPORTING
+        iv_make  = iv_make
+        iv_model = iv_model
+      EXCEPTIONS
+        wrong_type = 1 ).
+    IF sy-subrc <> 0.
+      RAISE wrong_type.
+    ELSE.
+      mv_cargo = iv_cargo.
+    ENDIF.
+
+  ENDMETHOD.
+  METHOD display_attributes.
+    super->display_attributes( ).         " Super class call
+    WRITE:/ ' Truck Cargo: ', mv_cargo.   " Sub class call
+  ENDMETHOD.
+ENDCLASS.
+CLASS lcl_bus DEFINITION INHERITING FROM lcl_vehicle.
+  PUBLIC SECTION.
+    METHODS:
+      constructor    IMPORTING  iv_make  TYPE s_make    " instance method
+                                iv_model TYPE s_model
+                                iv_seats TYPE s_seatsmax
+                     EXCEPTIONS wrong_type,
+      display_attributes REDEFINITION.
+  PRIVATE SECTION.
+    DATA: mv_seats TYPE s_seatsmax.
+
+ENDCLASS.
+
+CLASS lcl_bus IMPLEMENTATION.
+  METHOD constructor.
+    super->constructor(
+      EXPORTING
+        iv_make  = iv_make
+        iv_model = iv_model
+      EXCEPTIONS
+        wrong_type = 1 ).
+    IF sy-subrc <> 0.
+      RAISE wrong_type.
+    ELSE.
+      mv_seats = iv_seats.
+    ENDIF.
+
+  ENDMETHOD.
+  METHOD display_attributes.              " Redefinition
+    super->display_attributes( ).         " Super class call
+    WRITE:/ ' Bus Max Seats: ', mv_seats. " Sub class call
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_rental DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      constructor IMPORTING iv_name TYPE string,
+      display_vehicle,
+      display_attributes,    " upcast
+      add_vehicle IMPORTING io_vehicle TYPE REF TO lcl_vehicle.
+
+  PRIVATE SECTION.
+    DATA: mv_name    TYPE string,
+          mt_vehicle TYPE TABLE OF REF TO lcl_vehicle.        " 객체 변수
+
+ENDCLASS.
+
+CLASS lcl_rental IMPLEMENTATION.
+  METHOD constructor.
+    mv_name = iv_name.
+  ENDMETHOD.
+
+  METHOD display_vehicle.
+    WRITE:/ ' My name : ', mv_name.
+  ENDMETHOD.
+
+  METHOD display_attributes.
+    DATA lo_vehicle TYPE REF TO lcl_vehicle.
+    WRITE:/ ' My name : ', mv_name, / .
+
+    LOOP AT mt_vehicle INTO lo_vehicle.
+      lo_vehicle->display_attributes( ).
+      ULINE.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD add_vehicle.
+    APPEND io_vehicle TO mt_vehicle.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+
+DATA: go_vehicle  TYPE REF TO lcl_vehicle,      " Super class
+      gt_vehicles TYPE TABLE OF REF TO lcl_vehicle,
+      go_rental   TYPE REF TO lcl_rental,
+      gt_rental   TYPE TABLE OF REF TO lcl_rental.
+
+
+DATA: go_bus   TYPE REF TO lcl_bus,             " Sub class
+      go_truck TYPE REF TO lcl_truck.
+
+DATA: gv_number TYPE i.                         " static functional method의 returning 데이터를 넣을 변수 선언
+
+START-OF-SELECTION.
+  lcl_vehicle=>display_no_vehicles( ).          " static 메소드는 클래스 이름으로 불러온다.
+  ULINE.
+
+  CREATE OBJECT go_vehicle
+    EXPORTING
+      iv_make    = 'AUDI'
+      iv_model   = 'A3'
+    EXCEPTIONS
+      wrong_type = 1.
+
+  IF sy-subrc <> 0.
+    RAISE wrong_type.
+  ENDIF.
+
+  CREATE OBJECT go_bus
+    EXPORTING
+      iv_make    = 'AUDI'
+      iv_model   = 'A3'
+      iv_seats   = '355'
+    EXCEPTIONS
+      wrong_type = 1.
+
+  IF sy-subrc <> 0.
+    RAISE wrong_type.
+  ENDIF.
+
+  CREATE OBJECT go_truck
+    EXPORTING
+      iv_make    = 'BMW'
+      iv_model   = '318I'
+      iv_cargo   = '80'
+    EXCEPTIONS
+      wrong_type = 1.
+
+  IF sy-subrc <> 0.
+    RAISE wrong_type.
+  ENDIF.
+
+  CREATE OBJECT go_rental
+    EXPORTING
+      iv_name = 'Hyeon'.
+
+  go_rental->add_vehicle(
+    EXPORTING io_vehicle = go_truck ).  " upcast
+  go_rental->add_vehicle( go_bus ).     " 동일함, import에 필요한 객체만 넣은거
+
+  ULINE.
+  WRITE:/ 'Rental name : '.
+*  go_rental->display_vehicle( ).
+  go_rental->display_attributes( ).
+
+  ULINE.
+  go_vehicle->display_attributes( ).
+
+  ULINE.
+  go_vehicle = go_truck.            " Upcast
+  go_truck->display_attributes( ).
+
+  ULINE.
+  go_vehicle = go_bus.              " Upcast
+  go_bus->display_attributes( ).
+  ULINE.
+
+  lcl_vehicle=>display_no_vehicles( ).          " static 메소드는 클래스 이름으로 불러온다.
+  gv_number = lcl_vehicle=>get_no_vehicles( ).
+  WRITE:/ ' total : ' , gv_number.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,34 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      ZBC414_19_PRAC2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzbc414_19_prac2_top                    .    " Global Data
+INCLUDE mzbc414_19_prac2_c01.
+INCLUDE mzbc414_19_prac2_o01                    .  " PBO-Modules
+INCLUDE mzbc414_19_prac2_i01                    .  " PAI-Modules
+INCLUDE mzbc414_19_prac2_f01                    .  " FORM-Routines
+
+*GUI Texts
+*----------------------------------------------------------
+* T0200 --> Display ALV
+* T0220 --> Delete Data
+* T0210 --> Create Data
+* T0230 --> Change_Data
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: BC405_408
+*075   Internal Error
+*
+* Message class: Hard coded
+*   Please, Selected one row.
+*
+* Message class: ZBC414_19
+*003   그외 에러
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

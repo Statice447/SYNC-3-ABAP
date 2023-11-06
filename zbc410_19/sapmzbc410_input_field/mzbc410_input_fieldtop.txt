@@ -1,0 +1,18 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC410_SOLUTION_19TOP                   - Module Pool      SAPMZBC410_SOLUTION_19
+*&---------------------------------------------------------------------*
+PROGRAM sapmzbc410_solution_19.
+
+TABLES: sdyn_conn, saplane.
+
+DATA: wa_sflight TYPE sflight,
+      io_command TYPE c LENGTH 1,
+      ok_code    TYPE sy-ucomm,
+      dynnr      TYPE sy-dynnr.
+
+DATA: gv_rad1 TYPE c LENGTH 1 VALUE 'X',
+      gv_rad2 LIKE gv_rad1,
+      gv_rad3 LIKE gv_rad1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

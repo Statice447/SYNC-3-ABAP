@@ -1,0 +1,233 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_INNER_ALV
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_alv_object.
+TYPES: BEGIN OF gty_join,
+         light    TYPE c  LENGTH 1,
+         carrid   TYPE scarr-carrid,
+         carrname TYPE scarr-carrname,
+         connid   TYPE spfli-connid,
+         cityfrom TYPE spfli-cityfrom,
+         cityto   TYPE spfli-cityto,
+       END OF gty_join.
+
+DATA: gt_join TYPE TABLE OF gty_join,
+      gs_join LIKE LINE OF gt_join.
+
+DATA: ok_code TYPE sy-ucomm.
+
+DATA: go_alv_table TYPE REF TO cl_salv_table.                     " ALV object table 선언
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_layout  TYPE lvc_s_layo,
+      gv_variant TYPE disvariant,
+      gv_save    TYPE c LENGTH 1.
+
+
+DATA: gt_fcat TYPE lvc_t_fcat,    " internal table 형
+      gs_fcat TYPE lvc_s_fcat.    " structure 형
+
+DATA: gt_sort TYPE lvc_t_sort,    " 정렬 internal table 선언
+      gs_sort TYPE lvc_s_sort.    " 정렬 structure 선언
+
+START-OF-SELECTION.
+
+  SELECT scarr~carrid scarr~carrname spfli~connid spfli~cityfrom spfli~cityto
+    INTO CORRESPONDING FIELDS OF TABLE gt_join
+    FROM scarr INNER JOIN spfli
+    ON scarr~carrid = spfli~carrid.
+
+  LOOP AT gt_join INTO gs_join.
+    IF gs_join-cityfrom = 'NEW YORK'.
+      gs_join-light = '1'.                 " Red
+    ELSEIF gs_join-cityfrom = 'ROME'.
+      gs_join-light = '2'.                 " Yellow
+    ELSEIF gs_join-cityfrom = 'SAN FRANCISCO'.
+      gs_join-light = '3'.                 " Green
+    ELSE.
+    ENDIF.
+
+    MODIFY gt_join FROM gs_join TRANSPORTING light.
+
+  ENDLOOP.
+
+
+  CALL SCREEN 100.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module TRASFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE trasfer OUTPUT.
+  " 패턴 이용 시
+  CREATE OBJECT go_container                        " 클래스 : cl_gui_custom_container
+    EXPORTING                                       " 인스턴스 : go_container
+      container_name = 'MY_AREA'
+    EXCEPTIONS
+      OTHERS         = 1.
+
+  IF sy-subrc <> 0.
+    MESSAGE a001(zbc405_19).
+
+  ENDIF.
+  " 패턴 이용 시
+  CREATE OBJECT go_alv_grid                         " 클래스 : cl_gui_alv_grid
+    EXPORTING                                       " 인스턴스 : go_alv_grid
+      i_parent = go_container
+    EXCEPTIONS
+      OTHERS   = 1.
+
+  IF sy-subrc <> 0.
+    MESSAGE a001(zbc405_19).
+  ENDIF.
+
+  gv_variant-report = sy-cprog.
+  gv_save = 'A'.
+
+
+  gs_layout-zebra      = 'X'.             " 실행 시킨다는 의미의 X(체크 표시) 색깔 번갈아서
+  gs_layout-cwidth_opt = 'X'.             " 실행 시킨다는 의미의 X(체크 표시) 크기 정렬  5권 p.154
+  gs_layout-excp_fname = 'LIGHT'.         " 신호등
+  gs_layout-excp_led   = 'X'.             " 해당 light만 나오게 하는 설정
+
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRID'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CURRCODE'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'URL'.       " on Button Click 필드 선언
+  gs_fcat-no_out = 'X'.                  " 필드 text 이름 변경
+  APPEND gs_fcat TO gt_fcat.
+
+  " 여기까지 삭제
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRID'.              " 필드
+  gs_fcat-ref_field = 'CARRID'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SCARR'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'CARRID'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 1.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CARRNAME'.              " 필드                   " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 2.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CONNID'.              " 필드
+  gs_fcat-ref_field = 'CONNID'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'CONNID'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 3.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYFROM'.              " 필드
+  gs_fcat-ref_field = 'CITYFROM'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'CITYFROM'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 4.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'CITYTO'.              " 필드
+  gs_fcat-ref_field = 'CITYTO'.              " 참조 필드 설정
+  gs_fcat-ref_table = 'SPFLI'.                " 참조 테이블 설정
+  gs_fcat-coltext   = 'CITYTO'.                    " 필드 이름(텍스트) 변경
+  gs_fcat-col_pos   = 5.                        " 필드 위치 설정
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_sort.
+  gs_sort-fieldname = 'CARRID'.
+  gs_sort-down        = 'X'.
+  APPEND gs_sort TO gt_sort.
+
+  TRY.                                          " ALV_object UNIt. 10
+    cl_salv_table=>factory(
+    IMPORTING
+      r_salv_table = go_alv_table
+      CHANGING
+        t_table = gt_join
+    ).
+
+  CATCH cx_salv_msg.
+
+  ENDTRY.
+
+  go_alv_table->display( ).                    " ALV object display
+
+
+*  CALL METHOD go_alv_grid->set_table_for_first_display
+*    EXPORTING
+*      i_structure_name = 'SCARR'
+*      is_variant       = gv_variant     " Layout Variant
+*      is_layout        = gs_layout      " Layout Structure
+*    CHANGING
+*      it_outtab        = gt_join
+*      it_fieldcatalog  = gt_fcat
+*      it_sort          = gt_sort
+*    EXCEPTIONS
+***     invalid_parameter_combination = 1
+***     program_error                 = 2
+***     too_many_lines                = 3
+*      OTHERS           = 1.
+***    .
+*  IF sy-subrc <> 0.
+*  ENDIF.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+ENDMODULE.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC405_19
+*001   Container Instance is not Data
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

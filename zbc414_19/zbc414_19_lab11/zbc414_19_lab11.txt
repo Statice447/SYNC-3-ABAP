@@ -1,0 +1,85 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC414_19_LAB12
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc414_19_lab11.
+
+
+DATA: gt_scustom  TYPE TABLE OF scustom,            " Internal Table SCUSTOM
+      gs_scustom  LIKE LINE OF gt_scustom,          " Structure SCUSTOM
+      gt_zscustom TYPE TABLE OF zscustom19,         " 복사용 zscustom internal table
+      gs_zscustom LIKE LINE OF gt_zscustom,         " 복사용 zscustom Work Area
+      wa_scustom  TYPE zscustom19.
+
+DATA: gv_dbcnt TYPE i VALUE 0.                      " do-enddo 구문 카운트 용
+
+START-OF-SELECTION.
+  SELECT *                                      " 전체 복사
+    FROM scustom INTO gs_scustom.
+
+    MOVE-CORRESPONDING gs_scustom TO gs_zscustom.
+    INSERT zscustom19 FROM gs_zscustom.
+  ENDSELECT.
+  WRITE: / ' 전체 복사 ',' | subrc : ',sy-subrc, 'dbcnt :', sy-dbcnt , /.
+
+  DELETE FROM zscustom19 WHERE id LIKE '%'.    "전체 삭제
+  WRITE: / ' 전체 삭제 ',' | subrc : ',sy-subrc, 'dbcnt :', sy-dbcnt, /.
+
+  CLEAR gs_zscustom.
+  SELECT *  "한 줄 넣기
+    FROM scustom INTO CORRESPONDING FIELDS OF TABLE gt_scustom.
+
+  READ TABLE gt_scustom INDEX 99 INTO gs_scustom.   " 99번째 인덱스 찾기
+
+  MOVE-CORRESPONDING gs_scustom TO gs_zscustom.
+  INSERT zscustom19 FROM gs_zscustom.
+
+  WRITE: / ' 한 줄 넣기 ',' | subrc : ',sy-subrc, 'dbcnt :', sy-dbcnt, /.
+
+  DO 100 TIMES.   " do - enddo
+    SELECT SINGLE *
+      FROM scustom INTO CORRESPONDING FIELDS OF gs_scustom
+      WHERE id = sy-index.
+
+    MOVE-CORRESPONDING gs_scustom TO gs_zscustom.
+    INSERT zscustom19 FROM gs_zscustom .
+
+    gv_dbcnt = gv_dbcnt + sy-dbcnt.
+  ENDDO.
+  WRITE: / ' DO-ENDDO 100 ',' | subrc : ',sy-subrc, 'dbcnt :', gv_dbcnt, /.
+
+  SELECT * " LAB11 - Task2 전체 복사 (두 번째 전체 복사)
+    FROM scustom INTO gs_scustom.
+
+    MOVE-CORRESPONDING gs_scustom TO gs_zscustom.
+    INSERT zscustom19 FROM gs_zscustom.
+  ENDSELECT.
+  WRITE: / ' 두 번째 Insert ',' | subrc : ',sy-subrc, 'dbcnt :', sy-dbcnt, /.
+
+
+  DELETE FROM zscustom19                          " id 0번제외하고 삭제"
+  WHERE id <> '00000000'.
+  WRITE: / ' 0번 ID 빼고 Delete ',' | subrc : ', sy-subrc, 'dbcnt :', sy-dbcnt, /.
+
+
+  CLEAR gs_zscustom.                              " internal table 이용 복사
+  SELECT *
+    FROM scustom INTO CORRESPONDING FIELDS OF TABLE gt_scustom.
+  MOVE-CORRESPONDING gt_scustom TO gt_zscustom.
+
+  INSERT zscustom19 FROM TABLE gt_zscustom ACCEPTING DUPLICATE KEYS.
+  WRITE: /' Internal Table 이용해서 넣기 ',' | subrc : ',sy-subrc, 'dbcnt :', sy-dbcnt, /.
+
+
+  SELECT *                                        " 99번째 이름 바꾸기
+    FROM scustom INTO CORRESPONDING FIELDS OF TABLE gt_scustom.
+
+  READ TABLE gt_scustom INDEX 99 INTO gs_scustom.                " 99번째 인덱스 찾기
+
+  MOVE-CORRESPONDING gs_scustom TO wa_scustom.
+  UPDATE zscustom19 SET name = 'Hyeon' WHERE id = wa_scustom-id. " 99번째 레코드 이름바꾸기
+  WRITE: / ' 99번 이름 바꾸기 ', ' | subrc : ',sy-subrc, 'dbcnt :', sy-dbcnt,/.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

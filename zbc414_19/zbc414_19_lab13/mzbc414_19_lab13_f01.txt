@@ -1,0 +1,33 @@
+*&---------------------------------------------------------------------*
+*& Form READ_CUSTOMER_INFO
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_GV_ID  text
+*&---------------------------------------------------------------------*
+FORM read_customer_info  USING    VALUE(pv_id).
+  SELECT id name custtype
+    FROM zscustom19 INTO CORRESPONDING FIELDS OF TABLE gt_zscustom19
+    WHERE id = pv_id.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CHANGE_CUSTOMER_TYPE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_GV_ID  text
+*      -->P_ZSCUSTOM19_CUSTTYPE  text
+*&---------------------------------------------------------------------*
+FORM change_customer_type  USING    VALUE(pv_id)
+                                    VALUE(pv_custtype).
+
+  CALL FUNCTION 'ZFM_UPD_ZSCUSTOM19' IN UPDATE TASK
+    EXPORTING
+      iv_id       = pv_id
+      iv_custtype = pv_custtype.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,22 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC414_19_MENTEE_TOP                    - Module Pool      ZBC414_19_MENTEE
+*&---------------------------------------------------------------------*
+PROGRAM ZBC414_19_MENTEE.
+
+TABLES: zscustom19.
+
+
+DATA: ok_code TYPE sy-ucomm.
+
+TYPES: BEGIN OF gty_s_custom,
+  id TYPE zscustom19-id,
+  name TYPE zscustom19-name,
+  END OF gty_s_custom.
+
+DATA: gt_zscustom TYPE TABLE OF gty_s_custom,
+      gs_zscustom TYPE gty_s_custom.
+
+CONTROLS: my_table TYPE TABLEVIEW USING SCREEN '0100'.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

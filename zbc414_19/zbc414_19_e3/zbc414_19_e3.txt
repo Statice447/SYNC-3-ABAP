@@ -1,0 +1,32 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC414_19_E3
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc414_19_e3.
+
+DATA: gt_scarr TYPE TABLE OF scarr,          " Internal Table
+      gs_scarr LIKE LINE OF gt_scarr.        " Structure
+
+*gs_scarr-carrid = 'JA'.
+*gs_scarr-carrname = 'Jeju Airline'.
+*gs_scarr-currcode = 'KRW'.
+*gs_scarr-url      = 'http://www.JejuAir.com'.
+
+" 한 줄 업데이트
+*UPDATE zscarr from gs_scarr.
+
+" 한 개 업데이트
+UPDATE zscarr19 set currcode = 'KRW' WHERE carrid = 'JA'.
+UPDATE zscarr19 set currcode = 'KRW' WHERE carrid = 'KA'.
+UPDATE zscarr19 set currcode = 'KRW' WHERE carrid = 'TA'.
+
+" UPDATE SET 구문
+*UPDATE zscarr19
+*SET currcode = 'EUR'         " 바꿀 내용
+*WHERE currcode = 'KRW'.      " WHERE에 해당하는 필드 선택
+
+WRITE: / sy-subrc, sy-dbcnt.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

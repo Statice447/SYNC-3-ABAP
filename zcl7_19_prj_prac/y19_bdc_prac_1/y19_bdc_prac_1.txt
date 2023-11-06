@@ -1,0 +1,382 @@
+*&---------------------------------------------------------------------*
+*& Report Y19_BDC_PRAC
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT y19_bdc_prac_1.
+
+TABLES: ztc702_bom_i, ztc702_bom_h.
+
+DATA: BEGIN OF itab,
+*        mandt     TYPE s_mandt,
+        gdcode   TYPE ztc702_bom_h-gdcode,
+        gdname   TYPE ztc702_bom_h-gdname,
+        gdcode_m TYPE ztc702_bom_i-gdcode_m,
+        mtcode_m TYPE ztc702_bom_i-mtcode_m,
+        gdname_m TYPE ztc702_bom_i-gdname_m,
+        quan     TYPE ztc702_bom_i-quan,
+        unit     TYPE ztc702_bom_i-unit,
+      END OF itab.
+
+DATA: gv_rc      TYPE i,
+      gv_file    TYPE localfile,
+      gt_file    TYPE filetable,
+      gv_data    TYPE truxs_t_text_data,
+      g_frontend TYPE REF TO cl_gui_frontend_services.     "업로드용 파일 선택창
+
+DATA: gs_itab  LIKE itab,
+      gt_itab  LIKE TABLE OF itab,
+      gs_excel TYPE alsmex_tabline,      "엑셀 업로드 데이터 담을 work area
+      gt_excel TYPE TABLE OF alsmex_tabline.     "엑셀 업로드 데이터 담을 인터널 테이블
+
+*"--------------<BDC 관련 데이터 선언>----------------
+DATA: gt_bdc TYPE TABLE OF bdcdata,  "레코딩 담을 int
+      gs_bdc TYPE bdcdata, "레코딩 데이터 입력 위한 wa
+      gt_msg TYPE TABLE OF bdcmsgcoll, "처리결과 담을 int
+      gs_msg TYPE bdcmsgcoll. "처리 결과 메세지 입력 위한 wa
+
+DATA: gs_opt     TYPE ctu_params, "call transaction 옵션을 넣어줄 wa
+      gv_move    LIKE ctu_params-dismode VALUE 'N',     "display 메세지 옵션,메세지 옵션 주려고
+      gv_message LIKE bapireturn-message.          "실질적으로 메세지 담기는 변수
+
+CONSTANTS : c_filter TYPE string VALUE
+            'EXCEL FILES (*.XLSX)|*.XLSX|EXCEL FILES (*.XLS)|*.XLS|'.
+
+FIELD-SYMBOLS <fs>.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-000. "파일경로
+PARAMETERS : p_file TYPE localfile.
+
+
+SELECTION-SCREEN BEGIN OF LINE.
+SELECTION-SCREEN COMMENT 1(30) TEXT-c00. "처리방식
+PARAMETERS : p_alsm RADIOBUTTON GROUP rd1 DEFAULT 'X'.
+SELECTION-SCREEN COMMENT 38(30) TEXT-c01. "엑셀
+
+PARAMETERS : p_cbo RADIOBUTTON GROUP rd1.
+SELECTION-SCREEN COMMENT 78(30) TEXT-c02. "cbo테이블
+SELECTION-SCREEN END OF LINE.
+SELECTION-SCREEN END OF BLOCK b2.
+
+SELECTION-SCREEN BEGIN OF BLOCK b3 WITH FRAME TITLE TEXT-005. "파일경로
+*PARAMETERS : p_file2 TYPE localfile.
+
+
+SELECTION-SCREEN PUSHBUTTON /pos_low(10) TEXT-004 USER-COMMAND btn1.
+SELECTION-SCREEN END OF BLOCK b3.
+
+SELECTION-SCREEN : FUNCTION KEY 1.
+SELECTION-SCREEN : FUNCTION KEY 2.
+*펑션키에 들어갈 데이터를 담을 변수를 선언해준다.
+
+TABLES: sscrfields.
+DATA : g_function_key TYPE smp_dyntxt.
+DATA : g_function_key2 TYPE smp_dyntxt.
+*버튼의 초기값을 설정해준다. 키의 이름이나 아이콘이 들어간다. 초기값이니 Initialization에 입력한다.
+
+INITIALIZATION.
+  CREATE OBJECT g_frontend.
+
+  g_function_key-icon_id = icon_xls.
+  g_function_key-icon_text = TEXT-001. "템플릿 다운로드
+  g_function_key-text = TEXT-001.
+  sscrfields-functxt_01 = g_function_key.
+
+  g_function_key2-icon_id = icon_table_settings.
+  g_function_key2-icon_text = TEXT-002. "cbo테이블
+  g_function_key2-text = TEXT-002.
+  sscrfields-functxt_02 = g_function_key2.
+
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
+
+  DATA: ls_wwwdata_item TYPE wwwdatatab.
+
+  CASE sscrfields-ucomm.
+    WHEN 'FC01'. "템플릿 다운로드 버튼
+      SELECT SINGLE * FROM wwwdata
+      INTO CORRESPONDING FIELDS OF ls_wwwdata_item
+      WHERE objid = 'ZEXCEL11'.
+
+      IF sy-subrc NE 0.
+        MESSAGE '에러' TYPE 'E'.
+        EXIT.
+      ENDIF.
+
+      CALL FUNCTION 'DOWNLOAD_WEB_OBJECT'
+        EXPORTING
+          key = ls_wwwdata_item.
+
+    WHEN 'BTN1'.
+      MESSAGE '다운' TYPE 'I'.
+
+*    WHEN 'FC02'. "cbo테이블 버튼
+*      CALL TRANSACTION 'ZS1D11'.
+  ENDCASE.
+
+  PERFORM get_filepath.
+
+START-OF-SELECTION.
+
+  IF p_file IS NOT INITIAL.
+    CASE 'X'.
+      WHEN p_alsm.
+        PERFORM call_func1.
+
+      WHEN p_cbo.
+        PERFORM call_func2.
+    ENDCASE.
+
+  ELSE.
+    PERFORM call_func2.
+  ENDIF.
+
+END-OF-SELECTION.
+
+  CHECK gt_itab[] IS NOT INITIAL.
+
+  LOOP AT gt_itab INTO gs_itab.
+    PERFORM bdc_run. "uSING gs_itab-matnr gs_itab-maktx.
+  ENDLOOP.
+*&---------------------------------------------------------------------*
+*& Form GET_FILEPATH
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_filepath .
+  CLEAR : gv_rc, gt_file[].
+  CALL METHOD g_frontend->file_open_dialog
+    EXPORTING
+      file_filter       = c_filter
+      initial_directory = 'C:'
+      default_filename  = space
+    CHANGING
+      file_table        = gt_file
+      rc                = gv_rc
+    EXCEPTIONS
+      OTHERS            = 1.
+
+  CLEAR p_file.
+  READ TABLE gt_file INTO p_file INDEX 1.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CALL_FUNC1
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM call_func1 .
+  CLEAR gt_excel[].
+  CALL FUNCTION 'ALSM_EXCEL_TO_INTERNAL_TABLE'
+    EXPORTING
+      filename                = p_file
+      i_begin_col             = 1
+      i_begin_row             = 2
+      i_end_col               = 8
+      i_end_row               = 10000
+    TABLES
+      intern                  = gt_excel[]
+    EXCEPTIONS
+      inconsistent_parameters = 1
+      upload_ole              = 2
+      OTHERS                  = 3.
+
+  " 업로드된 엑셀을 LINE/COL 별로 MOVE
+  IF gt_excel[] IS NOT INITIAL.
+    CLEAR gt_itab[].
+    LOOP AT gt_excel INTO gs_excel.
+      UNASSIGN <fs>.
+      ASSIGN COMPONENT gs_excel-col OF STRUCTURE gs_itab TO <fs>.
+
+      IF <fs> IS ASSIGNED.
+        <fs> = gs_excel-value.
+      ENDIF.
+
+      AT END OF row.
+        APPEND gs_itab TO gt_itab.
+        CLEAR gs_itab.
+      ENDAT.
+    ENDLOOP.
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CALL_FUNC2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM call_func2 .
+  SELECT *
+    FROM zc7_19_employee INTO CORRESPONDING FIELDS OF TABLE gt_itab.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form BDC_RUN
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM bdc_run .
+  DATA: lv_index TYPE sy-index.  "카운트를 위한 변수, 레코드가 몇건인지 확인할수 있는 변수
+  DATA: lv_text TYPE string.
+  CLEAR: gs_bdc, gt_bdc, gs_opt, gt_msg, gs_msg.      "찌거기 데이터를 제거하기 위해 데이터 오브젝트 클리어
+
+*옵션 설정
+  gs_opt-dismode = 'E'.     "E 에러가 발생할 때 화면 표시, A는 전체
+  gs_opt-updmode = 'A'.     "비동기
+  gs_opt-defsize = 'X'.      "기본 윈도우
+
+*bdc 프로세스 시작
+  PERFORM bdc_data USING:
+        " '/00' ok_code 엔터
+*          'X' 'SAPMZC702_PRAC_HR'           '0100',
+**          ' ' 'ZC7_19_EMPLOYEE-MANDT'        gs_itab-mandt,  "WERKS (플랜트),
+*          ' ' 'ZC7_19_EMPLOYEE-PERNR'        gs_itab-pernr,  "WERKS (플랜트),
+*          ' ' 'ZC7_19_EMPLOYEE-ORGEH'        gs_itab-orgeh,  "WERKS (플랜트),
+*          ' ' 'ZC7_19_EMPLOYEE-PNAME'        gs_itab-pname,
+*          ' ' 'ZC7_19_EMPLOYEE-RANK'         gs_itab-rank,  "(자재번호),
+*          ' ' 'ZC7_19_EMPLOYEE-GENDER'       gs_itab-gender, "(조사기간 시작일),
+*          ' ' 'ZC7_19_EMPLOYEE-PCONT'        gs_itab-pcont,  "(조사기간 종료일,
+*          ' ' 'ZC7_19_EMPLOYEE-EMAIL'        gs_itab-email,
+*          ' ' 'ZC7_19_EMPLOYEE-ISMANAGER'    gs_itab-ismanager,
+*          ' ' 'BDC_CURSOR'                   'ZC7_19_EMPLOYEE-EMAIL',
+*          ' ' 'BDC_OKCODE' '=CREATE'.
+'X' 'SAPMZC702_PP_02'           '0100',
+' ' 'BDC_CURSOR'                'ZTC702_BOM_H-BOMID',
+' ' 'GV_RAD'                    'X',
+' ' 'BDC_OKCODE'                '=CREATE',
+
+
+'X' 'SAPMZC702_PP_02'           '0300',
+' ' 'ZSC702_BOM_H-GDCODE'                gs_itab-gdcode,
+' ' 'ZSC702_BOM_H-GDNAME'                gs_itab-gdname,
+' ' 'ZTC702_BOM_I-GDCODE_M'              gs_itab-gdcode_m,
+' ' 'ZTC702_BOM_I-MTCODE_M'              gs_itab-mtcode_m,
+' ' 'ZTC702_BOM_I-GDNAME_M'              gs_itab-gdname_m,
+' ' 'ZTC702_BOM_I-QUAN'                  gs_itab-quan,
+' ' 'ZTC702_BOM_I-UNIT'                  gs_itab-unit,
+' ' 'BDC_OKCODE'                '=ADD',
+
+'X' 'SAPMZC702_PP_02'           '0300',
+' ' 'ZSC702_BOM_H-GDCODE'                gs_itab-gdcode,
+' ' 'ZSC702_BOM_H-GDNAME'                gs_itab-gdname,
+' ' 'ZTC702_BOM_I-GDCODE_M'              gs_itab-gdcode_m,
+' ' 'ZTC702_BOM_I-MTCODE_M'              gs_itab-mtcode_m,
+' ' 'ZTC702_BOM_I-GDNAME_M'              gs_itab-gdname_m,
+' ' 'ZTC702_BOM_I-QUAN'                  gs_itab-quan,
+' ' 'ZTC702_BOM_I-UNIT'                  gs_itab-unit,
+' ' 'BDC_OKCODE'                '=ADD',
+
+'X' 'SAPMZC702_PP_02'           '0300',
+' ' 'ZSC702_BOM_H-GDCODE'                gs_itab-gdcode,
+' ' 'ZSC702_BOM_H-GDNAME'                gs_itab-gdname,
+' ' 'ZTC702_BOM_I-GDCODE_M'              gs_itab-gdcode_m,
+' ' 'ZTC702_BOM_I-MTCODE_M'              gs_itab-mtcode_m,
+' ' 'ZTC702_BOM_I-GDNAME_M'              gs_itab-gdname_m,
+' ' 'ZTC702_BOM_I-QUAN'                  gs_itab-quan,
+' ' 'ZTC702_BOM_I-UNIT'                  gs_itab-unit,
+' ' 'BDC_OKCODE'                '=ADD',
+
+'X' 'SAPMZC702_PP_02'           '0300',
+' ' 'ZSC702_BOM_H-GDCODE'                gs_itab-gdcode,
+' ' 'ZSC702_BOM_H-GDNAME'                gs_itab-gdname,
+' ' 'ZTC702_BOM_I-GDCODE_M'              gs_itab-gdcode_m,
+' ' 'ZTC702_BOM_I-MTCODE_M'              gs_itab-mtcode_m,
+' ' 'ZTC702_BOM_I-GDNAME_M'              gs_itab-gdname_m,
+' ' 'ZTC702_BOM_I-QUAN'                  gs_itab-quan,
+' ' 'ZTC702_BOM_I-UNIT'                  gs_itab-unit,
+' ' 'BDC_OKCODE'                '=ADD',
+
+'X' 'SAPMZC702_PP_02'           '0300',
+' ' 'ZSC702_BOM_H-GDCODE'                gs_itab-gdcode,
+' ' 'ZSC702_BOM_H-GDNAME'                gs_itab-gdname,
+' ' 'ZTC702_BOM_I-GDCODE_M'              gs_itab-gdcode_m,
+' ' 'ZTC702_BOM_I-MTCODE_M'              gs_itab-mtcode_m,
+' ' 'ZTC702_BOM_I-GDNAME_M'              gs_itab-gdname_m,
+' ' 'ZTC702_BOM_I-QUAN'                  gs_itab-quan,
+' ' 'ZTC702_BOM_I-UNIT'                  gs_itab-unit,
+' ' 'BDC_OKCODE'                '=ADD',
+
+'X' 'SAPMZC702_PP_02'           '0300',
+' ' 'ZSC702_BOM_H-GDCODE'                gs_itab-gdcode,
+' ' 'ZSC702_BOM_H-GDNAME'                gs_itab-gdname,
+' ' 'ZTC702_BOM_I-GDCODE_M'              gs_itab-gdcode_m,
+' ' 'ZTC702_BOM_I-MTCODE_M'              gs_itab-mtcode_m,
+' ' 'ZTC702_BOM_I-GDNAME_M'              gs_itab-gdname_m,
+' ' 'ZTC702_BOM_I-QUAN'                  gs_itab-quan,
+' ' 'ZTC702_BOM_I-UNIT'                  gs_itab-unit,
+' ' 'BDC_OKCODE'                '=ADD',
+
+'X' 'SAPMZC702_PP_02'           '0300',
+' ' 'BDC_OKCODE'                '=SAVE'.
+
+  CALL TRANSACTION 'ZC702_PP_02'
+          USING gt_bdc "BDC레코딩 데이터
+          OPTIONS FROM gs_opt "옵션
+          MESSAGES INTO gt_msg. "처리결과 메세지
+
+
+* 메세지INT 마지막 라인 읽기
+  CLEAR: lv_index.
+  DESCRIBE TABLE gt_msg LINES lv_index. "INT 라인수
+  READ TABLE gt_msg INTO gs_msg INDEX lv_index. "마지막 라인의 값 읽기
+
+  CHECK sy-subrc = 0.
+*  메세지 생성 펑션
+  CALL FUNCTION 'MESSAGE_TEXT_BUILD'
+    EXPORTING
+      msgid               = gs_msg-msgid
+      msgnr               = gs_msg-msgnr
+      msgv1               = gs_msg-msgv1
+      msgv2               = gs_msg-msgv2
+      msgv3               = gs_msg-msgv3
+      msgv4               = gs_msg-msgv4
+    IMPORTING
+      message_text_output = gv_message. "처리결과 메세지
+
+ENDFORM.
+
+FORM bdc_data  USING pv_check pv_name pv_value. "using : perform using 상수값 메모리 같이씀
+
+  CLEAR: gs_bdc.      "work area 클리어
+  IF pv_check EQ 'X'.     "bdc 시작 체크
+    gs_bdc-program = pv_name.     "프로그램 명
+    gs_bdc-dynpro = pv_value.     "화면 번호
+    gs_bdc-dynbegin = pv_check.     "시작
+  ELSE.
+    gs_bdc-fnam = pv_name.     "입력 필드 이름
+    gs_bdc-fval = pv_value.     "입력 값
+  ENDIF.
+
+  APPEND gs_bdc TO gt_bdc.      "bdc 인터널 테이블 append
+ENDFORM.
+
+*Text elements
+*----------------------------------------------------------
+* 000 엑셀 업로드
+* 001 템플릿 다운로드
+* 002 CBO 테이블
+* 004 다운로드
+* 005 엑셀 다운로드
+* C00 처리방식
+* C01 엑셀
+* C02 유지보수 뷰
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   에러
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

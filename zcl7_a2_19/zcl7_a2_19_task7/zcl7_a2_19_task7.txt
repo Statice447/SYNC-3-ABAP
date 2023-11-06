@@ -1,0 +1,228 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_A2_19_TASK4
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_a2_19_task7.
+
+DATA: ok_code    TYPE sy-ucomm,
+      gv_refresh TYPE c LENGTH 1.
+
+DATA: gt_sbook TYPE TABLE OF sbook,
+      gs_sbook TYPE sbook.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_layout  TYPE lvc_s_layo.
+
+PARAMETERS: pa_car TYPE sbook-carrid,
+            pa_con TYPE sbook-connid.
+
+CLASS: lcl_handle DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      on_toolbar FOR EVENT toolbar OF cl_gui_alv_grid
+        IMPORTING e_object,
+
+      on_user_command FOR EVENT user_command OF cl_gui_alv_grid
+        IMPORTING e_ucomm,
+
+      on_before_user_command FOR EVENT before_user_command OF cl_gui_alv_grid  " 기존 버튼이 다른 기능을 하도록 메소드 추가
+        IMPORTING e_ucomm.
+
+ENDCLASS.
+
+* 클래스 구현 부분
+CLASS: lcl_handle IMPLEMENTATION.
+  METHOD on_toolbar.
+    DATA: ls_button TYPE stb_button.
+
+    CLEAR ls_button. " 중복 데이터 방지를 위한 clear
+    ls_button-function = 'TOP5'.
+    ls_button-icon = icon_customer.
+    ls_button-text = '수화물 TOP5 고객'.
+    ls_button-butn_type = 0.
+    INSERT ls_button INTO TABLE e_object->mt_toolbar.     " 생성한 툴바 버튼을 insert
+
+  ENDMETHOD.
+  METHOD on_before_user_command.  " 기존 버튼이 다른 기능을 하도록 메소드 추가
+    CASE e_ucomm.
+      WHEN cl_gui_alv_grid=>mc_fc_detail.
+        go_alv_grid->set_user_command('NEW_DETAIL').
+    ENDCASE.
+  ENDMETHOD.
+  METHOD on_user_command.
+    DATA: lt_rows   TYPE lvc_t_row,
+          ls_row    TYPE lvc_s_row,
+          ls_weight TYPE i,
+          lt_sbook  TYPE TABLE OF sbook,
+          lt_sbook2 TYPE TABLE OF sbook,
+          ls_sbook  TYPE sbook.
+
+    CASE e_ucomm.
+      WHEN 'NEW_DETAIL'.
+
+        CALL METHOD go_alv_grid->get_selected_rows  " 선택 row 인덱스 찾기
+          IMPORTING
+            et_index_rows = lt_rows.
+
+        LOOP AT lt_rows INTO ls_row.
+          READ TABLE gt_sbook INTO ls_sbook INDEX ls_row .
+        ENDLOOP.
+        cl_demo_output=>display_data( ls_sbook ).
+
+      WHEN 'TOP5'.                    " 수화물 무게 Top5 버튼 이벤트
+
+        SELECT * UP TO 5 ROWS
+          FROM sbook INTO CORRESPONDING FIELDS OF TABLE lt_sbook
+          WHERE carrid = pa_car
+          AND connid = pa_con
+          ORDER BY luggweight DESCENDING.
+
+*        lt_sbook2 = gt_sbook.
+*        SORT lt_sbook2 DESCENDING by luggweight.
+*
+*        LOOP AT lt_sbook2 INTO ls_sbook FROM 1 TO 5.
+*          APPEND ls_sbook TO lt_sbook.                " 새로운 인터널 테이블에 5개 추가
+*        ENDLOOP.
+
+        cl_demo_output=>display_data( lt_sbook ).
+
+    ENDCASE.
+
+  ENDMETHOD.
+ENDCLASS.
+
+INITIALIZATION.
+
+  pa_car = 'AA'.
+  pa_con = '0017'.
+
+START-OF-SELECTION.
+  SELECT *
+    FROM sbook INTO CORRESPONDING FIELDS OF TABLE gt_sbook
+     WHERE carrid = pa_car
+  AND   connid = pa_con.
+
+  CALL SCREEN 100.
+
+
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_TO_TRANSFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_to_transfer OUTPUT.
+  IF go_container IS INITIAL.               " 컨테이너 생성 확인
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'MY_AREA'
+      EXCEPTIONS
+        OTHERS         = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+
+    ENDIF.
+
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container
+      EXCEPTIONS
+        OTHERS   = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+    ENDIF.
+
+    gv_refresh = abap_true.                " 생성 할 경우 트루 설정
+  ENDIF.
+
+  SET HANDLER lcl_handle=>on_toolbar FOR go_alv_grid.
+  SET HANDLER lcl_handle=>on_before_user_command FOR go_alv_grid.
+  SET HANDLER lcl_handle=>on_user_command FOR go_alv_grid.
+
+  gs_layout-sel_mode   = 'A'.             " 셀모드 설정 A, B, C, D 5권 p.155
+
+*    METHOD on_button_click.
+*    READ TABLE gt_sbook INTO gs_sbook INDEX es_row_no-row_id.
+*  ENDMETHOD.
+
+
+
+  IF gv_refresh = abap_true.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'SBOOK'
+        i_default        = 'X'
+        is_layout        = gs_layout
+      CHANGING
+        it_outtab        = gt_sbook
+      EXCEPTIONS
+        OTHERS           = 1.
+
+    gv_refresh = abap_false.                     " 그리드 생성 이후 새로고침을 위한 False로 설정
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).       " 생성된 ALV 새로고침
+  ENDIF.
+ENDMODULE.
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> Create ALV
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC414_19
+*001   1번 에러
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

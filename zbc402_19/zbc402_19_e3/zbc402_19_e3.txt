@@ -1,0 +1,61 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC402_19_E3
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc402_19_e3.
+
+TYPES: BEGIN OF gty_s_date,
+         year  TYPE n LENGTH 4,
+         month TYPE n LENGTH 2,
+         day   TYPE n LENGTH 2,
+       END OF gty_s_date.
+
+DATA: gt_date TYPE TABLE OF gty_s_date,
+      gs_date TYPE gty_s_date.
+
+FIELD-SYMBOLS <fs> TYPE gty_s_date.
+ASSIGN sy-datum TO <fs> CASTING.              " Assing A to B Casting - A의 타입을 B에다가 캐스팅
+
+WRITE:/ <fs>-year, <fs>-month, <fs>-day.
+
+
+*아래로 선언 했을 때 에러, 정상 작동 확인
+*FIELD-SYMBOLS <fs> TYPE gty_s_date.
+
+* 1
+*ASSIGN sy-datum TO <fs> CASTING. " Casting이 있으므로 오른쪽 타입이 왼쪽 타입으로 변경 정상작동
+
+* 2
+*ASSIGN sy-datum TO <fs>.         " 두 개의 타입이 다르므로 에러
+
+* 3
+*ASSIGN gty_s_date TO <fs>.       " Data Type과 Data Object Type은 별개다. 그래서 에러
+
+* 4
+*ASSIGN gs_date to <fs>.          " Data Object Type과 Data Object Type이 같으므로 정상작동
+
+* 5
+*ASSIGN gs_date TO <fs> CASTING.  " Casting이 있으므로 오른쪽 타입이 왼쪽 타입으로 변경 정상작동
+
+
+*아래로 선언 했을 때 에러, 정상 작동 확인
+*FIELD-SYMBOLS <fs> TYPE any.
+
+*6
+*ASSIGN gs_date TO <fs>.                         " Generic any가 전체 타입을 받으므로 정상작동
+
+*7
+*ASSIGN gs_date TO <fs> CASTING.                 " Generic 타입으로 Casting을 하지만 정확히 무슨 타입인지 모르므로 에러
+
+*8
+*ASSIGN gs_date TO <fs> CASTING TYPE gty_s_date. " Generic 타입으로 Casting을 하는데 type을 gty_s_date로 정해줌 정상작동
+
+*9
+*ASSIGN sy-datum TO <fs>.                        " Generic any가 전체 타입을 받으므로 정상작동
+
+*10
+*ASSIGN sy-datum to <fs> CASTING.               " Generic 타입으로 Casting을 하지만 정확히 무슨 타입인지 모르므로 에러
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

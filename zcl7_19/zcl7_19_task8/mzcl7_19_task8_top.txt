@@ -1,0 +1,13 @@
+*&---------------------------------------------------------------------*
+*& Include MZCL7_19_TASK8_TOP                       - Module Pool      ZCL7_19_TASK8
+*&---------------------------------------------------------------------*
+PROGRAM ZCL7_19_TASK8.
+
+TABLES: spfli, scarr, sflight.
+
+DATA: ok_code  TYPE sy-ucomm,
+      dynnr101 TYPE sy-dynnr,
+      dynnr102 TYPE sy-dynnr.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

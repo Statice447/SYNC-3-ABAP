@@ -1,0 +1,34 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_e1.
+*TYPES: BEGIN OF gty_sflight,
+*  carrid type sflight-carrid,
+*  END OF gty_sflight.
+*
+* DAta: gt_sflight type gty_sflight,
+*       gs_sflight like line of gt_sflight.
+*
+*
+*  append gs_sflight to gt_sflight.
+*  insert gs_sflight INTO gt_sflight index 1.
+*  Modify Table gt_sflight from gs_sflight.
+*
+*  LOOP AT gt_sflight INTO gs_sflight.
+*    WRITE: / 'adsf', gs_sflight-carrid.
+*
+*  ENDLOOP.
+*
+*  select connid 44carrid
+*    from sflight into A
+*    where carrid = p_carrid.
+
+*Text elements
+*----------------------------------------------------------
+* 001 computer
+* 002 S_Manager
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

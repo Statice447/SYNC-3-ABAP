@@ -1,0 +1,140 @@
+*&---------------------------------------------------------------------*
+*& Include          MZPRACFI_01F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form ADD_LIST_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM add_list_alv .
+  IF go_container IS INITIAL.
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'DOCU_ADD'.
+    gv_refresh     = abap_true.
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZTC702_DOCU_I'
+*       is_variant       = gs_variant
+*       i_save           = gv_save
+        i_default        = 'X'
+*       is_layout        =
+      CHANGING
+        it_outtab        = gt_add_item
+*       it_fieldcatalog  = gt_fcat
+*       it_sort          =
+*       it_filter        =
+      EXCEPTIONS
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+*       Implement suitable error handling here
+    ENDIF.
+
+    gv_refresh = abap_false.
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DOCU_LIST_ALV
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM docu_list_alv .
+  IF go_container2 IS INITIAL.
+    CREATE OBJECT go_container2
+      EXPORTING
+        container_name = 'DOCU_LIST'.
+    gv_refresh2     = abap_true.
+  ENDIF.
+
+  IF gv_refresh2 = abap_true.
+    CREATE OBJECT go_alv_grid2
+      EXPORTING
+        i_parent = go_container2.
+
+    CALL METHOD go_alv_grid2->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZTC702_DOCU_I'
+*       is_variant       = gs_variant
+*       i_save           = gv_save
+        i_default        = 'X'
+*       is_layout        =
+      CHANGING
+        it_outtab        = gt_docu_i
+*       it_fieldcatalog  = gt_fcat
+*       it_sort          =
+*       it_filter        =
+      EXCEPTIONS
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+*       Implement suitable error handling here
+    ENDIF.
+
+    gv_refresh2 = abap_false.
+
+  ELSE.
+    go_alv_grid2->refresh_table_display( ).
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DOCU_ADD_ITEM
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM docu_add_item .
+  DATA: lt_docu_h TYPE TABLE OF ztc702_docu_h,
+        ls_docu_h TYPE ztc702_docu_h.
+
+  DATA: lt_docu_i  TYPE TABLE OF ztc702_docu_i,
+        ls_docu_i  TYPE ztc702_docu_i,
+        ls_docu_i2 TYPE ztc702_docu_i.
+
+  MOVE-CORRESPONDING ztc702_docu_i TO ls_docu_i.
+  ls_docu_i-company = ztc702_docu_h-company.
+  ls_docu_i-accyear = ztc702_docu_h-accyear.
+  ls_docu_i-docunum = ztc702_docu_h-docunum.
+  ls_docu_i-docutype = ztc702_docu_h-docutype.
+
+* 매입 전표 생성
+  APPEND ls_docu_i TO gt_add_item.
+
+
+* 매입/매출
+  CASE ztc702_docu_i-drcrsort.
+    WHEN 'DR'.
+      MOVE-CORRESPONDING ls_docu_i TO ls_docu_i2.
+      CLEAR: ls_docu_i2-drcrsort, ls_docu_i2-acccode, ls_docu_i2-accname.
+      ls_docu_i2-drcrsort = 'CR'.
+      ls_docu_i2-acccode = '460'.
+      ls_docu_i2-accname = '외상매입금'.
+
+      APPEND ls_docu_i2 TO gt_add_item.
+
+    WHEN 'DR'.
+  ENDCASE.
+
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,121 @@
+**&---------------------------------------------------------------------*
+**& Report Y19_DOWN
+**&---------------------------------------------------------------------*
+**&
+**&---------------------------------------------------------------------*
+REPORT y19_down.
+
+DATA: it_down TYPE TABLE OF zc7_19_employee, "테이블 이름 수정
+      ls_down LIKE LINE OF it_down.
+
+DATA: BEGIN OF wa_header,
+        name TYPE c LENGTH 30,
+      END OF wa_header.
+
+DATA: t_header LIKE TABLE OF wa_header.
+
+
+DATA: g_str1 TYPE string VALUE '.xls',
+      g_str  TYPE string,
+      g_str2 TYPE string.
+
+"필드이름
+APPEND 'MANDT'  TO t_header.
+APPEND 'PERNR'  TO t_header.
+APPEND 'ORGEH'   TO t_header.
+APPEND 'PNAME' TO t_header.
+APPEND 'RANK' TO t_header.
+APPEND 'GENDER' TO t_header.
+APPEND 'PCONT' TO t_header.
+APPEND 'EMAIL' TO t_header.
+APPEND 'ISMANAGER' TO t_header.
+
+*DELFLAG  CRNAM ERDAT ERTIM CHNAM CHDAT CHTIM
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME.
+PARAMETERS: p_file   TYPE rlgrap-filename.
+SELECTION-SCREEN END OF BLOCK b1.
+
+START-OF-SELECTION.
+
+  SELECT * FROM zc7_19_employee "테이블 이름 수정
+    INTO TABLE it_down.
+
+
+  IF p_file NS '.xls'. "파일이름에 xls이 써져있지 않을 경우
+    g_str = p_file.
+    CONCATENATE g_str g_str1 INTO g_str2.
+  ELSE.
+    g_str2 = p_file.
+  ENDIF.
+
+  CALL FUNCTION 'GUI_DOWNLOAD'
+    EXPORTING
+*     BIN_FILESIZE          =
+      filename              = g_str2
+      filetype              = 'ASC' "DBF는 header 10 자리 제한
+*     APPEND                = ' '
+      write_field_separator = 'X' "
+*     HEADER                = '00'
+*     TRUNC_TRAILING_BLANKS = ' '
+*     WRITE_LF              = 'X'
+*     COL_SELECT            = ' '
+*     COL_SELECT_MASK       = ' '
+*     DAT_MODE              = ' '
+*     CONFIRM_OVERWRITE     = ' '
+*     NO_AUTH_CHECK         = ' '
+      codepage              = '8500' "KOR
+*     IGNORE_CERR           = ABAP_TRUE
+*     REPLACEMENT           = '#'
+*     WRITE_BOM             = ' '
+*     TRUNC_TRAILING_BLANKS_EOL       = 'X'
+*     WK1_N_FORMAT          = ' '
+*     WK1_N_SIZE            = ' '
+*     WK1_T_FORMAT          = ' '
+*     WK1_T_SIZE            = ' '
+*     WRITE_LF_AFTER_LAST_LINE        = ABAP_TRUE
+*     SHOW_TRANSFER_STATUS  = ABAP_TRUE
+*     VIRUS_SCAN_PROFILE    = '/SCET/GUI_DOWNLOAD'
+*   IMPORTING
+*     FILELENGTH            =
+    TABLES
+      data_tab              = it_down
+      fieldnames            = t_header
+    EXCEPTIONS
+*     FILE_WRITE_ERROR      = 1
+*     NO_BATCH              = 2
+*     GUI_REFUSE_FILETRANSFER         = 3
+*     INVALID_TYPE          = 4
+*     NO_AUTHORITY          = 5
+*     UNKNOWN_ERROR         = 6
+*     HEADER_NOT_ALLOWED    = 7
+*     SEPARATOR_NOT_ALLOWED = 8
+*     FILESIZE_NOT_ALLOWED  = 9
+*     HEADER_TOO_LONG       = 10
+*     DP_ERROR_CREATE       = 11
+*     DP_ERROR_SEND         = 12
+*     DP_ERROR_WRITE        = 13
+*     UNKNOWN_DP_ERROR      = 14
+*     ACCESS_DENIED         = 15
+*     DP_OUT_OF_MEMORY      = 16
+*     DISK_FULL             = 17
+*     DP_TIMEOUT            = 18
+*     FILE_NOT_FOUND        = 19
+*     DATAPROVIDER_EXCEPTION          = 20
+*     CONTROL_FLUSH_ERROR   = 21
+      OTHERS                = 0.
+  IF sy-subrc = 0.
+    MESSAGE 'Download DONE' TYPE 'S'.
+  ELSE.
+    MESSAGE 'NOT SUCCESSFUL' TYPE 'W'.
+  ENDIF.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   Download DONE
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

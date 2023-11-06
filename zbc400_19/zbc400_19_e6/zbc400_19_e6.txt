@@ -1,0 +1,35 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E6
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC400_19_E6.
+
+CONSTANTS gc_gf TYPE s_carr_id VALUE 'QF'.
+DATA: gv_carrid1 TYPE s_carr_id,
+      gv_carrid2 TYPE s_carr_id VALUE 'LH',
+      gv_count TYPE i.
+
+DATA: gv_max TYPE sbc400focc-SEATSMAX,
+      gv_occ TYPE sbc400focc-SEATSOCC,
+      gv_percentage TYPE sbc400focc-percentage,
+      gv_length TYPE i,
+      gv_string TYPE string.
+
+WRITE / 'gv_carrid1   gv_carrid2    gv_count'.
+MOVE gc_gf TO gv_carrid1.
+WRITE: / gv_carrid1,'             ',gv_count.
+
+gv_carrid2 = gv_carrid1.
+WRITE: / gv_carrid1,'        ',gv_carrid2,gv_count.
+gv_count = gv_count + 1.
+
+gv_percentage = gv_occ * 100 / gv_max.
+WRITE / gv_percentage.
+
+CLEAR: gv_carrid1,
+       gv_carrid2,
+       gv_count.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,32 @@
+**&---------------------------------------------------------------------*
+**& Report ZBC400_19_LAB5
+**&---------------------------------------------------------------------*
+**&
+**&---------------------------------------------------------------------*
+REPORT zbc400_19_lab5.
+
+PARAMETERS: gv_carid TYPE bc400_s_flight-carrid,
+            gv_conid TYPE bc400_s_flight-connid,
+            gv_fdate TYPE bc400_s_flight-fldate.
+
+DATA: gt_flight TYPE bc400_t_flights,
+      ls_flight LIKE LINE OF gt_flight.
+
+CALL FUNCTION 'Z_BC400_FM_19_GET_FLIGHT'
+  EXPORTING
+    iv_carrid  = gv_carid
+    iv_connid  = gv_conid
+    iv_fldate  = gv_fdate
+  IMPORTING
+    et_flights = gt_flight.
+* EXCEPTIONS
+*   NO_DATA          = 1
+*   OTHERS           = 2
+
+LOOP AT gt_flight INTO ls_flight.
+  WRITE: / ls_flight-carrid, ls_flight-connid, ls_flight-fldate, ls_flight-seatsocc, ls_flight-seatsmax, ls_flight-percentage.
+
+ENDLOOP.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

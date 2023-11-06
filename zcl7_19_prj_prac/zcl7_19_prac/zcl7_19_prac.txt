@@ -1,0 +1,88 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_19_PRAC
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_19_prac.
+
+TABLES: zttmenureq_19.
+
+*DATA: gv_container TYPE REF TO cl_gui_custom_container,
+*      gv_alv       TYPE REF TO cl_gui_alv_grid.
+
+DATA: gv_doking TYPE REF TO cl_gui_docking_container,
+      gv_alv    TYPE REF TO cl_gui_alv_grid.
+
+DATA: ok_code TYPE sy-ucomm.
+
+DATA: gt_menu TYPE TABLE OF zttmenureq_19,
+      gs_menu TYPE zttmenureq_19.
+
+START-OF-SELECTION.
+
+  SELECT *
+    FROM zttmenureq_19 INTO TABLE gt_menu.
+
+  CALL SCREEN 100.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_ALV OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_alv OUTPUT.
+*  CREATE OBJECT gv_container
+*    EXPORTING
+*      container_name = 'MY_CON'.
+
+
+  CREATE OBJECT gv_doking
+    EXPORTING
+      repid     = sy-repid
+      dynnr     = sy-dynnr
+      extension = 9999.
+
+  CREATE OBJECT gv_alv
+    EXPORTING
+      i_parent = gv_doking.
+
+  CALL METHOD gv_alv->set_table_for_first_display
+    EXPORTING
+      i_structure_name = 'ZTTMENUREQ_19'
+    CHANGING
+      it_outtab        = gt_menu.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'EXIT' OR 'CANC'.
+      LEAVE PROGRAM.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

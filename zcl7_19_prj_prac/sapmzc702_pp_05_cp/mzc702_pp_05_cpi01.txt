@@ -1,0 +1,101 @@
+*&---------------------------------------------------------------------*
+*& Include          MZC702_PP_05I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANCEL'.
+      IF sy-dynnr = 110.
+        CLEAR zsc702_prdord.
+        LEAVE TO SCREEN 0.
+
+      ELSEIF sy-dynnr = 120.
+        gv_check = 'X'.
+        LEAVE TO SCREEN 0.
+      ENDIF.
+
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'DISPLAY'.
+      PERFORM display_prdmanage.      " 생산 관리 현황 조회 서브루틴
+    WHEN 'CREATE'.
+      CALL SCREEN 110
+      STARTING AT 10 10
+      ENDING AT 65 15.
+*      PERFORM create_ppmanage.            " 생산 관리 현황 생성 서브루틴
+    WHEN 'CANC'.
+      PERFORM reset_screen.
+
+    WHEN 'COMP'.
+      PERFORM confirm_prdmanage.           " 생산 완료 버튼
+    WHEN 'CHECK'.
+      PERFORM check_prdmanage.             " 품질 검수 버튼
+    WHEN 'DISP'.
+      PERFORM change_tree_year.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0110  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0110 INPUT.
+  CASE ok_code.
+    WHEN 'OKAY'.
+      PERFORM save_prdmanage.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_YEAR  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_year INPUT.
+  DATA: lv_len  TYPE c LENGTH 1.
+
+  lv_len = strlen( gv_year ).
+
+  IF lv_len < 4.
+    MESSAGE '연도는 4자리를 입력해 주세요.' TYPE 'E'.
+  ELSEIF gv_year < 2000.
+    MESSAGE '2000년 대 이후로 입력해 주세요.' TYPE 'E'.
+
+  ENDIF.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0120  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0120 INPUT.
+  CASE ok_code.
+    WHEN 'OKAY'.
+      PERFORM save_qmcheck CHANGING gv_check.
+  ENDCASE.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

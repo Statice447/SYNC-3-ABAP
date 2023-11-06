@@ -1,0 +1,20 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC414_19_PRAC3_TOP                     - Module Pool      ZBC414_19_PRAC3
+*&---------------------------------------------------------------------*
+PROGRAM ZBC414_19_PRAC3.
+
+TABLES: ztpractice19.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid TYPE REF TO cl_gui_alv_grid.
+
+data: gt_data TYPE TABLE OF ztpractice19,
+      gs_data TYPE ztpractice19.
+
+DATA: ok_code TYPE sy-ucomm.
+
+DATA: gv_answer TYPE c LENGTH 1,
+      gv_refresh TYPE c LENGTH 1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

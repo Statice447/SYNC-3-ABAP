@@ -1,0 +1,181 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_A2_19_TASK4
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_a2_19_atask5_temp.
+
+TYPES: BEGIN OF gty_sbook.
+    INCLUDE TYPE sbook.
+TYPES: light TYPE c LENGTH 1,
+       END OF gty_sbook.
+
+
+DATA: ok_code    TYPE sy-ucomm,
+      gv_refresh TYPE c LENGTH 1.
+
+DATA: gt_sbook TYPE TABLE OF gty_sbook,
+      gs_sbook TYPE gty_sbook.
+
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA: gs_layout  TYPE lvc_s_layo,
+      gv_variant TYPE disvariant,
+      gv_save    TYPE c LENGTH 1.
+
+DATA: gt_sort TYPE lvc_t_sort,
+      gs_sort TYPE lvc_s_sort.
+
+PARAMETERS: pa_car TYPE sbook-carrid,
+            pa_con TYPE sbook-connid.
+
+START-OF-SELECTION.
+  SELECT *
+    FROM sbook INTO CORRESPONDING FIELDS OF TABLE gt_sbook
+    WHERE carrid = pa_car
+    AND   connid = pa_con.
+
+  LOOP AT gt_sbook INTO gs_sbook.
+
+    IF gs_sbook-luggweight > 20.
+      gs_sbook-light = '1'.                 " Red
+    ELSEIF gs_sbook-luggweight > 15.
+      gs_sbook-light = '2'.                 " Yellow
+    ELSE.
+      gs_sbook-light = '3'.                 " Green
+    ENDIF.
+
+    MODIFY gt_sbook FROM gs_sbook TRANSPORTING light.
+
+  ENDLOOP.
+
+  CALL SCREEN 100.
+
+
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_TO_TRANSFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_to_transfer OUTPUT.
+  IF go_container IS INITIAL.               " 컨테이너 생성 확인
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'MY_AREA'
+      EXCEPTIONS
+        OTHERS         = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+
+    ENDIF.
+
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container
+      EXCEPTIONS
+        OTHERS   = 1.
+
+    gv_variant-report = sy-cprog.
+    gv_save = 'A'.
+
+    gs_layout-zebra      = 'X'.
+    gs_layout-cwidth_opt = 'X'.
+    gs_layout-sel_mode   = 'A'.
+    gs_layout-excp_fname = 'LIGHT'.
+    gs_layout-excp_led   = 'X'.
+
+    CLEAR gs_sort.
+    gs_sort-fieldname = 'FLDATE'.
+    gs_sort-up = 'X'.
+    APPEND gs_sort TO gt_sort.
+
+    CLEAR gs_sort.
+    gs_sort-fieldname = 'BOOKID'.
+    gs_sort-up        = 'X'.
+    APPEND gs_sort TO gt_sort.
+
+
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+    ENDIF.
+
+    gv_refresh = abap_true.                " 생성 할 경우 트루 설정
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'SBOOK'
+        is_variant       = gv_variant     " Layout Variant
+        i_save           = gv_save
+        i_default        = 'X'
+        is_layout        = gs_layout      " Layout Structure
+      CHANGING
+        it_outtab        = gt_sbook
+        it_sort          = gt_sort
+      EXCEPTIONS
+        OTHERS           = 1.
+
+    gv_refresh = abap_false.                     " 그리드 생성 이후 새로고침을 위한 False로 설정
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).       " 생성된 ALV 새로고침
+  ENDIF.
+ENDMODULE.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC414_19
+*001   1번 에러
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

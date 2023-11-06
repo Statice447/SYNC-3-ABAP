@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*& Include          MZFIPRAC_01F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form CREATE_DOCU
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_docu.
+  LOOP AT gt_fiprac INTO gs_fiprac WHERE acccode = y19_fi_prac_2-acccode.
+  ENDLOOP.
+
+  MOVE-CORRESPONDING gs_fiprac TO gs_fiprac_2.
+  gs_fiprac_2-gdcode = y19_fi_prac_2-gdcode.
+  gs_fiprac_2-gdname = y19_fi_prac_2-gdname.
+
+  INSERT y19_fi_prac_2 FROM gs_fiprac_2.
+
+  gs_fiprac_2-drcrsort = '차'.
+
+  INSERT y19_fi_prac_2 FROM gs_fiprac_2.
+
+  PERFORM get_prac2_data.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_PRAC2_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_prac2_data .
+  SELECT *
+    FROM y19_fi_prac_2 INTO CORRESPONDING FIELDS OF TABLE gt_fiprac_2.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

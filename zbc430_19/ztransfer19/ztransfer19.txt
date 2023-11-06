@@ -1,0 +1,26 @@
+*&---------------------------------------------------------------------*
+*& Report ZTRANSFER19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ztransfer19.
+
+* 스탠다드에서 컨텐츠 복사하기 예제 프로그램
+
+DATA: gs_cargo  TYPE scargo,
+      gs_zcargo TYPE zscargo19.
+
+SELECT *
+  FROM scargo
+  INTO gs_cargo.
+
+  MOVE-CORRESPONDING gs_cargo TO gs_zcargo.
+  INSERT zscargo19 FROM gs_zcargo.
+ENDSELECT.
+
+IF sy-subrc = 0.
+  WRITE: / 'Transfer done'.
+ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

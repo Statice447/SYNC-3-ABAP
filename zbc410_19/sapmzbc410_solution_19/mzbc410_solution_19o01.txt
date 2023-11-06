@@ -1,0 +1,93 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC410_SOLUTION_19O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module MOVE_TO_DYNP OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE move_to_dynp OUTPUT.
+
+  MOVE-CORRESPONDING wa_sflight TO sdyn_conn.
+
+* SET PF-STATUS 'xxxxxxxx'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+    WHEN 'EXIT' OR 'CANC'.
+      LEAVE PROGRAM.
+  ENDCASE.
+
+  CASE 'X'.
+    WHEN gv_rad1.
+      SET TITLEBAR 'T0100' WITH 'Display'.
+    WHEN gv_rad2.
+      SET TITLEBAR 'T0100' WITH 'Maintain Flight'.
+    WHEN gv_rad3.
+      SET TITLEBAR 'T0100' WITH 'Maintain Bookings'.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module MODIFY_SCREEN OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE modify_screen OUTPUT.
+* SET PF-STATUS 'xxxxxxxx'.
+* SET TITLEBAR 'xxx'.
+*  IF gv_rad2 = 'X'.
+*    LOOP AT SCREEN.
+*      IF screen-name = 'IO_COMMAND'.
+*        screen-input = 0.
+*        MODIFY SCREEN.
+*      ENDIF.
+*    ENDLOOP.
+*  ELSEIF gv_rad1 = 'X'.
+*    LOOP AT SCREEN.
+*      IF screen-name = 'IO_COMMAND'.
+*        screen-input = 1.
+*        MODIFY SCREEN.
+*      ENDIF.
+*    ENDLOOP.
+*  ENDIF.
+  IF gv_rad2 = 'X'.
+    LOOP AT SCREEN.
+      IF screen-name = 'SDYN_CONN-PLANETYPE'.
+        screen-input = 1.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+    ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0150 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0150 OUTPUT.
+  SET PF-STATUS 'S0150'.
+  SET TITLEBAR 'T0150' WITH 'Flight Data'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

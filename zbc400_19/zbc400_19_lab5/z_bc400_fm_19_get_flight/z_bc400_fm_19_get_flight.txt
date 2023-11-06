@@ -1,0 +1,33 @@
+FUNCTION z_bc400_fm_19_get_flight.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     REFERENCE(IV_CARRID) TYPE  BC400_S_FLIGHT-CARRID
+*"     REFERENCE(IV_CONNID) TYPE  BC400_S_FLIGHT-CONNID
+*"     REFERENCE(IV_FLDATE) TYPE  BC400_S_FLIGHT-FLDATE
+*"  EXPORTING
+*"     REFERENCE(ET_FLIGHTS) TYPE  BC400_T_FLIGHTS
+*"  EXCEPTIONS
+*"      NO_DATA
+*"----------------------------------------------------------------------
+  DATA: ls_flight LIKE LINE OF et_flights.
+  SELECT carrid connid fldate seatsocc seatsmax
+    FROM sflight
+    INTO TABLE et_flights
+    WHERE carrid = iv_carrid
+    AND   connid = iv_connid
+    AND   fldate = iv_fldate.
+
+
+  LOOP AT et_flights INTO ls_flight.
+    ls_flight-percentage = ls_flight-seatsocc / ls_flight-seatsmax * 100.
+
+    MODIFY et_flights FROM ls_flight
+      INDEX sy-tabix
+      TRANSPORTING percentage.
+  ENDLOOP.
+
+ENDFUNCTION.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

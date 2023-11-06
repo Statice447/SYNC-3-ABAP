@@ -1,0 +1,23 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC414_19_PRAC_TOP                      - Module Pool      ZBC414_19_PRAC
+*&---------------------------------------------------------------------*
+PROGRAM zbc414_19_prac.
+
+TABLES: zscustom19.
+
+
+
+DATA: gt_scustom TYPE TABLE OF zscustom19,
+      gs_scustom TYPE zscustom19,
+      pa_id TYPE i.
+
+DATA: ok_code TYPE sy-ucomm,
+      dynnr   TYPE sy-dynnr.
+
+DATA: rad1 TYPE c LENGTH 1,
+      rad2 LIKE rad1.
+
+CONTROLS: my_table TYPE TABLEVIEW USING SCREEN '0200'.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,48 @@
+*&---------------------------------------------------------------------*
+*& Form SET_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_refresh_alv .
+  CLEAR gt_data.
+  SELECT *
+    FROM ztpractice19 INTO CORRESPONDING FIELDS OF TABLE gt_data.
+
+  go_alv_grid->refresh_table_display( ).
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form POPUP_SCREEN
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM popup_screen_no .
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = 'Realy?'
+      text_question         = '취소하고 뒤로 가시겠습니까?'
+      text_button_1         = 'Yes'
+      text_button_2         = 'No'
+      display_cancel_button = ''
+    IMPORTING
+      answer                = gv_answer
+    EXCEPTIONS
+      text_not_found        = 1
+      OTHERS                = 2.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+  IF gv_answer = 1.
+    CLEAR: wa_data, gs_upd.
+    LEAVE TO SCREEN 0.
+  ENDIF.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

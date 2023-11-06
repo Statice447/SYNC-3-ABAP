@@ -1,0 +1,19 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_06_I
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC400_06_I.
+
+DATA : gv_val1 type i value 2,
+       gv_val2 type i value 3,
+       gv_str type c length 5.
+
+IF abs( gv_val1 ) > gv_val2.
+write : 'aobap'.
+ELSEIF charlen( gv_str ) between 1 AND 10.
+write : '아오밥'.
+ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

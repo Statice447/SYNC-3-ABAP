@@ -1,0 +1,287 @@
+*&---------------------------------------------------------------------*
+*& Include          MZC702_HR_01F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form SET_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_layout .
+
+  gs_layout-info_fname = 'COLOR'.
+  gs_layout-cwidth_opt = 'X'.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY_EMP
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_emp .
+
+  PERFORM get_emp_data.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CHANGE_EMP
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM change_emp .
+  DATA: ls_pre_emp TYPE zc7_19_employee,
+        ls_edt_emp TYPE zc7_19_employee,
+        lv_answer  TYPE c LENGTH 1.
+
+  MOVE-CORRESPONDING zc7_19_employee TO ls_pre_emp.
+
+  IF ls_pre_emp-pernr <> gs_emp_f-pernr.
+    MESSAGE '사원번호는 변경할 수 없습니다.' TYPE 'I'.
+    ROLLBACK WORK.
+  ELSE.
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = '사원 정보 변경 확인'
+        text_question         = '사원 정보를 정말 변경하시겠습니까?'
+        text_button_1         = '예'
+        text_button_2         = '아니오'
+        display_cancel_button = space
+      IMPORTING
+        answer                = lv_answer.
+
+    IF lv_answer = 1.
+      MOVE-CORRESPONDING zc7_19_employee TO ls_edt_emp.
+
+      ls_edt_emp-chnam = sy-uname.
+      ls_edt_emp-chdat = sy-datum.
+      ls_edt_emp-chtim = sy-uzeit.
+
+      UPDATE ztc702_employee FROM ls_edt_emp.
+
+      IF sy-subrc = 0.
+        MESSAGE '사원 정보 변경 완료.' TYPE 'I'.
+        CLEAR gs_emp_f.
+        PERFORM get_emp_data.
+
+        COMMIT WORK.
+      ELSE.
+        DATA lv_text TYPE string.
+        lv_text = sy-subrc.
+        MESSAGE lv_text TYPE 'I'.
+
+      ENDIF.
+
+
+
+    ENDIF.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_EMP_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_emp_data .
+  SELECT *
+    FROM zc7_19_employee INTO CORRESPONDING FIELDS OF TABLE gt_emp
+    ORDER BY pernr ASCENDING.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE_EMP
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_emp .
+  DATA: ls_emp    TYPE zc7_19_employee,
+        lv_text   TYPE string,
+        lv_answer TYPE c LENGTH 1.
+
+*  IF zc7_19_employee-pernr IS NOT INITIAL.
+*    MESSAGE '사원번호는 비워두세요.' TYPE 'I'.
+*  ELSE.
+*    IF zc7_19_employee-orgeh IS INITIAL.
+*      MESSAGE '부서코드를 입력하세요.' TYPE 'I'.
+*
+*    ELSE.
+      MOVE-CORRESPONDING zc7_19_employee TO ls_emp.
+
+*      CALL FUNCTION 'POPUP_TO_CONFIRM'
+*        EXPORTING
+*          titlebar              = '사원 등록'
+*          text_question         = '새로운 사원을 등록하시겠습니까?'
+*          text_button_1         = '예'
+*          text_button_2         = '아니오'
+*          display_cancel_button = space
+*        IMPORTING
+*          answer                = lv_answer.
+*
+*      IF lv_answer = 1.
+*      CALL FUNCTION 'ZFMC702_CNRO_ORGEH'
+*        EXPORTING
+*          fv_module_name   = 'C702'
+*          fv_cnro_nr       = '05'
+*          fv_object        = 'ZCL719FINR'
+*        CHANGING
+*          fv_change_codenr = lv_text.
+
+*      ls_emp-pernr = lv_text.
+      ls_emp-crnam = sy-uname.
+      ls_emp-erdat = sy-datum.
+      ls_emp-ertim = sy-uzeit.
+      INSERT zc7_19_employee FROM ls_emp.
+
+      IF sy-subrc = 0.
+        MESSAGE '성공' TYPE 'I'.
+        PERFORM get_emp_data.
+      ELSE.
+        lv_text = sy-subrc.
+        MESSAGE lv_text TYPE 'I'.
+
+      ENDIF.
+      COMMIT WORK.
+
+*        IF sy-subrc = 0.
+*          MESSAGE '등록 성공' TYPE 'I'.
+*
+*        ELSE.
+*          MESSAGE '등록 실패' TYPE 'I'.
+*          ROLLBACK WORK.
+
+*    ENDIF.
+
+*    ENDIF.
+*    ENDIF.
+*  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FCAT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fcat .
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'ORGEH'.
+  gs_fcat-coltext = '부서코드'.
+  APPEND gs_fcat TO gt_fcat.
+
+  CLEAR gs_fcat.
+  gs_fcat-fieldname = 'DELFLAG'.
+  gs_fcat-no_out = 'X'.
+  APPEND gs_fcat TO gt_fcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CHECK_EMP
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM check_emp .
+  DATA: ls_emporg TYPE zdvc702_emporg,
+        ls_emp    TYPE ztc702_employee,
+        lt_row    TYPE lvc_t_row,
+        ls_row    TYPE lvc_s_row,
+        lv_line   TYPE i,
+        lv_answer TYPE c LENGTH 1.
+
+  CALL METHOD go_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = lt_row.
+
+  DESCRIBE TABLE lt_row LINES lv_line.
+
+  IF lt_row IS INITIAL.
+    MESSAGE '라인을 선택해주세요.' TYPE 'I'.
+  ELSEIF lv_line > 1.
+    MESSAGE '라인을 하나만 선택해주세요.' TYPE 'I'.
+  ELSE.
+    LOOP AT lt_row INTO ls_row.
+      READ TABLE gt_emp INTO ls_emporg INDEX ls_row-index.
+    ENDLOOP.
+    MOVE-CORRESPONDING ls_emporg TO ls_emp.
+  ENDIF.
+
+*    READ TABLE gt_plant INTO gs_plant INDEX ls_row.
+
+*  MOVE-CORRESPONDING ztc702_plant TO ls_plant.
+
+  IF ls_emp-delflag = space.
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = '사원 퇴직'
+        text_question         = '사원을 퇴직시키겠습니까?'
+        text_button_1         = '예'
+        text_button_2         = '아니오'
+        display_cancel_button = space
+      IMPORTING
+        answer                = lv_answer.
+
+    IF lv_answer = 1.
+      ls_emp-delflag = 'X'.
+      ls_emp-chnam = sy-uname.
+      ls_emp-chdat = sy-datum.
+      ls_emp-chtim = sy-uzeit.
+
+      UPDATE ztc702_employee FROM ls_emp.
+      MESSAGE '사원 퇴직' TYPE 'I'.
+
+      COMMIT WORK.
+    ENDIF.
+
+  ELSEIF ls_emp-delflag = 'X'.
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = '사원 정보'
+        text_question         = '사원을 복귀 시키겠습니까?'
+        text_button_1         = '예'
+        text_button_2         = '아니오'
+        display_cancel_button = space
+      IMPORTING
+        answer                = lv_answer.
+
+    IF lv_answer = 1.
+      ls_emp-delflag = space.
+      ls_emp-chnam = sy-uname.
+      ls_emp-chdat = sy-datum.
+      ls_emp-chtim = sy-uzeit.
+
+      UPDATE ztc702_employee FROM ls_emp.
+      MESSAGE '사원 복직' TYPE 'I'.
+
+      COMMIT WORK.
+    ENDIF.
+
+  ENDIF.
+
+  PERFORM get_emp_data.
+
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

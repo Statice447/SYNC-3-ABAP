@@ -1,0 +1,101 @@
+*&---------------------------------------------------------------------*
+*& Include          MZDDTEMP19_01_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_AND_TRANSFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_and_transfer OUTPUT.
+  IF go_container IS INITIAL.
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'DVMT_CON'.
+    gv_refresh     = abap_true.
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container.
+
+    SET HANDLER lcl_handler=>on_double_click FOR go_alv_grid.
+
+    gs_layout-info_fname = 'COLOR'.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZTC702_DVMT'
+*       is_variant       = gs_variant
+*       i_save           = gv_save
+        i_default        = 'X'
+        is_layout        = gs_layout
+      CHANGING
+        it_outtab        = gt_dvmt
+        it_fieldcatalog  = gt_fcat
+*       it_sort          =
+*       it_filter        =
+      EXCEPTIONS
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+*       Implement suitable error handling here
+    ENDIF.
+
+    gv_refresh = abap_false.
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE init_100 OUTPUT.
+
+  MOVE-CORRESPONDING gs_dvmt_f TO ztc702_dvmt.
+
+  LOOP AT gt_dvmt INTO gs_dvmt.
+
+    IF gs_dvmt-enddat < sy-datum.
+      gs_dvmt-color = 'C610'.
+    ENDIF.
+
+*    gs_selltab = 'DCODE'.
+*    gs_selltab-style = cl_gui_alv_grid=>mc_style_disabled.
+*    APPEND gs_selltab to gt_selltab.
+*
+*    gs_dvmt-celltab = gt_selltab.
+
+    MODIFY gt_dvmt FROM gs_dvmt TRANSPORTING color.
+
+
+
+
+
+
+  ENDLOOP.
+
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

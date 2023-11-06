@@ -1,0 +1,119 @@
+*&---------------------------------------------------------------------*
+*& Include MZC702_MM_04TOP                          - Module Pool      SAPMZC702_MM_04
+*&---------------------------------------------------------------------*
+PROGRAM sapmzc702_mm_04.
+
+
+* 수불대장 관리 테이블 사용.
+TABLES: ztc702_srmanage, zdvc702_mpo, ztc702_mtmaster, ztc702_prdmanage, ztc702_reor_i, ztc702_exp, zdvc702_srm.
+
+* 데이터 오브젝트 정의.
+DATA: ok_code    LIKE sy-ucomm,
+      gv_refresh TYPE c LENGTH 1,
+      gv_switch  TYPE c LENGTH 1 VALUE '1',
+      gv_switch2 TYPE c LENGTH 1 VALUE '1'.
+
+* 인터널 테이블 정의.
+TYPES: BEGIN OF gty_table.
+    INCLUDE TYPE ztc702_srmanage.
+TYPES: color TYPE c LENGTH 4,
+       END OF gty_table.
+
+DATA: gt_table  TYPE TABLE OF gty_table,
+      gs_table  TYPE gty_table,
+      gt_screen TYPE TABLE OF gty_table,
+      gs_screen TYPE gty_table.
+
+TYPES: BEGIN OF gty_table2.
+    INCLUDE TYPE zdvc702_srm.
+TYPES: color    TYPE c LENGTH 4,
+       srtype_t TYPE c LENGTH 4,
+       END OF gty_table2.
+
+DATA: gt_table2 TYPE TABLE OF gty_table2,
+      gs_table2 TYPE gty_table2,
+      gs_screen2 TYPE gty_table2.
+
+TYPES: BEGIN OF gty_mpo.
+    INCLUDE TYPE zdvc702_mpo.
+TYPES: color TYPE c LENGTH 4,
+       END OF gty_mpo.
+
+DATA: gt_mpo TYPE TABLE OF gty_mpo,
+      gs_mpo TYPE gty_mpo.
+
+TYPES: BEGIN OF gty_prd.
+    INCLUDE TYPE ztc702_prdmanage.
+TYPES: color TYPE c LENGTH 4,
+       END OF gty_prd.
+
+DATA: gt_prd TYPE TABLE OF gty_prd,
+      gs_prd TYPE gty_prd.
+
+TYPES: BEGIN OF gty_reor.
+    INCLUDE TYPE ztc702_reor_i.
+TYPES: color TYPE c LENGTH 4,
+       END OF gty_reor.
+
+DATA: gt_reor TYPE TABLE OF gty_reor,
+      gs_reor TYPE gty_reor.
+
+TYPES: BEGIN OF gty_exp.
+    INCLUDE TYPE ztc702_exp.
+TYPES: color TYPE c LENGTH 4,
+       END OF gty_exp.
+
+DATA: gt_exp TYPE TABLE OF gty_exp,
+      gs_exp TYPE gty_exp.
+
+TYPES: BEGIN OF gty_ord.
+    INCLUDE TYPE ztc702_prdord.
+TYPES: color TYPE c LENGTH 4,
+       END OF gty_ord.
+
+DATA: gt_ord TYPE TABLE OF gty_ord,
+      gs_ord TYPE gty_ord.
+
+DATA: gv_ra1 TYPE c LENGTH 1 VALUE 'X',
+      gv_ra2 TYPE c LENGTH 1,
+      gv_ra3 TYPE c LENGTH 1,
+      gv_ra4 TYPE c LENGTH 1,
+      gv_ra5 TYPE c LENGTH 1,
+      gv_ra6 TYPE c LENGTH 1,
+      gv_low LIKE sy-datum,
+      gv_hig LIKE sy-datum.
+
+* ALV GRID 정의.
+DATA: go_container TYPE REF TO cl_gui_custom_container,
+      go_alv_grid  TYPE REF TO cl_gui_alv_grid.
+
+DATA: go_container2 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid2  TYPE REF TO cl_gui_alv_grid.
+
+DATA: go_container3 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid3  TYPE REF TO cl_gui_alv_grid.
+
+DATA: go_container4 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid4  TYPE REF TO cl_gui_alv_grid.
+
+DATA: go_container5 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid5  TYPE REF TO cl_gui_alv_grid.
+
+DATA: go_container6 TYPE REF TO cl_gui_custom_container,
+      go_alv_grid6  TYPE REF TO cl_gui_alv_grid.
+
+
+* ALV GRID 변수 선언.
+DATA: gs_variant TYPE disvariant.
+
+* ALV GRID 버튼 숨기기 함수.
+DATA: gt_exclude TYPE ui_functions.
+
+* LAV GRID 화면 편집 변수.
+DATA: gs_layout      TYPE lvc_s_layo,
+      gs_field_color TYPE lvc_s_scol,
+      gt_field_cat   TYPE lvc_t_fcat,
+      gs_field_cat   TYPE lvc_s_fcat.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,72 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E15
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_e15.
+
+TYPES: BEGIN OF gty_s_flightocc,
+         cntall TYPE i,
+         minocc TYPE sflight-seatsocc,
+         maxocc TYPE sflight-seatsocc,
+         sumocc TYPE sflight-seatsocc,
+         argocc TYPE f,
+       END OF gty_s_flightocc.
+* gty_s_flightocc 이름으로 Structure 선언
+
+PARAMETERS: pa_carid TYPE sflight-carrid DEFAULT 'LH',
+            pa_conid TYPE sflight-connid DEFAULT '0400'.
+* 임의의 값을 입력하기위해 parameter 값 선언
+
+DATA gs_flightocc TYPE gty_s_flightocc.
+* Internal table을 선언하기 위한 Data 선언
+
+
+PERFORM aggregate_occ    "서브루틴 사용
+  USING pa_carid
+        pa_conid         "파라미터 2개를 받아오기위한 using
+  CHANGING gs_flightocc. "서브루틴의 결과 값을 받기위한 changing
+
+WRITE: / 'CarrID : ', pa_carid,
+       / 'connID : ', pa_conid,
+       / 'cntall : ', gs_flightocc-cntall,
+       / 'minocc : ', gs_flightocc-minocc,
+       / 'maxocc : ', gs_flightocc-maxocc,
+       / 'sumocc : ', gs_flightocc-sumocc,
+       / 'argocc : ', gs_flightocc-argocc.
+
+*IF ( sy-dbcnt = 0 ).
+*
+*ENDIF.
+
+
+*&---------------------------------------------------------------------*
+*& Form aggregate_occ
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM aggregate_occ
+  USING VALUE(lv_carid) type sflight-carrid
+        VALUE(lv_conid) type sflight-connid   "받아오는 parameter 값에대한 타입 선언
+    CHANGING ls_occ TYPE gty_s_flightocc.     "값을 내보내기 위한 타입 선언
+
+  CASE lv_carid.
+    WHEN 'XX'.
+      WRITE / 'No data'.      "값이 XX일 경우"
+    WHEN OTHERS.              "그 외"
+      SELECT COUNT(*) MIN( seatsocc ) MAX( seatsocc ) SUM( seatsocc )
+        FROM sflight
+        INTO ls_occ                 "조건에 맞는 데이터들을 ls_occ에 넣음
+        WHERE carrid = lv_carid
+        AND   connid = lv_conid.    "이 조건에 해당하는 데이터들을 Select
+
+      ls_occ-argocc = ls_occ-maxocc / ls_occ-sumocc * 100.
+
+  ENDCASE.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

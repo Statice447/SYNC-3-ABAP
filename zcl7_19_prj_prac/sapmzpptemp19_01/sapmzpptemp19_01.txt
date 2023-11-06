@@ -1,0 +1,21 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZPPTEMP19_01
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzpptemp19_01top                        .    " Global Data
+
+INCLUDE mzpptemp19_01o01                        .  " PBO-Modules
+INCLUDE mzpptemp19_01i01                        .  " PAI-Modules
+INCLUDE mzpptemp19_01f01                        .  " FORM-Routines
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   공장코드는 변경할 수 없습니다.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

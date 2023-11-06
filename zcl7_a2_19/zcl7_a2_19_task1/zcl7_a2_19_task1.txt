@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_A2_19_TASK1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_a2_19_task1.
+
+DATA: gs_sflight TYPE sflight.
+
+SELECTION-SCREEN BEGIN OF BLOCK condition WITH FRAME TITLE TEXT-001.
+
+PARAMETERS:     pa_car TYPE s_carr_id.
+
+SELECT-OPTIONS: so_con FOR gs_sflight-connid,
+                so_date FOR gs_sflight-fldate.
+
+SELECTION-SCREEN END OF BLOCK condition.
+
+SELECTION-SCREEN BEGIN OF BLOCK button.
+
+  PARAMETERS: pa_smoke AS CHECKBOX,
+              pa_valid RADIOBUTTON GROUP rgb DEFAULT 'X',
+              pa_canc RADIOBUTTON GROUP rgb.
+
+SELECTION-SCREEN END OF BLOCK button.
+
+
+INITIALIZATION.
+
+  pa_car = 'AA'.
+
+  MOVE: '0017' TO so_con-low,
+        'I'  TO so_con-sign.
+  APPEND so_con.
+
+  MOVE: '20230815' TO so_date-low,
+        'I'  TO so_date-sign.
+  APPEND so_date.
+
+*Text elements
+*----------------------------------------------------------
+* 001 Condition
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

@@ -1,0 +1,11 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC410_SOL_19_E5_TOP                    - Module Pool      SAPMZBC410_SOL_19_E5
+*&---------------------------------------------------------------------*
+PROGRAM sapmzbc410_sol_19_e5.
+
+TABLES: sflight.
+
+DATA: ok_code TYPE sy-ucomm.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

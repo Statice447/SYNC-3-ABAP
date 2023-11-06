@@ -1,0 +1,131 @@
+*&---------------------------------------------------------------------*
+*& Include          MZPPTEMP19_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_AND_TRANS_ALV OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_and_trans_alv OUTPUT.
+  IF go_container IS INITIAL.
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'BOM_H_CON'.
+    gv_refresh     = abap_true.
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZTC702_BOM_H'
+*       is_variant       = gs_variant
+*       i_save           = gv_save
+        i_default        = 'X'
+*       is_layout        =
+      CHANGING
+        it_outtab        = gt_bom_h
+*        it_fieldcatalog  = gt_fcat
+*       it_sort          =
+*       it_filter        =
+      EXCEPTIONS
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+*       Implement suitable error handling here
+    ENDIF.
+
+    gv_refresh = abap_false.
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module INIT_200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE init_200 OUTPUT.
+  READ TABLE gt_bom_h INTO gs_bom_200_h INDEX gv_lines.
+
+  SELECT *
+    FROM ztc702_bom_i INTO CORRESPONDING FIELDS OF TABLE gt_bom_i
+    WHERE bomid = gs_bom_200_h-bomid.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_AND_TRAN_200_ALV OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_and_tran_200_alv OUTPUT.
+  IF go_container2 IS INITIAL.
+    CREATE OBJECT go_container2
+      EXPORTING
+        container_name = 'BOM_I_CON'.
+    gv_refresh2     = abap_true.
+  ENDIF.
+
+  IF gv_refresh2 = abap_true.
+    CREATE OBJECT go_alv_grid2
+      EXPORTING
+        i_parent = go_container2.
+
+    PERFORM set_field_catalog.
+
+    CALL METHOD go_alv_grid2->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZTC702_BOM_I'
+*       is_variant       = gs_variant
+*       i_save           = gv_save
+        i_default        = 'X'
+*       is_layout        =
+      CHANGING
+        it_outtab        = gt_bom_i
+        it_fieldcatalog  = gt_fcat
+*       it_sort          =
+*       it_filter        =
+      EXCEPTIONS
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+*       Implement suitable error handling here
+    ENDIF.
+
+    gv_refresh2 = abap_false.
+
+  ELSE.
+    go_alv_grid2->refresh_table_display( ).
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0200 OUTPUT.
+  SET PF-STATUS 'S0200'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

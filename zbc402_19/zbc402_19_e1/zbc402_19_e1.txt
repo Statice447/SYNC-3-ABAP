@@ -1,0 +1,38 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC402_19_E1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc402_19_e1.
+
+DATA: gt_scarr TYPE TABLE OF scarr,
+      gt_sbook TYPE TABLE OF sbook.
+
+*PARAMETERS: gv_table TYPE string.
+PARAMETERS: gv_table TYPE c LENGTH 10.
+
+FIELD-SYMBOLS:
+               <fs_tab> TYPE ANY TABLE.
+
+CASE gv_table.
+  WHEN 'SCARR'.
+    ASSIGN gt_scarr TO <fs_tab>.
+  WHEN 'SBOOK'.
+    ASSIGN gt_sbook TO <fs_tab>.
+ENDCASE.
+
+IF <fs_tab> IS ASSIGNED.
+
+  SELECT *
+    FROM (gv_table)
+    UP TO 100 ROWS
+    INTO TABLE <fs_tab>.
+
+  IF sy-subrc = 0.
+    cl_demo_output=>display_data( <fs_tab> ).
+  ENDIF.
+
+ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

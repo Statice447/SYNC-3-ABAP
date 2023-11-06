@@ -1,0 +1,15 @@
+*&---------------------------------------------------------------------*
+*& Include MZCL7_19_TASK9_TOP                       - Module Pool      ZCL7_19_TASK9
+*&---------------------------------------------------------------------*
+PROGRAM zcl7_19_task9.
+
+TABLES: spfli, scarr, sflight.
+
+DATA: ok_code TYPE sy-ucomm,
+      dynnr   TYPE sy-dynnr.
+
+DATA: gv_rad1 TYPE c LENGTH 1 VALUE 'X',
+      gv_rad2 LIKE gv_rad1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

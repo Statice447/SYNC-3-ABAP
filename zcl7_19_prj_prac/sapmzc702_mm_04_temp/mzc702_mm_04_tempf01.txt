@@ -1,0 +1,870 @@
+*&---------------------------------------------------------------------*
+*& Include          MZC702_MM_04F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form SEARCH
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM search .
+  gv_switch2 = '0'.
+
+  CASE gs_screen-srtype.
+    WHEN 'GR'. " 구매입고.
+      SELECT *
+        FROM zdvc702_mpo
+        INTO CORRESPONDING FIELDS OF TABLE gt_mpo
+        WHERE status = 'O'. "입고 대기 구매품.
+
+    WHEN 'PR'. " 생산입고.
+      SELECT *
+        FROM ztc702_prdmanage
+        INTO CORRESPONDING FIELDS OF TABLE gt_prd
+        WHERE status = '3'. "생산 검수 완료.
+
+    WHEN 'GI'. " 판매출고.
+      SELECT *
+        FROM ztc702_reor_i
+        INTO CORRESPONDING FIELDS OF TABLE gt_reor.
+
+    WHEN 'DI'. " 폐기처리.
+      SELECT *
+        FROM ztc702_exp
+        INTO CORRESPONDING FIELDS OF TABLE gt_exp
+       WHERE expfin < sy-datum.
+
+    WHEN 'MD'. " 생산출고.
+      SELECT *
+        FROM ztc702_prdord
+        INTO CORRESPONDING FIELDS OF TABLE gt_exp.
+
+    WHEN OTHERS.
+      MESSAGE '입출고 유형을 선택하십시오.' TYPE 'I'.
+  ENDCASE.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CLEAR
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM clear .
+* 스크린 100 필드 초기화.
+  CLEAR gs_screen.
+  CLEAR ztc702_srmanage.
+  CLEAR ztc702_mtmaster.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DELFLAG
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM delflag .
+  DATA: lt_row    TYPE lvc_t_row,
+        ls_row    TYPE lvc_s_row,
+        lv_answer TYPE c LENGTH 1. " 팝업창 결과 오브젝트.
+
+* 라인 선택 메소드.
+  CALL METHOD go_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = lt_row.
+
+* 라인을 선택하지 않았을 때.
+  IF lt_row IS INITIAL.
+    MESSAGE '라인을 선택하십시오.' TYPE 'I'.
+
+* 라인을 선택하였을 때.
+  ELSE.
+    LOOP AT lt_row INTO ls_row.
+      READ TABLE gt_table INTO gs_screen INDEX ls_row-index.
+    ENDLOOP.
+
+* 삭제 플래그가 공백이면.
+    IF gs_screen-delflag = ''.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = '입출고 문서 삭제'
+          text_question         = '입출고 문서를 삭제하시겠습니까?'
+          text_button_1         = '예'
+          text_button_2         = '아니오'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = lv_answer.
+
+* 예를 눌렀을 때.
+      IF lv_answer = 1.
+        gs_screen-delflag = 'X'. " 삭제 플래그 on.
+
+* 변경자 정보 입력.
+        gs_screen-chnam = sy-uname.
+        gs_screen-chdat = sy-datum.
+        gs_screen-chtim = sy-uzeit.
+
+* 수불대장 테이블 업데이트.
+        UPDATE ztc702_srmanage FROM gs_screen.
+        MESSAGE '입출고기록 삭제' TYPE 'I'.
+        COMMIT WORK. " 업데이트 확정.
+      ENDIF.
+
+    ELSEIF gs_screen-delflag = 'X'.
+
+    ENDIF.
+
+  ENDIF.
+
+* 스크린 필드 초기화.
+  CLEAR gs_screen.
+
+* 데이터 갱신.
+  PERFORM get_data.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_data .
+* 입출고 문서 리스트 조회.
+  SELECT *
+    FROM ztc702_srmanage
+    INTO CORRESPONDING FIELDS OF TABLE gt_table
+    ORDER BY srdocu.
+ENDFORM.
+***&---------------------------------------------------------------------*
+***& Form UPDATE
+***&---------------------------------------------------------------------*
+***& text
+***&---------------------------------------------------------------------*
+***& -->  p1        text
+***& <--  p2        text
+***&---------------------------------------------------------------------*
+**FORM UPDATE .
+**  DATA: LS_MTIV   TYPE ZTC702_MTIV,
+**        LT_ROW    TYPE LVC_T_ROW,
+**        LS_ROW    TYPE LVC_S_ROW,
+**        LV_ANSWER TYPE C LENGTH 1,
+**        ls_prd    type ztc702_prdmanage,
+**        ls_mpo    type ztc702_mpo_h.
+**
+*** 라인 선택 메소드.
+**  CALL METHOD GO_ALV_GRID->GET_SELECTED_ROWS
+**    IMPORTING
+**      ET_INDEX_ROWS = LT_ROW.
+**
+*** 라인을 선택하지 않았을 때.
+**  IF LT_ROW IS INITIAL.
+**    MESSAGE '라인을 선택하십시오.' TYPE 'I'.
+**
+*** 라인을 선택하였을 때.
+**  ELSE.
+**
+*** ABAP 초기화.
+**    CLEAR GS_SCREEN.
+**
+*** 선택한 라인의 데이터 조회.
+**    LOOP AT LT_ROW INTO LS_ROW.
+**      READ TABLE GT_TABLE INTO GS_SCREEN INDEX LS_ROW-INDEX.
+**    ENDLOOP.
+**
+*** 실재고 테이블에서 품목코드 조건으로 데이터 조회.
+**    SELECT *
+**      FROM ZTC702_MTIV
+**      INTO CORRESPONDING FIELDS OF LS_MTIV
+**     WHERE GDCODE = GS_SCREEN-GDCODE
+**       AND DELFLAG = SPACE.
+**    ENDSELECT.
+**
+**      CALL FUNCTION 'POPUP_TO_CONFIRM'
+**        EXPORTING
+**          TITLEBAR              = '입출고 문서 확정'
+**          TEXT_QUESTION         = '입출고 문서를 확정하고 입출고를 진행합니까?'
+**          TEXT_BUTTON_1         = '예'
+**          TEXT_BUTTON_2         = '아니오'
+**          DISPLAY_CANCEL_BUTTON = ''
+**        IMPORTING
+**          ANSWER                = LV_ANSWER.
+**
+*** 예를 선택하면.
+**      IF LV_ANSWER = 1.
+**        GS_SCREEN-DELFLAG = 'X'.   " 삭제 플래그 ON.
+**        GS_SCREEN-CHNAM = SY-UNAME.
+**        GS_SCREEN-CHDAT = SY-DATUM.
+**        GS_SCREEN-CHTIM = SY-UZEIT.
+**
+*** 입출고 방식을 조건으로.
+**        CASE GS_SCREEN-SRTYPE.
+**          WHEN 'PR'. " 구매입고의 경우.
+**            LS_MTIV-RINVEN = LS_MTIV-RINVEN + GS_SCREEN-QUANTITY.
+**
+*** 변경자 정보 입력.
+**            LS_MTIV-CHNAM = SY-UNAME.
+**            LS_MTIV-CHDAT = SY-DATUM.
+**            LS_MTIV-CHTIM = SY-UZEIT.
+**
+*** 입출고 관리 테이블과 실재고 테이블 업데이트.
+**            UPDATE ZTC702_SRMANAGE FROM GS_SCREEN.
+**            UPDATE ZTC702_MTIV FROM LS_MTIV.
+**
+**            IF SY-SUBRC = 0.
+**              MESSAGE '입고 확정' TYPE 'I'.
+**              select status
+**                from zTc702_mpo_h
+**                into ls_mpo
+**               where MPONO = gs_mpo-mpono.
+**              endselect.
+**
+**              ls_mpo-status = 'R'.
+**
+**              update ztc702_mpo_h from ls_mpo.
+**              COMMIT WORK.
+**            ELSE.
+**              MESSAGE '작업 실패' TYPE 'I'.
+**              ROLLBACK WORK.
+**            ENDIF.
+**
+**          WHEN 'GR'. " 생산입고의 경우.
+**            LS_MTIV-RINVEN = LS_MTIV-RINVEN + GS_SCREEN-QUANTITY.
+**
+*** 변경자 정보 입력.
+**            LS_MTIV-CHNAM = SY-UNAME.
+**            LS_MTIV-CHDAT = SY-DATUM.
+**            LS_MTIV-CHTIM = SY-UZEIT.
+**
+*** 입출고 관리 테이블과 실재고 테이블 업데이트.
+**            UPDATE ZTC702_SRMANAGE FROM GS_SCREEN.
+**            UPDATE ZTC702_MTIV FROM LS_MTIV.
+**
+**            IF SY-SUBRC = 0.
+**              MESSAGE '입고 확정' TYPE 'I'.
+**
+**              select status
+**                from ztc702_prdmanage
+**                into ls_prd
+**               where PORNUM = gs_screen-reference.
+**              endselect.
+**
+**              ls_prd-status = '4'.
+**
+**              update ztc702_prdmanage from ls_prd.
+**              COMMIT WORK.
+**            ELSE.
+**              MESSAGE '작업 실패' TYPE 'I'.
+**              ROLLBACK WORK.
+**            ENDIF.
+**
+**          WHEN 'GI' OR 'MD'. " 출하출고나 생산출고의 경우.
+**
+**            PERFORM EXP_MANAGE USING GS_SCREEN-GDCODE LS_ROW-INDEX. " 실재고 & 유통기한 관리 서브루틴 실행.
+**
+*** DB 업데이트 확정.
+**            IF SY-SUBRC = 0.
+**              MESSAGE '출고 확정' TYPE 'I'.
+**              COMMIT WORK.
+**            ELSE.
+**              MESSAGE '출고 실패' TYPE 'I'.
+**              ROLLBACK WORK.
+**            ENDIF.
+**
+**          WHEN 'DI'. " 폐기출고의 경우.
+*** 유통기한 테이블에서 데이터 조회.
+**            SELECT *
+**              FROM ZTC702_EXP
+**              INTO CORRESPONDING FIELDS OF GS_EXP
+**             WHERE LOTNUM = GS_SCREEN-LOTNUM.
+**            ENDSELECT.
+**
+*** 창고코드 변경.
+**            GS_EXP-WHCODE = 'DI01'.
+**
+*** 변경자 정보 입력.
+**            GS_EXP-CHNAM = SY-UNAME.
+**            GS_EXP-CHDAT = SY-DATUM.
+**            GS_EXP-CHTIM = SY-UZEIT.
+**
+*** 유통기한 테이블 업데이트.
+**            UPDATE ZTC702_EXP FROM GS_EXP.
+**
+*** 유통기한 테이블 업데이트가 성공했을 때.
+**            IF SY-SUBRC = 0.
+**              LS_MTIV-RINVEN = LS_MTIV-RINVEN - GS_SCREEN-QUANTITY. "실재고 테이블에서 폐기된 수량만큼 감소.
+**
+*** 변경자 정보 입력.
+**              LS_MTIV-CHNAM = SY-UNAME.
+**              LS_MTIV-CHDAT = SY-DATUM.
+**              LS_MTIV-CHTIM = SY-UZEIT.
+**
+*** 입출고 관리 테이블과 실재고 테이블 업데이트
+**              UPDATE ZTC702_SRMANAGE FROM GS_SCREEN.
+**              UPDATE ZTC702_MTIV FROM LS_MTIV.
+**
+*** 실재고량보다 폐기된 품목 수량이 많을 때.
+**              IF LS_MTIV-RINVEN < 0.
+**                MESSAGE '출고량이 실재고량보다 더 많습니다.' TYPE 'I'.
+**                ROLLBACK WORK.
+*** 실재고량이 폐기된 품목 수량보다 많을 때.
+**              ELSE.
+**                IF SY-SUBRC = 0.
+**                  MESSAGE '폐기 확정' TYPE 'I'.
+**                  COMMIT WORK.
+**                ELSE.
+**                  MESSAGE '폐기 실패' TYPE 'I'.
+**                  ROLLBACK WORK.
+**                ENDIF.
+**
+**              ENDIF.
+*** 유통기한 테이블 업데이트가 실패했을 때.
+**            ELSE.
+**              MESSAGE '입출고 실패' TYPE 'I'.
+**              ROLLBACK WORK.
+**            ENDIF.
+**
+*** 입출고 방식에 유효한 값이 입력되지 않았을 때.
+**          WHEN OTHERS.
+**            MESSAGE '알 수 없는 에러가 발생했습니다.' TYPE 'I'.
+**            ROLLBACK WORK.
+**        ENDCASE.
+**      ENDIF.
+**  ENDIF.
+**
+*** 데이터 오브젝트 초기화.
+**  CLEAR GS_SCREEN.
+**  CLEAR GS_MPO.
+**  CLEAR LS_MTIV.
+**  CLEAR LT_ROW.
+**
+*** 갱신된 데이터 조회.
+**  PERFORM DISPLAY.
+**ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CREATE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create .
+  CLEAR gs_table.
+
+  DATA: lv_num    TYPE c LENGTH 10,
+        lv_dnum   TYPE c LENGTH 12,
+        lv_answer TYPE c LENGTH 1.
+
+* 채번 펑션.
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = '3'
+      object      = 'ZNRC702_MM'
+    IMPORTING
+      number      = lv_num.
+
+* 입출고 대기 문서 채번.
+  CONCATENATE 'SRD' gs_screen-srdate+2(6) lv_num+5(3) INTO lv_dnum.
+
+* 입출고 대기 문서 데이터 입력.
+  gs_table-srdocu = lv_dnum.
+  gs_table-srtype = gs_screen-srtype.
+  gs_table-gdcode = gs_screen-gdcode.
+  gs_table-quantity = gs_screen-quantity.
+  gs_table-unit = gs_screen-unit.
+  gs_table-srdate = gs_screen-srdate.
+  gs_table-reference = gs_screen-reference.
+  gs_table-lotnum = gs_screen-lotnum.
+
+* 생성자 데이터 입력.
+  gs_table-crnam  = sy-uname.
+  gs_table-erdat  = sy-datum.
+  gs_table-ertim  = sy-uzeit.
+  gs_table-chnam  = sy-uname.
+  gs_table-chdat  = sy-datum.
+  gs_table-chtim  = sy-uzeit.
+
+* 저장 여부를 묻는 팝업창 오픈.
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = '수불 문서 생성'
+      text_question         = '수불 문서를 생성하시겠습니까?'
+      text_button_1         = '예'
+      text_button_2         = '아니오'
+      display_cancel_button = ''
+    IMPORTING
+      answer                = lv_answer.
+
+* 예 버튼을 눌럿을 때.
+  IF lv_answer = 1.
+    INSERT ztc702_srmanage FROM gs_table.
+
+    IF sy-subrc = 0.
+      MESSAGE '입출고 문서를 생성하였습니다.' TYPE 'I'.
+      COMMIT WORK.
+    ELSEIF sy-subrc = 4.
+      MESSAGE '입출고 문서를 생성하는데 실패했습니다.' TYPE 'I'.
+      ROLLBACK WORK.
+    ELSE.
+      MESSAGE '알 수 없는 에러가 발생했습니다.' TYPE 'I'.
+      ROLLBACK WORK.
+    ENDIF.
+  ELSE.
+    PERFORM clear.
+  ENDIF.
+
+  PERFORM display.
+
+  gv_switch2 ='1'.
+  LEAVE TO SCREEN 0. " 102 모달 스크린 종료.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form EDIT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM edit .
+  DATA lv_answer TYPE c LENGTH 1.
+
+* 편집 스크린 103에 데이터 입력.
+  CLEAR gs_table.
+  MOVE-CORRESPONDING gs_table TO ztc702_srmanage.
+
+* 스크린 103에 입력된 데이터 복사.
+  gs_table-srdocu = gs_screen-srdocu.
+  gs_table-srtype = gs_screen-srtype.
+  gs_table-gdcode = gs_screen-gdcode.
+  gs_table-quantity = gs_screen-quantity.
+  gs_table-unit = gs_screen-unit.
+  gs_table-srdate = gs_screen-srdate.
+  gs_table-reference = gs_screen-reference.
+  gs_table-lotnum = gs_screen-lotnum.
+
+* 생성/변경 정보 데이터 입력.
+  gs_table-crnam  = gs_screen-crnam.
+  gs_table-erdat  = gs_screen-erdat.
+  gs_table-ertim  = gs_screen-ertim.
+  gs_table-chnam  = sy-uname.
+  gs_table-chdat  = sy-datum.
+  gs_table-chtim  = sy-uzeit.
+
+* 문서 편집 여부 팝업창 호출.
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = '입출고 문서 편집'
+      text_question         = '입출고 문서를 편집하시겠습니까?'
+      text_button_1         = '예'
+      text_button_2         = '아니오'
+      display_cancel_button = ''
+    IMPORTING
+      answer                = lv_answer.
+
+* 예 버튼을 선택했을 때.
+  IF lv_answer = 1.
+
+* 입출고 관리 테이블 DB 업데이트.
+    UPDATE ztc702_srmanage FROM gs_table.
+
+* DB 업데이트 확정.
+    IF sy-subrc = 0.
+      MESSAGE '입출고 문서를 편집하였습니다.' TYPE 'I'.
+      COMMIT WORK.
+
+    ELSEIF sy-subrc = 4.
+      MESSAGE '입출고 문서를 편집하는데 실패했습니다.(중복 값 입력).' TYPE 'I'.
+      ROLLBACK WORK.
+    ELSE.
+      MESSAGE '알 수 없는 에러가 발생했습니다.' TYPE 'I'.
+      ROLLBACK WORK.
+    ENDIF.
+  ELSE.
+
+* 필드 초기화.
+    PERFORM clear.
+  ENDIF.
+
+* 갱신된 데이터 조회.
+  PERFORM display.
+
+* 스크린 103 종료.
+  LEAVE TO SCREEN 0.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display .
+  DATA: lt_gdcode TYPE RANGE OF ztc702_mtmaster-gdcode,
+        ls_gdcode LIKE LINE OF lt_gdcode.
+
+* 검색 날짜 LOW 값이 공백일 때.
+  IF gv_low IS INITIAL.
+    gv_low = '00010101'.
+  ENDIF.
+
+* 검색 날짜 HIGH 값이 공백일 때.
+  IF gv_hig IS INITIAL.
+    gv_hig = '99991231'.
+  ENDIF.
+
+  CLEAR lt_gdcode.
+
+* 품목 코드에 값이 입력됬을 때.
+  IF ztc702_mtmaster-gdcode IS NOT INITIAL.
+    ls_gdcode-sign = 'I'.
+    ls_gdcode-option = 'EQ'.
+    ls_gdcode-low = ztc702_mtmaster-gdcode.
+    APPEND ls_gdcode TO lt_gdcode.
+  ENDIF.
+
+* 100번 스크린 입출고 대기 문서 조회.
+  CASE 'X'.
+    WHEN gv_ra1. " 전체 조회.
+      SELECT *
+        FROM zdvc702_srm
+        INTO CORRESPONDING FIELDS OF TABLE gt_table2
+       WHERE delflag = space
+         AND srdate BETWEEN gv_low AND gv_hig
+         AND gdcode IN lt_gdcode
+       ORDER BY srdocu.
+
+    WHEN gv_ra2.  " 구매입고.
+      SELECT *
+        FROM zdvc702_srm
+        INTO CORRESPONDING FIELDS OF TABLE gt_table2
+       WHERE delflag = space
+         AND srtype = 'GR'
+         AND srdate BETWEEN gv_low AND gv_hig
+         AND gdcode IN lt_gdcode
+       ORDER BY srdocu.
+
+    WHEN gv_ra3.  " 생산입고.
+      SELECT *
+        FROM zdvc702_srm
+        INTO CORRESPONDING FIELDS OF TABLE gt_table2
+       WHERE delflag = space
+         AND srtype = 'PR'
+         AND srdate BETWEEN gv_low AND gv_hig
+         AND gdcode IN lt_gdcode
+       ORDER BY srdocu.
+
+    WHEN gv_ra4.  " 주문출고.
+      SELECT *
+        FROM zdvc702_srm
+        INTO CORRESPONDING FIELDS OF TABLE gt_table2
+       WHERE delflag = space
+         AND srtype = 'GI'
+         AND srdate BETWEEN gv_low AND gv_hig
+         AND gdcode IN lt_gdcode
+       ORDER BY srdocu.
+
+    WHEN gv_ra5.  " 폐기처리.
+      SELECT *
+        FROM zdvc702_srm
+        INTO CORRESPONDING FIELDS OF TABLE gt_table2
+       WHERE delflag = space
+         AND srtype = 'DI'
+         AND srdate BETWEEN gv_low AND gv_hig
+         AND gdcode IN lt_gdcode
+       ORDER BY srdocu.
+
+    WHEN gv_ra6.  " 생산출고.
+      SELECT *
+        FROM zdvc702_srm
+        INTO CORRESPONDING FIELDS OF TABLE gt_table2
+       WHERE delflag = space
+         AND srtype = 'MD'
+         AND srdate BETWEEN gv_low AND gv_hig
+         AND gdcode IN lt_gdcode
+       ORDER BY srdocu.
+    WHEN OTHERS.
+  ENDCASE.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CALC_GV_LOW
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM calc_gv_low .
+* 검색 날짜 LOW 값 계산.(한 달 전 날짜)
+  CALL FUNCTION 'RP_CALC_DATE_IN_INTERVAL'
+    EXPORTING
+      date      = gv_hig
+      days      = '00'
+      months    = '01'
+      signum    = '-'
+      years     = '00'
+    IMPORTING
+      calc_date = gv_low.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form CLEAR_FIELD
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM clear_field .
+  CLEAR ztc702_mtmaster-gdcode.                          " 품목 코드 초기화.
+  CLEAR: gv_low, gv_hig, gv_ra2, gv_ra3, gv_ra4, gv_ra5. " 문서 유형 초기화.
+  gv_ra1 = 'X'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form EXP_MANAGE
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM exp_manage USING VALUE(pv_gdcode) VALUE(pv_index).
+  DATA: lt_exp  TYPE TABLE OF ztc702_exp,
+        ls_exp  TYPE ztc702_exp,
+        ls_row  TYPE i,
+        lt_srm  TYPE TABLE OF ztc702_srmanage,
+        ls_srm  TYPE ztc702_srmanage,
+        lt_mtiv TYPE TABLE OF ztc702_mtiv,
+        ls_mtiv TYPE ztc702_mtiv,
+        lv_i    TYPE c LENGTH 1 VALUE 1,    " WHILE문 INDEX 번호.
+        lv_e    TYPE i,                     " WHILE문 유통기한 테이블 데이터 품목 수량.
+        lv_s    TYPE i.                     " WHILE문 입출고 관리 테이블 데이터 품목 수량.
+
+* SQL 검색 조건 설정.
+  ls_exp-gdcode = pv_gdcode.
+  ls_srm-gdcode = pv_gdcode.
+  ls_mtiv-gdcode = pv_gdcode.
+  ls_row = pv_index.
+
+* 유통기한 관리 테이블 데이터 조회.
+  SELECT *
+    FROM ztc702_exp
+    INTO TABLE lt_exp
+   WHERE gdcode = ls_exp-gdcode
+     AND delflag = space
+   ORDER BY lotnum ASCENDING.
+
+* 입출고 관리 테이블 데이터 조회.
+  SELECT *
+    FROM ztc702_srmanage
+    INTO TABLE lt_srm
+   WHERE delflag = space
+   ORDER BY lotnum ASCENDING.
+
+*GDCODE = LS_SRM-GDCODE
+*     AND SRTYPE IN ( 'GI', 'MD' ) " 출고 조건일 때.
+*     AND
+
+* 실재고량 테이블 데이터 조회.
+  SELECT *
+    FROM ztc702_mtiv
+    INTO TABLE lt_mtiv
+   WHERE gdcode = ls_mtiv-gdcode
+   ORDER BY gdcode.
+
+  READ TABLE gt_table INTO ls_srm INDEX ls_row. " ALV에서 선택된 라인 데이터 조회.
+  READ TABLE lt_exp INTO ls_exp INDEX 1.      " SQL로 불러온 데이터 중 LOT 넘버가 가장 오래된 라인 데이터 조회.
+  READ TABLE lt_mtiv INTO ls_mtiv INDEX 1.    " SQL로 불러온 데이터 중 LOT 넘버가 가장 오래된 라인 데이터 조회.
+
+  lv_e = ls_exp-quan.     " 유통기한 테이블 데이터 품목 수량
+  lv_s = ls_srm-quantity. " 입출고 관리 테이블 데이터 품목 수량
+  ls_mtiv-rinven = ls_mtiv-rinven - ls_srm-quantity. " 실재고량에서 출고 품목수량만큼 감소.
+
+* 실재고량이 0이 되었을 때.
+  IF ls_mtiv-rinven = 0.
+    ls_mtiv-delflag = 'X'. " 삭제 플래그 ON.
+  ENDIF.
+
+* 출고 품목 수량이 하나의 LOT 넘버를 가진 품목 수량보다 클 때.
+  WHILE lv_e < lv_s.
+    READ TABLE lt_exp INTO ls_exp INDEX lv_i. " 하나의 LOT 넘버 데이터 조회.
+
+    lv_s = lv_s - lv_e.   " 출고 품목수량에서 LOT 넘버 품목 수량만큼 감소.
+    ls_exp-quan = 0.      " 해당 LOT 넘버 품목 0으로 설정.
+    ls_exp-delflag = 'X'. " 해당 LOT 넘버 삭제플래그 ON.
+
+* 변경자 정보 입력.
+    ls_exp-chnam = sy-uname.
+    ls_exp-chdat = sy-datum.
+    ls_exp-chtim = sy-uzeit.
+
+* 유통기한 테이블 업데이트.
+    MODIFY lt_exp FROM ls_exp INDEX lv_i.
+
+* WHILE문 인덱스 넘버 작업.
+    lv_i = lv_i + 1.
+  ENDWHILE. " 출고 품목 수량이 하나의 LOT 넘버를 가진 품목 수량보다 작을 때.
+
+* 유통기한 테이블 데이터 조회.
+  READ TABLE lt_exp INTO ls_exp INDEX lv_i.
+
+  lv_e = ls_exp-quan.   " LOT 넘버 품목 수량 조회.
+  lv_e = lv_e - lv_s  . " LOT 넘버 품목 수량에서 출고 품목 수량만큼 감소.
+
+  ls_srm-delflag = 'X'. " 입출고 문서 삭제플래그 ON.
+  ls_exp-quan = lv_e.   " 출고 품목수량만큼 감소한 LOT 넘버 품목 수량을 스트럭처에 갱신.
+
+* 유통기한 테이블 변경자 정보 입력.
+  ls_exp-chnam = sy-uname.
+  ls_exp-chdat = sy-datum.
+  ls_exp-chtim = sy-uzeit.
+
+* 입출고 관리 테이블 변경자 정보 입력.
+  ls_srm-chnam = sy-uname.
+  ls_srm-chdat = sy-datum.
+  ls_srm-chtim = sy-uzeit.
+
+* 실재고량 테이블 변경자 정보 입력.
+  ls_mtiv-chnam = sy-uname.
+  ls_mtiv-chdat = sy-datum.
+  ls_mtiv-chtim = sy-uzeit.
+
+* 로컬 테이블 갱신.
+  MODIFY lt_exp FROM ls_exp INDEX lv_i.
+  MODIFY lt_srm FROM ls_srm INDEX ls_row.
+  MODIFY lt_mtiv FROM ls_mtiv INDEX 1.
+
+* 각 테이블 업데이트.
+  MODIFY ztc702_srmanage FROM TABLE lt_srm.
+  MODIFY ztc702_exp FROM TABLE lt_exp.
+  MODIFY ztc702_mtiv FROM TABLE lt_mtiv.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM layout .
+  gs_layout-zebra      = 'X'. " 지브라 패턴 설정.
+  gs_layout-cwidth_opt = 'A'. " 컬럼 가로 너비 최적화.
+  gs_layout-info_fname = 'COLOR'.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form FIELD_CATALOG
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM field_catalog .
+* 필드 카탈로그 변경 내역.
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'SRDOCU'.
+  gs_field_cat-coltext   = '입출고 문서번호'.
+  gs_field_cat-col_opt   = 'X'.
+  gs_field_cat-key = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'SRTYPE'.
+  gs_field_cat-coltext   = '입출고 유형'.
+  gs_field_cat-col_opt   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  gs_field_cat-fieldname = 'GDCODE'.
+  gs_field_cat-coltext   = '품목 코드'.
+  gs_field_cat-col_opt   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  gs_field_cat-fieldname = 'GDNAME'.
+  gs_field_cat-coltext   = '품목명'.
+  gs_field_cat-col_opt   = 'X'.
+*  gs_field_cat-outputlen = 25.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'LOTNUM'.
+  gs_field_cat-coltext   = 'LOT 넘버'.
+  gs_field_cat-col_opt   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'QUANTITY'.
+  gs_field_cat-coltext   = '재고량'.
+  gs_field_cat-qfieldname = 'UNIT'.
+*  GS_FIELD_CAT-COL_OPT   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'UNIT'.
+  gs_field_cat-coltext   = '단위'.
+  gs_field_cat-col_opt   = 'X'.
+  gs_field_cat-quantity = 'EA'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'SRDATE'.
+  gs_field_cat-coltext   = '입출고 일자'.
+  gs_field_cat-col_opt   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'REFERENCE'.
+  gs_field_cat-coltext   = '참조문서번호'.
+  gs_field_cat-col_opt   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'CRNAM'.
+  gs_field_cat-coltext   = '생성자'.
+*  GS_FIELD_CAT-COL_OPT   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'ERDAT'.
+  gs_field_cat-coltext   = '생성 일자'.
+*  GS_FIELD_CAT-COL_OPT   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+  CLEAR gs_field_cat.
+  gs_field_cat-fieldname = 'ERTIM'.
+  gs_field_cat-coltext   = '생성 시각'.
+*  GS_FIELD_CAT-COL_OPT   = 'X'.
+  APPEND gs_field_cat TO gt_field_cat.
+
+*  CLEAR gs_field_cat.
+*  gs_field_cat-fieldname = 'CHNAM'.
+*  gs_field_cat-coltext   = '변경자'.
+**  GS_FIELD_CAT-COL_OPT   = 'X'.
+*  APPEND gs_field_cat TO gt_field_cat.
+*
+*  CLEAR gs_field_cat.
+*  gs_field_cat-fieldname = 'CHDAT'.
+*  gs_field_cat-coltext   = '변경 날짜'.
+**  GS_FIELD_CAT-COL_OPT   = 'X'.
+*  APPEND gs_field_cat TO gt_field_cat.
+*
+*  CLEAR gs_field_cat.
+*  gs_field_cat-fieldname = 'CHTIM'.
+*  gs_field_cat-coltext   = '변경 시각'.
+**  GS_FIELD_CAT-COL_OPT   = 'X'.
+*  APPEND gs_field_cat TO gt_field_cat.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

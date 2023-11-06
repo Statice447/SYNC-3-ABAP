@@ -1,0 +1,60 @@
+FUNCTION zfm_cl7_19_task4.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     REFERENCE(IV_CARRID) TYPE  BC400_S_FLIGHT-CARRID
+*"     REFERENCE(IV_CONNID) TYPE  BC400_S_FLIGHT-CONNID
+*"  EXPORTING
+*"     REFERENCE(ET_FLIGHTS) TYPE  BC400_T_FLIGHTS
+*"  EXCEPTIONS
+*"      EX_NO_DATA
+*"      EX_NO_AUTH
+*"----------------------------------------------------------------------
+  "----------------------------------------------------------------------
+  "*"Local Interface:
+  "  IMPORTING
+  "     REFERENCE(IV_CARRID) TYPE  BC400_S_FLIGHT-CARRID
+  "     REFERENCE(IV_CONNID) TYPE  BC400_S_FLIGHT-CONNID
+  "  EXPORTING
+  "     REFERENCE(ET_FLIGHTS) TYPE  BC400_T_FLIGHTS
+  "  EXCEPTIONS
+  "      EX_NO_DATA
+  "      EX_NO_AUTH
+  "----------------------------------------------------------------------
+
+  DATA es_flights LIKE LINE OF et_flights.
+  TRY.
+    IF iv_carrid is INITIAL or iv_connid is INITIAL.
+      RAISE ex_no_data.
+    ENDIF.
+
+  ENDTRY.
+
+  SELECT carrid connid fldate seatsocc seatsmax
+    FROM sflight INTO CORRESPONDING FIELDS OF TABLE et_flights
+    WHERE carrid = iv_carrid
+    AND   connid = iv_connid.
+
+  IF sy-subrc <> 0.
+    MESSAGE e001(zcl7_19).
+  ENDIF.
+
+  LOOP AT et_flights INTO es_flights.
+* 퍼센트 계산
+    es_flights-percentage = es_flights-seatsocc / es_flights-seatsmax * 100.
+    MODIFY et_flights FROM es_flights INDEX sy-tabix TRANSPORTING percentage.
+    CLEAR es_flights.
+    SORT et_flights DESCENDING BY percentage.
+  ENDLOOP.
+
+ENDFUNCTION.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZCL7_19
+*001   No data
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

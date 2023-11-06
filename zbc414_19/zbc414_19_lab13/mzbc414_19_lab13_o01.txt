@@ -1,0 +1,198 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_19_LAB13_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CREATE_AND_TRANSFER OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE create_and_transfer OUTPUT.
+  IF go_container IS INITIAL.               " 컨테이너 생성 확인
+    CREATE OBJECT go_container
+      EXPORTING
+        container_name = 'MY_AREA'
+      EXCEPTIONS
+        OTHERS         = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+
+    ENDIF.
+
+    CREATE OBJECT go_alv_grid
+      EXPORTING
+        i_parent = go_container
+      EXCEPTIONS
+        OTHERS   = 1.
+
+    IF sy-subrc <> 0.
+      MESSAGE a001(zbc414_19).
+    ENDIF.
+
+    gv_refresh = abap_true.                " 생성 할 경우 트루 설정
+  ENDIF.
+
+  IF gv_refresh = abap_true.
+
+    gs_fcat-fieldname = 'ID'.
+    gs_fcat-ref_field = 'ID'.
+    gs_fcat-ref_table = 'ZSCUSTOM19'.
+    gs_fcat-coltext   = '아이디'.
+    gs_fcat-col_pos   = 1.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'NAME'.
+    gs_fcat-ref_field = 'NAME'.
+    gs_fcat-ref_table = 'ZSCUSTOM19'.
+    gs_fcat-coltext   = '이름'.
+    gs_fcat-col_pos   = 2.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CUSTTYPE'.
+    gs_fcat-ref_field = 'CUSTTYPE'.
+    gs_fcat-ref_table = 'ZSCUSTOM19'.
+    gs_fcat-coltext   = '좌석'.
+    gs_fcat-col_pos   = 3.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.                  " 필드 숨김
+    gs_fcat-fieldname = 'FORM'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'STREET'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'POSTBOX'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'POSTCODE'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CITY'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'COUNTRY'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'REGION'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'TELEPHONE'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'CUSTTYPE'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'DISCOUNT'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'LANGU'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'EMAIL'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CLEAR gs_fcat.
+    gs_fcat-fieldname = 'WEBUSER'.
+    gs_fcat-no_out    = 'X'.
+    APPEND gs_fcat TO gt_fcat.
+
+    CALL METHOD go_alv_grid->set_table_for_first_display
+      EXPORTING
+        i_structure_name = 'ZSCUSTOM19'
+*       is_variant       =
+*       i_save           =
+        i_default        = 'X'
+      CHANGING
+        it_outtab        = gt_zscustom19
+        it_fieldcatalog  = gt_fcat
+*       it_sort          =
+      EXCEPTIONS
+        OTHERS           = 1.
+
+    gv_refresh = abap_false.                     " 그리드 생성 이후 새로고침을 위한 False로 설정
+
+  ELSE.
+    go_alv_grid->refresh_table_display( ).       " 생성된 ALV 새로고침
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      CALL FUNCTION 'DEQUEUE_ALL'. " 200 스크린에서 BACK 할 경우 Lock 해제
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0200 OUTPUT.
+  SET PF-STATUS 'S0200'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module MOVE_TO_ZSCUSTOM19 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE move_to_zscustom19 OUTPUT.
+  SELECT SINGLE custtype
+    FROM zscustom19
+    INTO gs_zscustom19-custtype
+    WHERE id = gv_id.
+
+  MOVE-CORRESPONDING gs_zscustom19 TO zscustom19.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

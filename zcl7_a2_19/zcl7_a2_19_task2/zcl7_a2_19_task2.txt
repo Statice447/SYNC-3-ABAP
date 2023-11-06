@@ -1,0 +1,102 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_A2_19_TASK2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_a2_19_task2.
+
+DATA: gv_check TYPE i.
+
+DATA: gt_scarr   TYPE TABLE OF scarr,
+      gs_scarr   TYPE scarr,
+      gt_sflight TYPE TABLE OF sflight,
+      gs_sflight TYPE sflight,
+      gt_spfli   TYPE TABLE OF spfli,
+      gs_spfli   TYPE spfli.
+
+SELECTION-SCREEN BEGIN OF SCREEN 101 AS SUBSCREEN.
+
+SELECT-OPTIONS pa_car FOR gs_scarr-carrid NO INTERVALS NO-EXTENSION.
+
+SELECTION-SCREEN END OF SCREEN 101.
+
+SELECTION-SCREEN BEGIN OF SCREEN 102 AS SUBSCREEN.
+
+SELECT-OPTIONS: so_car2 FOR gs_sflight-carrid,
+                so_con2 FOR gs_sflight-connid,
+                so_date2 FOR gs_sflight-fldate.
+
+SELECTION-SCREEN END OF SCREEN 102.
+
+SELECTION-SCREEN BEGIN OF SCREEN 103 AS SUBSCREEN.
+
+SELECT-OPTIONS: so_car3 FOR gs_spfli-carrid,
+                so_con3 FOR gs_spfli-connid.
+
+SELECTION-SCREEN END OF SCREEN 103.
+
+SELECTION-SCREEN BEGIN OF TABBED BLOCK airlines FOR 8 LINES.
+SELECTION-SCREEN TAB (20) tab1 USER-COMMAND comm1 DEFAULT SCREEN 101. " tab (20) 탭 글자 수 최대치
+SELECTION-SCREEN TAB (20) tab2 USER-COMMAND comm2 DEFAULT SCREEN 102.
+SELECTION-SCREEN TAB (20) tab3 USER-COMMAND comm3 DEFAULT SCREEN 103.
+SELECTION-SCREEN END OF BLOCK airlines.
+
+INITIALIZATION.
+
+  tab1 = 'SCARR'.
+  tab2 = 'SFLIGHT'.
+  tab3 = 'SPFLI'.
+
+  airlines-activetab = 'COMM2'. " 시작 탭 위치 선정. 대문자로 해야함
+  airlines-dynnr = '102'.    " 시작 화면 표시 선정.
+
+START-OF-SELECTION.
+
+  CASE airlines-activetab.
+    WHEN 'COMM1'.
+      gv_check = 101.
+      PERFORM get_data USING gv_check.
+    WHEN 'COMM2'.
+      gv_check = 102.
+      PERFORM get_data USING gv_check.
+    WHEN 'COMM3'.
+      gv_check = 103.
+      PERFORM get_data USING gv_check.
+  ENDCASE.
+*&---------------------------------------------------------------------*
+*& Form GET_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_GV_CHECK  text
+*&---------------------------------------------------------------------*
+FORM get_data  USING  VALUE(pv_check).
+  CASE pv_check.
+    WHEN '101'.
+      SELECT *
+        FROM scarr INTO CORRESPONDING FIELDS OF TABLE gt_scarr
+        WHERE carrid IN pa_car.
+
+      cl_demo_output=>display_data( gt_scarr ).
+    WHEN '102'.
+      SELECT *
+      FROM sflight INTO CORRESPONDING FIELDS OF TABLE gt_sflight
+        WHERE carrid IN so_car2
+        AND   connid IN so_con2
+        AND   fldate IN so_date2.
+
+      cl_demo_output=>display_data( gt_sflight ).
+    WHEN '103'.
+      SELECT *
+        FROM spfli INTO CORRESPONDING FIELDS OF TABLE gt_spfli
+        WHERE carrid IN so_car3
+        AND   connid IN so_con3.
+
+      cl_demo_output=>display_data( gt_spfli ).
+
+  ENDCASE.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

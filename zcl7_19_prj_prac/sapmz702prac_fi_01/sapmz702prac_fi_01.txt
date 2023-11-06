@@ -1,0 +1,14 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZ702PRAC_FI_01
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzpracfi_01top                          .    " Global Data
+
+INCLUDE mzpracfi_01o01                          .  " PBO-Modules
+INCLUDE mzpracfi_01i01                          .  " PAI-Modules
+INCLUDE mzpracfi_01f01                          .  " FORM-Routines
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

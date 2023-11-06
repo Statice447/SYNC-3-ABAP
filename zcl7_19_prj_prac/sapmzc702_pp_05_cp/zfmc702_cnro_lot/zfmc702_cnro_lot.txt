@@ -1,0 +1,46 @@
+FUNCTION zfmc702_cnro_lot.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     REFERENCE(FV_MODULE_NAME) TYPE  STRING
+*"     REFERENCE(FV_CNRO_NR) TYPE  STRING
+*"     REFERENCE(FV_OBJECT) TYPE  STRING
+*"  CHANGING
+*"     REFERENCE(FV_CHANGE_CODENR) TYPE  STRING
+*"----------------------------------------------------------------------
+  DATA: lv_number   TYPE n LENGTH 6,
+        lv_range_nr TYPE inri-nrrangenr,
+        lv_object   TYPE inri-object.
+
+  DATA: lv_text_d TYPE string,
+        lv_text_n TYPE c LENGTH 6.
+
+  lv_range_nr = fv_cnro_nr.
+  lv_object = fv_object.
+
+  CALL FUNCTION 'NUMBER_GET_NEXT'
+    EXPORTING
+      nr_range_nr = lv_range_nr        " 01 : 어느거, 02: 어느거, 03 : 어느거
+      object      = lv_object
+    IMPORTING
+      number      = lv_number.
+
+  lv_text_n = lv_number.
+
+  CONCATENATE fv_module_name '000' lv_text_n INTO fv_change_codenr.
+
+
+
+
+
+ENDFUNCTION.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   전화번호는 - 없이 10자리 혹은 11자리로 입력하세요.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

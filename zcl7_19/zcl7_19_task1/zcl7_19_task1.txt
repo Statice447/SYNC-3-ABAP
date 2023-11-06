@@ -1,0 +1,76 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_19_TASK1
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_19_task1.
+
+PARAMETERS: pa_num1 TYPE i,
+            pa_op   TYPE c LENGTH 1,
+            pa_num2 TYPE i.
+
+DATA gv_result TYPE i.
+
+PERFORM cal           " 계산 서브루틴
+  USING pa_num1
+        pa_op
+        pa_num2
+  CHANGING
+        gv_result.
+
+PERFORM display       " 출력 서브루틴
+  USING gv_result.
+*&---------------------------------------------------------------------*
+*& Form CAL
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_PA_NUM1  text
+*      -->P_PA_OP  text
+*      -->P_PA_NUM2  text
+*      <--P_GV_RESULT  text
+*&---------------------------------------------------------------------*
+FORM cal  USING    VALUE(p_pa_num1)
+                   VALUE(p_pa_op)
+                   VALUE(p_pa_num2)
+          CHANGING      p_gv_result.
+
+  IF p_pa_num1 < p_pa_num2.
+    WRITE: / '첫번째 수보다 두번째 수가 더 큽니다.'.
+
+  ELSE.
+    " 몫 구하기
+    IF p_pa_op = 'D'.
+      p_gv_result = p_pa_num1 DIV p_pa_num2.
+
+      " 나머지 구하기
+    ELSEIF p_pa_op = 'M'.
+      p_gv_result = p_pa_num1 MOD p_pa_num2.
+
+      " 그 외 op값 들어올 경우
+    ELSE.
+      WRITE: / '잘못된 op 값 입니다.'.
+    ENDIF.
+
+
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_GV_RESULT  text
+*&---------------------------------------------------------------------*
+FORM display  USING    p_gv_result.
+     " 결과 출력 구문
+    WRITE: / 'pa_num1 : ', pa_num1,
+           / 'pa_num2 : ', pa_num2,
+           / 'Result  : ', p_gv_result.
+
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

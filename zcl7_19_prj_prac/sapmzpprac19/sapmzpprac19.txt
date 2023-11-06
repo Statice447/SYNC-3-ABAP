@@ -1,0 +1,14 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZPPRAC19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE mzpppractop                             .    " Global Data
+
+INCLUDE mzpppraco01                             .  " PBO-Modules
+INCLUDE mzpppraci01                             .  " PAI-Modules
+INCLUDE mzpppracf01                             .  " FORM-Routines
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

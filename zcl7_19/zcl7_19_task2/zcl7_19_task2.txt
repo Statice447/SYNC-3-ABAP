@@ -1,0 +1,39 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_19_TASK2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_19_task2.
+
+PARAMETERS: pa_num1 TYPE i,
+            pa_op   TYPE c LENGTH 1,
+            pa_num2 TYPE i.
+
+DATA gv_result TYPE i.
+
+CALL FUNCTION 'ZFM_CL7_19_TASK2'
+  EXPORTING
+    iv_op     = pa_op
+    iv_num1   = pa_num1
+    iv_num2   = pa_num2
+  IMPORTING
+    ev_result = gv_result.
+
+PERFORM display       " 출력 서브루틴
+  USING gv_result.
+*&---------------------------------------------------------------------*
+*& Form DISPLAY
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*      -->P_GV_RESULT  text
+*&---------------------------------------------------------------------*
+FORM display  USING    VALUE(p_gv_result).
+    "결과 출력
+      WRITE: / 'pa_num1 : ', pa_num1,
+             / 'pa_num2 : ', pa_num2,
+             / 'Result  : ', p_gv_result.
+ENDFORM.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

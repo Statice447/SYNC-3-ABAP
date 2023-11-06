@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E8
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZBC400_19_E8.
+
+TYPES gty_perc TYPE p DECIMALS 2.
+
+DATA: gv_int1 TYPE i,
+      gv_int2 TYPE i,
+      gv_result TYPE gty_perc.
+
+PERFORM calc_perc
+   USING
+        gv_int1
+        gv_int2
+  CHANGING
+        gv_result.
+
+INCLUDE zbc400_19_e8_calc_percf03.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

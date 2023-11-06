@@ -1,0 +1,218 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC405_19_MENTOR2
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc405_19_mentor3.
+
+TABLES ztpractice19.
+
+TYPES: BEGIN OF gty_upd,
+         id      TYPE ztpractice19-id,
+         name    TYPE ztpractice19-name,
+         email   TYPE ztpractice19-email,
+         number1 TYPE ztpractice19-number1,
+         number2 TYPE ztpractice19-number2,
+       END OF gty_upd.
+
+
+DATA: gt_upd  TYPE TABLE OF gty_upd,
+      gs_upd  TYPE gty_upd,
+      wa_data TYPE ztpractice19.
+
+DATA: gt_sflight TYPE TABLE OF dv_flights,
+      gs_sflight TYPE dv_flights.
+
+DATA: gt_prac TYPE TABLE OF ztpractice19,
+      gs_prac TYPE ztpractice19.
+
+DATA: dynnr     TYPE sy-dynnr,
+      ok_code   TYPE sy-ucomm,
+      gv_mark   TYPE c,
+      gv_answer TYPE c LENGTH 1.
+
+CONTROLS my_table TYPE TABLEVIEW USING SCREEN '110'.
+CONTROLS my_table2 TYPE TABLEVIEW USING SCREEN '100'.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1100 AS SUBSCREEN.
+
+SELECT-OPTIONS: so_car FOR gs_sflight-carrid,
+                so_con FOR gs_sflight-connid.
+
+SELECTION-SCREEN END OF SCREEN 1100.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1200 AS SUBSCREEN.
+
+SELECTION-SCREEN BEGIN OF BLOCK radio WITH FRAME.
+
+PARAMETERS: pa_wrt RADIOBUTTON GROUP rgb1 DEFAULT 'X',
+            pa_alv RADIOBUTTON GROUP rgb1.
+
+SELECTION-SCREEN END OF BLOCK radio.
+
+SELECTION-SCREEN END OF SCREEN 1200.
+
+SELECTION-SCREEN BEGIN OF TABBED BLOCK airlines FOR 10 LINES.
+SELECTION-SCREEN TAB (20) tab1 USER-COMMAND wrt DEFAULT SCREEN 1100. " tab (20) 탭 글자 수 최대치
+SELECTION-SCREEN TAB (20) tab2 USER-COMMAND alv DEFAULT SCREEN 1200.
+SELECTION-SCREEN TAB (20) tab3 USER-COMMAND tab DEFAULT SCREEN 110.
+SELECTION-SCREEN END OF BLOCK airlines.
+
+INITIALIZATION.
+
+  tab1 = 'Connection'.
+  tab2 = 'Booking'.
+  tab3 = 'Table Control'.
+
+  SELECT *
+    FROM  ztpractice19 INTO CORRESPONDING FIELDS OF TABLE gt_prac
+    ORDER BY id ASCENDING.
+
+START-OF-SELECTION.
+
+  CALL SCREEN 100.
+
+*&---------------------------------------------------------------------*
+*& Module TRAN_TO_TABLE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE tran_to_table OUTPUT.
+  MOVE-CORRESPONDING gs_prac TO ztpractice19.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+  SET PF-STATUS 'S0100'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+  CASE ok_code.
+    WHEN 'EXIT' OR 'CANC'.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      LEAVE TO SCREEN 0.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module TRAN_TO_TABLE2 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE tran_to_table2 OUTPUT.
+  MOVE-CORRESPONDING gs_prac TO ztpractice19.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0101 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0101 OUTPUT.
+  SET PF-STATUS 'S0101'.
+* SET TITLEBAR 'xxx'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0101  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0101 INPUT.
+  CASE ok_code.
+    WHEN 'OKAY'.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Realy?'
+          text_question         = '저장 하시겠습니까?'
+          text_button_1         = 'Yes'
+          text_button_2         = 'No'
+          display_cancel_button = ''
+        IMPORTING
+          answer                = gv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.
+      IF sy-subrc <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+      IF gv_answer = 1.
+        CLEAR wa_data.
+        MOVE-CORRESPONDING gs_upd TO wa_data.
+
+        UPDATE ztpractice19 FROM wa_data.
+        IF sy-subrc <> 0.
+          MESSAGE a003(zbc414_19) WITH '덤프'.
+        ENDIF.
+
+        SELECT *
+          FROM ztpractice19 INTO CORRESPONDING FIELDS OF TABLE gt_prac
+          ORDER BY id ASCENDING.
+
+        REFRESH CONTROL 'MY_TABLE2' FROM SCREEN '0100'.
+
+*          LOOP AT gt_prac INTO gs_prac.
+*            MOVE-CORRESPONDING gs_prac to ztpractice19.
+*          ENDLOOP.
+
+        CLEAR: wa_data, gs_upd.
+        LEAVE TO SCREEN 0.
+      ELSE.
+        CLEAR: wa_data, gs_upd.
+      ENDIF.
+
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module CLEAR_OK_CODE OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE clear_ok_code OUTPUT.
+  CLEAR ok_code.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  CHECK_MARK  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE check_mark INPUT.
+  CASE ok_code.
+    WHEN 'CHANGE'.
+      READ TABLE gt_prac INTO gs_upd INDEX my_table2-current_line.
+
+      CALL SCREEN 101
+        STARTING AT 10 10
+        ENDING AT 50 20.
+  ENDCASE.
+
+ENDMODULE.
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: ZBC414_19
+*003   그외 에러
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

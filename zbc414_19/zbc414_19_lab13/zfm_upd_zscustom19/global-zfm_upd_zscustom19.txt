@@ -1,0 +1,6 @@
+FUNCTION-POOL ZBC414_19.                    "MESSAGE-ID ..
+
+* INCLUDE LZBC414_19D...                     " Local class definition
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

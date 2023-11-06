@@ -1,0 +1,199 @@
+*&---------------------------------------------------------------------*
+*& Include          MZBC414_19_PRAC2_C01
+*&---------------------------------------------------------------------*
+
+CLASS: lcl_handle DEFINITION.
+  PUBLIC SECTION.
+    CLASS-DATA: gv_rowid TYPE i.
+    CLASS-METHODS:
+      on_double_click   FOR EVENT double_click OF cl_gui_alv_grid
+        IMPORTING es_row_no,
+      on_toolbar        FOR EVENT toolbar OF cl_gui_alv_grid       " toolbar 정의, importing e_object
+        IMPORTING e_object,
+      on_user_commnad   FOR EVENT user_command OF cl_gui_alv_grid  " user command 정의 importing e_ucomm
+        IMPORTING e_ucomm.
+*      on_context_menu_request
+*                    FOR EVENT context_menu_request OF cl_gui_alv_grid
+*        IMPORTING e_object,
+*      print_top FOR EVENT print_top_of_page OF cl_gui_alv_grid,
+*      print_tol FOR EVENT print_top_of_list OF cl_gui_alv_grid.
+*
+
+ENDCLASS.
+
+* 클래스 구현 부분
+CLASS: lcl_handle IMPLEMENTATION.
+
+  METHOD on_double_click.
+    DATA: lv_message_text    TYPE c LENGTH 60.
+
+    READ TABLE gt_data INTO wa_data INDEX es_row_no-row_id.
+
+    IF sy-subrc <> 0.
+      MESSAGE i075(bc405_408).
+      EXIT.
+    ENDIF.
+
+    CONCATENATE wa_data-name wa_data-email INTO lv_message_text SEPARATED BY ' '.
+
+    MESSAGE lv_message_text TYPE 'I'. " I 타입의 메시지 형태로 텍스트 출력
+
+  ENDMETHOD.
+*  "on toolbar 메소드
+  METHOD on_toolbar.
+
+    DATA ls_button TYPE stb_button.
+    " Seperate
+    ls_button-butn_type = 3. " 버튼 타입 3번이 세퍼레이트 긋기, 아이콘 사이의 세로 줄
+
+    INSERT ls_button INTO TABLE e_object->mt_toolbar.
+    " 실제 툴바 버튼 생성 구문
+
+    CLEAR ls_button. " 중복 데이터 방지를 위한 clear
+    ls_button-function = 'NAME'.
+    ls_button-text = 'Name'.
+    ls_button-butn_type = 0.
+    INSERT ls_button INTO TABLE e_object->mt_toolbar.     " 생성한 툴바 버튼을 insert
+
+    CLEAR ls_button.
+    ls_button-function = 'REFRESH'.
+    ls_button-icon = icon_refresh.
+    ls_button-butn_type = 0.
+    INSERT ls_button INTO TABLE e_object->mt_toolbar.     " 생성한 툴바 버튼을 insert
+
+  ENDMETHOD.
+  " on User command 메소드
+  METHOD on_user_commnad.
+    DATA: lv_occupied   TYPE i,
+          lv_capacity   TYPE i,
+          lv_percentage TYPE p LENGTH 8 DECIMALS 1,
+          lv_text       TYPE string,
+          " context user command에 사용되는 carrname 선언
+          lv_name       TYPE ztpractice19-name,
+          " 행을 선택 했을 때 식별하기 위한 행 넘버 선언
+          lt_row_no     TYPE lvc_t_roid,
+          ls_row_no     TYPE lvc_s_roid.
+
+    " user command 실행 case 문
+    CASE e_ucomm.
+      WHEN 'NAME'.
+        CALL METHOD go_alv_grid->get_selected_rows
+          IMPORTING
+            et_row_no = lt_row_no.
+
+        IF lines( lt_row_no ) > 0.
+          LOOP AT lt_row_no INTO ls_row_no.
+            READ TABLE gt_data INTO wa_data INDEX ls_row_no-row_id.
+            lv_name = wa_data-name.
+          ENDLOOP.
+
+          MOVE lv_name TO lv_text.
+          CONCATENATE 'This row Name : ' lv_text INTO lv_text SEPARATED BY space.
+
+          MESSAGE lv_text TYPE 'I'.
+        ELSE.
+          MESSAGE 'Please, Selected one row.' TYPE 'I'.
+
+        ENDIF.
+      WHEN 'REFRESH'.
+        PERFORM set_refresh_alv.
+*      WHEN 'CARRIER_INFO'.
+*        READ TABLE gt_sflight INTO gs_sflight INDEX gv_rowid.
+*        SELECT SINGLE carrname
+*          FROM scarr INTO lv_carrname
+*          WHERE carrid = gs_sflight-carrid.
+*
+*        MESSAGE lv_carrname TYPE 'I'.
+*
+*        " 내가 임의로 추가한 planetype_info
+*      WHEN 'PLANETYPE_INFO'.
+*        READ TABLE gt_sflight INTO gs_sflight INDEX gv_rowid.
+*        SELECT SINGLE planetype
+*          FROM sflight INTO lv_planetype
+*          WHERE planetype = gs_sflight-planetype.
+*
+*        MESSAGE lv_planetype TYPE 'I'.
+
+    ENDCASE.
+  ENDMETHOD.
+  " on context request 메소드 구현
+*  METHOD on_context_menu_request.
+*    DATA: ls_column_info TYPE lvc_s_col.
+*
+*    go_alv_grid->get_current_cell(
+*    IMPORTING
+*      e_row = gv_rowid
+*      es_col_id = ls_column_info ).
+*    " 해당 컬럼의 필드를 선택 했을 때
+*    CASE ls_column_info-fieldname.
+*        " 필드이름이 CARRID 일 경우
+*      WHEN 'CARRID'.
+*        e_object->add_function(
+*        EXPORTING
+*          fcode = 'CARRIER_INFO'
+*          text = 'Carrier info' ).
+*
+*        "내가 임의로 추가한 plane type info
+*        " 필드이름이 PLANETPYE 일 경우
+*      WHEN 'PLANETYPE'.
+*        e_object->add_function(
+*        EXPORTING
+*          fcode = 'PLANETYPE_INFO'
+*          text = 'Planetype info' ).
+*      WHEN OTHERS.
+*    ENDCASE.
+*  ENDMETHOD.
+*  METHOD print_tol.
+*    DATA: ls_so_car LIKE LINE OF so_car,
+*          ls_so_con LIKE LINE OF so_con.
+*    CONSTANTS: lc_end TYPE i VALUE 20.
+*
+*    FORMAT COLOR COL_HEADING.
+*
+*    WRITE: / 'Select options', AT lc_end space.
+*    SKIP.
+*
+*    WRITE: / 'Airlines', AT lc_end space.
+*    ULINE AT /(lc_end).
+*
+*    FORMAT COLOR COL_NORMAL.
+*
+*    LOOP AT so_car INTO ls_so_car.
+*      WRITE: / ls_so_car-sign,
+*               ls_so_car-option,
+*               ls_so_car-low ,
+*               ls_so_car-high .
+*
+*    ENDLOOP.
+*
+*    SKIP.
+*
+*    FORMAT COLOR COL_HEADING.
+*    WRITE: / 'Connections', AT lc_end space.
+*    ULINE AT /(lc_end).
+*    FORMAT COLOR COL_NORMAL.
+*
+*    LOOP AT so_con INTO ls_so_con.
+*      WRITE: / ls_so_con-sign,
+*               ls_so_con-option,
+*               ls_so_con-low NO-ZERO,
+*               ls_so_con-high NO-ZERO.
+*
+*    ENDLOOP.
+*    SKIP.
+*  ENDMETHOD.
+*  METHOD print_top.
+*    DATA lv_pos TYPE i.
+*    FORMAT COLOR COL_HEADING.
+*    WRITE: / sy-datum.         " 처음 현재 시간 출력
+*    lv_pos = sy-linsz / 2 - 3. " length of pagno : 6 chars
+*    WRITE AT lv_pos sy-pagno.  " 라인 띄우고 sy-pagno 출력
+*    lv_pos = sy-linsz - 11.    " length of username : 12 chars
+*    WRITE: AT lv_pos sy-uname. " lv_pos 만큼 라인 띄우고 sy-uname 출력
+*    ULINE.
+*  ENDMETHOD.
+
+ENDCLASS.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

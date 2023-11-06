@@ -1,0 +1,22 @@
+*&---------------------------------------------------------------------*
+*& Include MZBC410_SOL_19_E4_TOP                    - Module Pool      SAPMZBC410_SOL_19_E4
+*&---------------------------------------------------------------------*
+PROGRAM sapmzbc410_sol_19_e4.
+
+TABLES: sdyn_conn.
+
+data: wa_sflight type sflight.
+
+DATA: gv_carrid TYPE scarr-carrid,
+      gv_icon   TYPE icons-text,
+      ok_code   TYPE sy-ucomm.
+
+data: gv_chk1 type c LENGTH 1,
+      gv_chk2 like gv_chk1.
+
+data: gv_rad1 type c LENGTH 1,
+      gv_rad2 LIKE gv_rad1,
+      gv_rad3 LIKE gv_rad1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

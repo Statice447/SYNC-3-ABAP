@@ -1,0 +1,48 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E17
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_e17.
+
+TYPES: BEGIN OF gty_s_cus,
+         mandt     TYPE scustom-mandt,
+         id        TYPE scustom-id,
+         name      TYPE scustom-name,
+         form      TYPE scustom-form,
+         street    TYPE scustom-street,
+         postbox   TYPE scustom-postbox,
+         postcode  TYPE scustom-postcode,
+         city      TYPE scustom-city,
+         country   TYPE scustom-country,
+         region    TYPE scustom-region,
+         telephone TYPE scustom-telephone,
+         custtype  TYPE scustom-custtype,
+         discount  TYPE scustom-discount,
+         langu     TYPE scustom-langu,
+         email     TYPE scustom-email,
+         webuser   TYPE scustom-webuser,
+       END OF gty_s_cus.
+
+TYPES gty_t_cus TYPE TABLE OF gty_s_cus.
+
+DATA: gt_customer TYPE gty_t_cus,
+      gs_customers LIKE gt_customer.
+
+
+SELECT mandt id name form street postbox postcode city country region telephone custtype discount langu email webuser
+  FROM scustom
+  INTO TABLE gs_customers
+  WHERE country IN ('DE','US')
+  AND discount BETWEEN '005' AND '010'
+  AND postcode LIKE '___5_'
+  AND name LIKE '%ra%'.
+
+IF sy-subrc <> 0.
+  MESSAGE i100(ZBC400_19).
+else.
+  cl_demo_output=>display_data( gs_customers ).
+ENDIF.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

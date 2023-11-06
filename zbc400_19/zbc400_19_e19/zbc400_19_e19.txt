@@ -1,0 +1,46 @@
+*&---------------------------------------------------------------------*
+*& Report ZBC400_19_E19
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zbc400_19_e19.
+
+TYPES : BEGIN OF gty_s_flight,
+          carrid   TYPE sflight-carrid,
+          connid   TYPE sflight-connid,
+          fldate   TYPE sflight-fldate,
+          seatsmax TYPE sflight-seatsmax,
+          seatsocc TYPE sflight-seatsocc,
+        END OF gty_s_flight.
+
+*DATA : gt_sflight TYPE TABLE OF gty_s_flight,
+*       gs_sflight LIKE LINE OF gt_sflight.
+
+DATA: gt_sflight TYPE SORTED TABLE OF gty_s_flight " 정렬되어지는 테이블 선언
+                WITH NON-UNIQUE DEFAULT KEY.
+
+START-OF-SELECTION.
+
+  SELECT  carrid connid fldate seatsmax seatsocc
+    FROM sflight
+    INTO TABLE gt_sflight
+    WHERE carrid = 'AA'.
+
+  SELECT carrid connid fldate seatsmax seatsocc
+    FROM sflight
+    INTO TABLE gt_sflight
+    WHERE carrid = 'LH'.
+
+  SELECT carrid connid fldate seatsmax seatsocc
+     FROM sflight
+     APPENDING TABLE gt_sflight
+     WHERE carrid = 'AA'.
+
+* LH로 덮어써진후 AA가 뒤에 추가 됐지만 위 Sorted Table로 선언 했기때문에
+* 정렬되어진 상태로 나온다 그러므로 AA가 먼저나옴
+
+
+  cl_demo_output=>display( gt_sflight ) .
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

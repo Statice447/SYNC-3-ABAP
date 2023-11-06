@@ -1,0 +1,32 @@
+*&---------------------------------------------------------------------*
+*& Report ZCL7_19_TASK6
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcl7_19_task6.
+
+PARAMETERS: pa_con TYPE sflight-connid.
+
+DATA: gs_spfli       TYPE spfli,
+      gs_flight_info TYPE brf_flight_info,
+      gt_flight_info LIKE TABLE OF gs_flight_info.
+
+SELECT carrid carrname connid fldate price currency
+  FROM zvflight_19 INTO CORRESPONDING FIELDS OF TABLE gt_flight_info
+  WHERE connid = pa_con.
+
+LOOP AT gt_flight_info INTO gs_flight_info.
+  WRITE: / gs_flight_info-carrid,
+           gs_flight_info-carrname,
+           gs_flight_info-connid,
+           gs_flight_info-countryfr,
+           gs_flight_info-countryto,
+           gs_flight_info-cityfrom,
+           gs_flight_info-cityto,
+           gs_flight_info-fldate,
+           gs_flight_info-price.
+  CLEAR gs_flight_info.
+ENDLOOP.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

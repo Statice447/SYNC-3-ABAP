@@ -1,0 +1,20 @@
+FUNCTION ZFM_19_UPDATE.
+*"----------------------------------------------------------------------
+*"*"Update Function Module:
+*"
+*"*"Local Interface:
+*"  IMPORTING
+*"     VALUE(IV_ID) TYPE  SBOOK-CUSTOMID
+*"     VALUE(IV_CUSTTYPE) TYPE  SBOOK-CUSTTYPE
+*"  EXCEPTIONS
+*"      ERROR
+*"----------------------------------------------------------------------
+
+UPDATE zsbook19 set custtype = iv_custtype WHERE customid = iv_id.
+
+
+
+ENDFUNCTION.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

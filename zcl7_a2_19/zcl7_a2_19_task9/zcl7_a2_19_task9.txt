@@ -1,0 +1,34 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      ZBC414_19_LAB13
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE ZCL7_A2_19_TASK9_TOP.     " Global Data
+
+INCLUDE ZCL7_A2_19_TASK9_O01.     " PBO-Modules
+INCLUDE ZCL7_A2_19_TASK9_I01.     " PAI-Modules
+INCLUDE ZCL7_A2_19_TASK9_F01.     " FORM-Routines
+
+*GUI Texts
+*----------------------------------------------------------
+* T0100 --> & Customer Info
+* T0200 --> & Booked Customer List
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: Hard coded
+*   ID를 입력하세요
+*
+* Message class: ZBC414_19
+*001   1번 에러
+*002   2번 에러
+*003   그외 에러
+*
+* Message class: ZCL7_A2_19
+*001   & Customer 정보 변경 성공
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

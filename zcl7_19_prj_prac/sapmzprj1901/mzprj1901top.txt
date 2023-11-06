@@ -1,0 +1,16 @@
+*&---------------------------------------------------------------------*
+*& Include MZPRJ1901TOP                             - Module Pool      SAPMZPRJ1901
+*&---------------------------------------------------------------------*
+PROGRAM sapmzprj1901.
+
+TABLES: ysem1901, ysem1902.
+
+DATA: ok_code TYPE sy-ucomm.
+
+DATA: gt_table TYPE TABLE OF ysem1902,
+      gs_table TYPE ysem1902.
+
+CONTROLS: my_table TYPE TABLEVIEW USING SCREEN '0100'.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751

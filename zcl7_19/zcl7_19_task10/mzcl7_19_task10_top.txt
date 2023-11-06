@@ -1,0 +1,17 @@
+*&---------------------------------------------------------------------*
+*& Include MZCL7_19_TASK10_TOP                      - Module Pool      ZCL7_19_TASK10
+*&---------------------------------------------------------------------*
+PROGRAM ZCL7_19_TASK10.
+
+CONTROLS: my_tab type TABSTRIP.
+
+TABLES: spfli, scarr, sflight.
+
+DATA: ok_code TYPE sy-ucomm,
+      dynnr   TYPE sy-dynnr.
+
+DATA: gv_rad1 TYPE c LENGTH 1 VALUE 'X',
+      gv_rad2 LIKE gv_rad1.
+
+----------------------------------------------------------------------------------
+Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2023. Sap Release 751
